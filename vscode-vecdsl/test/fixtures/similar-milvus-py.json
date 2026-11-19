@@ -1,0 +1,194 @@
+{
+ "statement": "similar",
+ "files": [],
+ "errors": [],
+ "statements": [
+  {
+   "name": "connectCloud",
+   "range": {
+    "start": {
+     "line": 8,
+     "character": 0
+    },
+    "end": {
+     "line": 8,
+     "character": 144
+    }
+   }
+  },
+  {
+   "name": "dropOld",
+   "range": {
+    "start": {
+     "line": 10,
+     "character": 0
+    },
+    "end": {
+     "line": 10,
+     "character": 32
+    }
+   }
+  },
+  {
+   "name": "createProducts",
+   "range": {
+    "start": {
+     "line": 12,
+     "character": 0
+    },
+    "end": {
+     "line": 26,
+     "character": 15
+    }
+   }
+  },
+  {
+   "name": "seed",
+   "range": {
+    "start": {
+     "line": 28,
+     "character": 0
+    },
+    "end": {
+     "line": 33,
+     "character": 6
+    }
+   }
+  },
+  {
+   "name": "similar",
+   "range": {
+    "start": {
+     "line": 35,
+     "character": 0
+    },
+    "end": {
+     "line": 38,
+     "character": 53
+    }
+   }
+  },
+  {
+   "name": "keywords",
+   "range": {
+    "start": {
+     "line": 40,
+     "character": 0
+    },
+    "end": {
+     "line": 40,
+     "character": 93
+    }
+   }
+  },
+  {
+   "name": "hybrid",
+   "range": {
+    "start": {
+     "line": 42,
+     "character": 0
+    },
+    "end": {
+     "line": 45,
+     "character": 23
+    }
+   }
+  },
+  {
+   "name": "byId",
+   "range": {
+    "start": {
+     "line": 47,
+     "character": 0
+    },
+    "end": {
+     "line": 47,
+     "character": 56
+    }
+   }
+  },
+  {
+   "name": "cheapBooks",
+   "range": {
+    "start": {
+     "line": 49,
+     "character": 0
+    },
+    "end": {
+     "line": 49,
+     "character": 71
+    }
+   }
+  },
+  {
+   "name": "reprice",
+   "range": {
+    "start": {
+     "line": 51,
+     "character": 0
+    },
+    "end": {
+     "line": 51,
+     "character": 57
+    }
+   }
+  },
+  {
+   "name": "similarToFirst",
+   "range": {
+    "start": {
+     "line": 53,
+     "character": 0
+    },
+    "end": {
+     "line": 53,
+     "character": 100
+    }
+   }
+  },
+  {
+   "name": "browse",
+   "range": {
+    "start": {
+     "line": 55,
+     "character": 0
+    },
+    "end": {
+     "line": 55,
+     "character": 87
+    }
+   }
+  },
+  {
+   "name": "removeOne",
+   "range": {
+    "start": {
+     "line": 57,
+     "character": 0
+    },
+    "end": {
+     "line": 57,
+     "character": 44
+    }
+   }
+  },
+  {
+   "name": "remaining",
+   "range": {
+    "start": {
+     "line": 59,
+     "character": 0
+    },
+    "end": {
+     "line": 59,
+     "character": 28
+    }
+   }
+  }
+ ],
+ "targets": [
+  "pinecone"
+ ],
+ "sections": [],
+ "unsupported": []
+}

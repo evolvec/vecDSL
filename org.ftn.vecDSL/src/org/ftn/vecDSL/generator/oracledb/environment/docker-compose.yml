@@ -1,0 +1,23 @@
+# {{product}} for the generated programs: image {{server.image}} (image id {{server.image.id}}), Oracle Net on 127.0.0.1:{{server.port}},
+# pluggable database {{service}}. The image is licensed under the Oracle Free Use Terms and Conditions and is pulled without a login.
+# ORACLE_PWD (SYS, SYSTEM and PDBADMIN) and VECDSL_ORACLEDB_PASSWORD (the application user {{user}}) come only from the environment;
+# compose refuses to start without them. On the first start the image creates the database (several minutes) and then runs
+# setup/01-vecdsl-user.sh once: it creates {{user}} in {{service}} with the privileges the samples need and sets VECTOR_MEMORY_SIZE
+# for HNSW indexes in the server parameter file, which takes effect after one restart (docker compose restart).
+# The database is ready when the log shows "DATABASE IS READY TO USE!". Data persists in the named volume {{storage.volume}};
+# docker compose down -v removes it. Oracle AI Database Free uses at most 2 GB of RAM; give Docker Desktop at least 4 GB.
+services:
+  oracledb:
+    image: {{server.image}}
+    ports:
+      - "127.0.0.1:${VECDSL_ORACLEDB_PORT:-{{server.port}}}:1521"
+    environment:
+      ORACLE_PWD: ${ORACLE_PWD:?set ORACLE_PWD}
+      VECDSL_ORACLEDB_PASSWORD: ${VECDSL_ORACLEDB_PASSWORD:?set VECDSL_ORACLEDB_PASSWORD}
+      VECDSL_VECTOR_MEMORY: "{{vector.memory}}"
+    volumes:
+      - {{storage.volume}}:/opt/oracle/oradata
+      - ./setup:/opt/oracle/scripts/setup:ro
+
+volumes:
+  {{storage.volume}}:

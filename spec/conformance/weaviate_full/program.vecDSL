@@ -1,0 +1,148 @@
+script libraryCoverage
+targets [ weaviate ]
+version "1.0"
+description "Every native and concealed Weaviate statement, in an order that runs against a fresh server"
+param queryVector : vector = [0.9, 0.1, 0.0, 0.1]
+param queryText : text = "vector database"
+
+connectLocal: create connection local uri "http://localhost:8080" grpc-port 50051
+
+writer: create generative-model writer provider "dummy"
+
+dropBooks: drop books if-exists
+
+dropNotes: drop notes if-exists
+
+createBooks: create collection books ttl 86400 generative-model writer {
+    primary id
+    analyzer english tokenizer standard language "en"
+    field id type int
+    field title type varchar max-length 256 full-text analyzer english
+    field category type varchar max-length 64
+    field price type float
+    vector-field embedding type float_vector dim 4 metric cosine {
+        vector-index embeddingIndex family hnsw max-degree 16 build-candidates 200
+    }
+    alias shelf for books
+} with {
+    create payload-index priceRange on price kind float
+}
+
+createNotes: create collection notes {
+    primary id
+    field id type int
+    field body type text
+    vector-field noteVector type float_vector dim 2 metric cosine
+    namespace teamA key "team-a"
+    tenant north
+    tenant beta
+} with {
+    create tenant gamma
+}
+
+evolveBooks: alter books {
+    add-field field pages type int
+    set description = "Books about databases"
+    add-alias alias stacks for books
+}
+
+seed: insert into books values [
+    { id: 1, title: "Milvus in action: vector database design", category: "books", price: 39.5, embedding: [0.9, 0.1, 0.0, 0.1] },
+    { id: 2, title: "Approximate nearest neighbour search", category: "books", price: 52.0, embedding: [0.8, 0.2, 0.1, 0.0] },
+    { id: 3, title: "Espresso machine", category: "kitchen", price: 249.0, embedding: [0.0, 0.1, 0.9, 0.3] },
+    { id: 4, title: "Graph databases explained", category: "books", price: 28.0, embedding: [0.5, 0.5, 0.2, 0.1] }
+]
+
+importMore: bulk-import into books from "file://../books.jsonl" format json
+
+restock: upsert into books values [
+    { id: 4, title: "Graph databases explained", category: "books", price: 30.0, embedding: [0.5, 0.5, 0.2, 0.1] }
+]
+
+reprice: update books set { price: 35.0 } ids [1]
+
+priceReady: await-index priceRange until ready timeout 120
+
+vectorsReady: await-index embeddingIndex until ready timeout 120
+
+reindexPrice: rebuild-index priceRange
+
+persist: flush books
+
+loadBooks: load books
+
+similar: vector-search in books top 3 query vector $queryVector using embedding output [title, price] where category eq "books"
+
+keywords: search in books top 2 query text $queryText fields [title] output [title]
+
+hybrid: hybrid-search in books top 3 fusion rrf fusion-k 60 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text $queryText fields [title] }
+} output [title]
+
+byId: get from books ids [1, 4] output [title, price]
+
+recommended: recommend in books top 2 positive [1] negative [3] using embedding output [title]
+
+browse: scroll in books limit 10 output [title, price]
+
+firstTwo: sample in books size 2 method first output [title]
+
+pairs: distance-matrix in books using embedding sample 3 limit 2
+
+summaries: generate in books top 2 query vector $queryVector using embedding model writer single-prompt "Summarize {title}" output [title]
+
+overview: generate in books top 2 query vector $queryVector using embedding model writer grouped-task "List the topics" grouped-fields [title] output [title]
+
+both: batch-query {
+    count in books
+    count in books where price lt 40
+}
+
+info: describe books stats index-progress
+
+collectionNames: list collections prefix "Book"
+
+aliasNames: list aliases in books
+
+indexNames: list indexes in books
+
+tenantNames: list tenants in notes
+
+writeNorth: insert into notes values [ { id: 1, body: "first note", noteVector: [1.0, 0.0] } ] tenant north
+
+writeTeam: insert into notes values [ { id: 2, body: "team note", noteVector: [0.0, 1.0] } ] namespace "team-a"
+
+countNorth: count in notes tenant north
+
+releaseNotes: release notes
+
+loadNotes: load notes
+
+countTeam: count in notes namespace "team-a"
+
+removeBeta: drop beta
+
+clearNorth: delete from notes all tenant north
+
+trimKitchen: delete from books limit 1 where category eq "kitchen"
+
+moveShelf: swap-alias shelf from books to notes
+
+dropStacks: drop stacks
+
+nightly: snapshot books as "nightly"
+
+snapshotNames: list snapshots in books
+
+copyBooks: clone books to "booksCopy"
+
+dropForRestore: drop books
+
+restoreBooks: restore books from "nightly"
+
+restored: count in books
+
+emptyBooks: truncate books
+
+remaining: count in books

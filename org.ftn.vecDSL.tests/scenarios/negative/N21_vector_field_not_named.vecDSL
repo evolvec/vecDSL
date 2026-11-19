@@ -1,0 +1,15 @@
+// Judgment: vf. Intended: reject. A query over a collection with two vector fields names neither.
+script n21
+version "7.1"
+
+createBooks: create collection books {
+    primary id
+    field id type varchar
+    field genre type varchar
+    vector-field embedding type float_vector dim 4 metric cosine
+    vector-field cover type float_vector dim 4 metric cosine
+}
+
+nearest: vector-search in books top 10 query vector [0.8, 0.2, 0.1, 0.0]
+    output [id, genre]
+    where genre eq "fiction"

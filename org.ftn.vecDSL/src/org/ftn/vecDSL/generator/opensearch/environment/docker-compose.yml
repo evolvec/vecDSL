@@ -1,0 +1,55 @@
+# {{product}} {{server.version}} for the generated programs: one node, port {{server.port}} on 127.0.0.1 only (9201, so that it
+# never collides with the Elasticsearch compose file on 9200), HTTP without TLS.
+# Image {{server.image}} ({{server.image.digest}}), the default distribution with the bundled plugins (k-NN, neural-search,
+# ml-commons, index-management, security, sql and others).
+# Security is on: the security plugin installs its demo configuration with user {{user}}, whose password is the environment
+# variable VECDSL_OPENSEARCH_PASSWORD (compose refuses to start without it). OpenSearch checks it on the first start: 8 to 100
+# characters with an uppercase letter, a lowercase letter, a digit and a special character, rated strong by zxcvbn and not
+# similar to "admin"; a weak password stops the container. Write every $ as $$ when the value goes into an .env file.
+# TLS on the REST layer is off (plugins.security.ssl.http.enabled false) because the server listens on 127.0.0.1 only.
+# The password applies only to a fresh data volume: after a change, run docker compose down -v.
+# Data persists in the named volume {{storage.volume}} (docker compose down -v removes it). Snapshots go to {{snapshot.path}}
+# (path.repo) inside the container and last until the container is removed.
+# MMR reranking needs the system-generated search processors mmr_over_sample_factory and mmr_rerank_factory.
+# Docker Desktop with WSL2: if the container exits with "max virtual memory areas vm.max_map_count [65530] is too low", run
+#   wsl -d docker-desktop sysctl -w vm.max_map_count=262144
+# The disk watermarks are off so that a nearly full Docker Desktop disk does not make the indices read-only.
+# Start with: docker compose up -d   Health: the cluster health API inside the container (yellow or green).
+services:
+  opensearch:
+    image: {{server.image}}
+    ports:
+      - "127.0.0.1:{{server.port}}:9200"
+    environment:
+      discovery.type: single-node
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${VECDSL_OPENSEARCH_PASSWORD:?set VECDSL_OPENSEARCH_PASSWORD}
+      plugins.security.ssl.http.enabled: "false"
+      # The demo configuration logs audit events to a daily security-auditlog-* index, which list collections would show.
+      plugins.security.audit.type: noop
+      # The query insights plugin writes a daily top_queries-* index, which list collections would show.
+      search.insights.top_queries.latency.enabled: "false"
+      search.insights.top_queries.cpu.enabled: "false"
+      search.insights.top_queries.memory.enabled: "false"
+      path.repo: {{snapshot.path}}
+      cluster.search.enabled_system_generated_factories: mmr_over_sample_factory,mmr_rerank_factory
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+      OPENSEARCH_JAVA_OPTS: -Xms{{heap}} -Xmx{{heap}}
+    volumes:
+      - {{storage.volume}}:{{storage.path}}
+    mem_limit: 2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -m 5 -u {{user}}:\"$$OPENSEARCH_INITIAL_ADMIN_PASSWORD\" 'http://127.0.0.1:9200/_cluster/health?timeout=4s' | grep -Eq '\"status\":\"(green|yellow)\"'"]
+      interval: 5s
+      timeout: 10s
+      retries: 36
+      start_period: 30s
+
+volumes:
+  {{storage.volume}}:

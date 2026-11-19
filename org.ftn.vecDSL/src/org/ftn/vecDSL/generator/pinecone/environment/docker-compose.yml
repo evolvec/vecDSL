@@ -1,0 +1,41 @@
+# Mock of the {{product}} API {{api.version}} (Prism serving Pinecone's OpenAPI specifications). Pinecone Local, the
+# self-hosted emulator, reached end of life on 7 October 2026; Pinecone itself runs only as a managed service.
+# The mock validates every request against the specification and answers with the specification's examples; it
+# stores nothing, so it checks request shapes, not results. It persists no data and needs no volume.
+# Before the first start: git clone {{specs.repository}} pinecone-api
+#                         git -C pinecone-api checkout {{specs.commit}}
+# Start with: docker compose up -d   Ports: {{mock.control.port}} (control plane), {{mock.data.port}} (data plane).
+# Run a generated program against it with
+#   VECDSL_PINECONE_API_KEY={{api.key.placeholder}} (any value; the mock checks only that a key is sent)
+#   VECDSL_PINECONE_URI=http://localhost:{{mock.control.port}}
+#   VECDSL_PINECONE_INDEX_HOST=http://localhost:{{mock.data.port}}
+#   VECDSL_PINECONE_INDEX_TIMEOUT=0 (the mock never reports an index as deleted)
+services:
+  control-plane:
+    image: {{mock.image}}
+    command: mock -h 0.0.0.0 -p {{mock.control.port}} /specs/{{api.version}}/db_control_{{api.version}}.oas.yaml
+    platform: linux/amd64
+    ports:
+      - "{{mock.control.port}}:{{mock.control.port}}"
+    volumes:
+      - ./pinecone-api:/specs:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get({host: '127.0.0.1', port: {{mock.control.port}}, path: '/indexes', headers: {'Api-Key': 'health', 'X-Pinecone-Api-Version': '{{api.version}}'}}, (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+  data-plane:
+    image: {{mock.image}}
+    command: mock -h 0.0.0.0 -p {{mock.data.port}} /specs/{{api.version}}/db_data_{{api.version}}.oas.yaml
+    platform: linux/amd64
+    ports:
+      - "{{mock.data.port}}:{{mock.data.port}}"
+    volumes:
+      - ./pinecone-api:/specs:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "const q = require('http').request({host: '127.0.0.1', port: {{mock.data.port}}, path: '/describe_index_stats', method: 'POST', headers: {'Api-Key': 'health', 'X-Pinecone-Api-Version': '{{api.version}}', 'Content-Type': 'application/json'}}, (r) => process.exit(r.statusCode === 200 ? 0 : 1)); q.on('error', () => process.exit(1)); q.end('{}')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s

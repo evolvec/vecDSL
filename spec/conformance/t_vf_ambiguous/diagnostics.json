@@ -1,0 +1,12 @@
+{
+  "vecdsl-ir": "1.0",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "t.vf.ambiguous",
+      "message": "collection books has 2 vector fields, so the query must name one with 'using'",
+      "line": 14,
+      "column": 27
+    }
+  ]
+}

@@ -1,0 +1,2045 @@
+// ============================================================================
+// vecDSL textual concrete syntax, vecDSL 1.0 (grammar 7.1 frozen as 1.0 on 16 Nov 2026)
+// Faculty of Technical Sciences, University of Novi Sad, NAIS group
+//
+// Decisions applied: D1 to D14 (language designer, 5 Nov 2026), D15 (6 Nov 2026).
+// vecDSL 1.0 = grammar 7.1 with this header; no rule changed (spec/README.md, "What 1.0 is").
+//   The EMF namespace URI stays
+//   http://www.ftn.org/vecDSL/VecDSL/7 because the metamodel is unchanged.
+//   Language and IR are versioned together (spec/VERSIONING.md); the IR is spec/ir/vecdsl-ir-1.0.schema.json.
+//   D15: a declared recall floor is written 'target-recall q' in SearchParams, 0 < q < 1;
+//   recall 1 is written 'exact'. Oracle AI Database 26ai treats TARGET ACCURACY 100 and
+//   FETCH EXACT as different mechanisms, so the language keeps a declared floor (approximate
+//   evaluation) distinct from exact (exhaustive evaluation).
+// Comment convention:
+//   Every rule carries a comment naming the domain concept it represents.
+//   Extension rules additionally name the vendor and the documentation version.
+//   Vendor names appear only in VendorId, in extension sections and in comments (D13).
+//
+// Documentation versions referenced (all re-opened 6 Nov 2026, one source type per system):
+//   GitHub releases page, latest non-pre-release: Milvus 3.0.5 (30 Oct 2026) | Weaviate 1.40.4
+//   (5 Nov 2026; feature notes 1.38) | Qdrant 1.20.0 (22 Oct 2026) | Chroma 1.5.9 (5 May 2026)
+//   | Redis Open Source 8.10.3 (26 Oct 2026) | Elasticsearch 9.5.6 (2 Nov 2026) | OpenSearch 3.9.0
+//   (29 Sep 2026) | LanceDB 0.41.0 (29 Oct 2026) / Lance 14.0.2 (29 Oct 2026, lance-format/lance)
+//   | Vespa 8.781.11 (2 Nov 2026; the vespa-engine releases page publishes Vespa CLI releases,
+//   which carry the Vespa release number)
+//   GitHub tags page (pgvector publishes no GitHub releases): pgvector 0.8.7 (1 Oct 2026)
+//   API versioning page: Pinecone API 2026-07 (latest stable)
+//   Atlas changelog: MongoDB Atlas, October 2026 section (entries are not dated individually)
+//   Release-update page: Oracle AI Database 26ai RU 23.26.4 (October 2026)
+// Extension sections 17.1 (Vespa 8.781.11) and 17.2 (Qdrant 1.20.0) were re-checked against the
+// pinned documentation on 8 Nov 2026. Section 17.3 (Weaviate) was written against v7.0 and was
+// not re-audited.
+//
+// Canonical score semantics (D3). Every score the language exposes is a similarity:
+// higher is better. Ranges per metric:
+//   cosine      cos(x, y)                       [-1, 1]
+//   dot         x . y                           (-inf, +inf)
+//   euclidean   -||x - y||_2                    (-inf, 0]
+//   manhattan   -||x - y||_1                    (-inf, 0]
+//   hamming     -(number of differing bits)     [-dim, 0]
+//   jaccard     |x AND y| / |x OR y|            [0, 1]
+//   multivector (max_sim) sum over query vectors of the best per-vector similarity
+//   keyword     engine relevance (BM25 family)  [0, +inf)
+//   fused       output of the fusion function   fusion-dependent, documented per EFusionType
+// 'score native' on a query is the explicit escape hatch: scores and bounds then use the
+// target engine's own form and are not portable.
+// ============================================================================
+
+grammar org.ftn.vecDSL.VecDSL with org.eclipse.xtext.common.Terminals
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+generate vecDSL "http://www.ftn.org/vecDSL/VecDSL/7"
+
+
+// ============================================================================
+// 1. PROGRAM
+// ============================================================================
+
+// Program: a named, vendor-independent unit of vecDSL statements. The generation
+// target is a generator parameter, never part of the program (D1).
+Script:
+    'script' name=ValidID
+    ('targets' '[' targets+=VendorId (',' targets+=VendorId)* ']')?  // D1: optional restriction checked against capability tables
+    ('version' version=STRING)?
+    ('language' hostLanguage=EHostLanguage)?  // host-language hint; the generator parameter overrides it
+    ('description' description=STRING)?
+    ('created' createdAt=STRING)?
+    ('modified' lastModifiedAt=STRING)?
+    (hints+=GeneratorHint)*
+    (provenance=ProvenanceMetadata)?
+    (parameters+=Parameter)*
+    (methods+=Method)*
+;
+
+// Program parameter: a typed input bound by the signature of the generated function.
+Parameter:
+    'param' name=ValidID ':' type=EParamType ('=' defaultValue=Literal)?
+;
+
+// Statement label: optional name of a statement, written as a prefix 'name:'.
+fragment Labeled*:
+    (name=ValidID ':')?
+;
+
+// Statement: any executable step of a program.
+Method:
+    DdlMethod | DmlMethod | OperationalMethod | QueryMethod | Transaction
+;
+
+
+// ============================================================================
+// 2. SCHEMA DEFINITION STATEMENTS (DDL)
+// ============================================================================
+
+// Schema statement: creation, alteration or removal of a structural concept.
+DdlMethod:
+    Create | Alter | Drop
+;
+
+// Creation of a structural concept, either defined inline or referenced by name.
+Create:
+    Labeled 'create' (definition=Concept | target=[Concept|ValidID])
+    (ifNotExists?='if-not-exists')?
+    ('with' '{' (nested+=DdlMethod)* '}')?
+;
+
+// Schema evolution of an existing concept.
+Alter:
+    Labeled 'alter' target=[Concept|ValidID]
+    ('rename' 'to' newName=ValidID)?
+    ('{' (operations+=AlterOperation)* '}')?
+;
+
+// One schema evolution step.
+AlterOperation:
+    AddFieldOp | DropFieldOp | RenameFieldOp | SetPropertyOp | AddAliasOp
+    | AddFunctionOp | DropFunctionOp
+;
+
+// Field addition (payload or vector field, D5).
+AddFieldOp:
+    'add-field' newField=Field
+;
+
+// Field removal (payload or vector field, D5).
+DropFieldOp:
+    'drop-field' field=[Field|ValidID]
+;
+
+// Field renaming.
+RenameFieldOp:
+    'rename-field' field=[Field|ValidID] 'to' newName=ValidID
+;
+
+// Change of a portable collection property.
+SetPropertyOp:
+    'set' property=ECollectionProperty '=' value=Literal
+;
+
+// Alias addition.
+AddAliasOp:
+    'add-alias' newAlias=Alias
+;
+
+// Server-side function addition (BM25, embedding, sparse encoding, rerank).
+AddFunctionOp:
+    'add-function' newFunction=Function
+;
+
+// Server-side function removal.
+DropFunctionOp:
+    'drop-function' function=[Function|ValidID]
+;
+
+// Removal of a structural concept.
+Drop:
+    Labeled 'drop' target=[Concept|ValidID]
+    (ifExists?='if-exists')?
+;
+
+
+// ============================================================================
+// 3. DATA MANIPULATION STATEMENTS (DML)
+// ============================================================================
+
+// Data statement: record-level writes.
+DmlMethod:
+    Insert | Upsert | Update | Delete | BulkImport
+;
+
+// Logical slice addressed by a statement: namespace, tenant and partition.
+fragment WriteScope*:
+    ('namespace' namespace=STRING)?
+    ('tenant' tenant=[Tenant|ValidID])?
+    ('partition' partition=[Partition|ValidID])?
+;
+
+// Durability and visibility of a write.
+fragment WriteOptions*:
+    ('consistency' writeConsistency=EWriteConsistency)?
+    (waitForPersistence?='wait')?
+;
+
+// Origin of records for a write.
+RecordSource:
+    FileSource | InlineRecords | ParamSource
+;
+
+// Records read from a file or object-store location.
+FileSource:
+    'from' location=STRING
+;
+
+// Records written literally in the program.
+InlineRecords:
+    'values' '[' records+=RecordLiteral (',' records+=RecordLiteral)* ']'
+;
+
+// Records bound through a program parameter.
+ParamSource:
+    'from-param' param=ParamRef
+;
+
+// One record: field-value pairs.
+RecordLiteral:
+    {RecordLiteral} '{' (entries+=RecordEntry (',' entries+=RecordEntry)*)? '}'
+;
+
+// One field-value pair of a record.
+RecordEntry:
+    field=[Field|ValidID] ':' value=Literal
+;
+
+// Insert: write new records; fails on an existing id unless on-conflict says otherwise.
+Insert:
+    Labeled 'insert' 'into' collection=[VectorCollection|ValidID]
+    source=RecordSource
+    ('records' recordCountHint=INT)?
+    ('ttl' ttlSeconds=INT)?
+    ('on-conflict' onConflict=EConflictPolicy)?
+    WriteScope
+    WriteOptions
+    (extensions+=VendorExtension)*
+;
+
+// Upsert: write records, replacing whole records that share an id.
+Upsert:
+    Labeled 'upsert' 'into' collection=[VectorCollection|ValidID]
+    source=RecordSource
+    ('records' recordCountHint=INT)?
+    ('batch' batchSize=INT)?
+    ('ttl' ttlSeconds=INT)?
+    WriteScope
+    WriteOptions
+    (extensions+=VendorExtension)*
+;
+
+// Update: partial or full change of existing records selected by ids or by a filter.
+Update:
+    Labeled 'update' collection=[VectorCollection|ValidID]
+    (source=RecordSource)?
+    ('set' values=RecordLiteral)?
+    ('mode' mode=EUpdateMode)?
+    ('ids' '[' ids+=Literal (',' ids+=Literal)* ']')?
+    ('remove-fields' '[' removedFields+=[Field|ValidID] (',' removedFields+=[Field|ValidID])* ']')?
+    ('array-append' '[' appendFields+=[Field|ValidID] (',' appendFields+=[Field|ValidID])* ']')?
+    ('array-remove' '[' arrayRemoveFields+=[Field|ValidID] (',' arrayRemoveFields+=[Field|ValidID])* ']')?
+    ('if-version' ifVersion=INT)?  // optimistic concurrency (Qdrant 1.16+, Elasticsearch if_seq_no, Vespa conditional writes)
+    WriteScope
+    WriteOptions
+    (filter=FilterBlock)?
+    (extensions+=VendorExtension)*
+;
+
+// Delete: removal of records selected by ids, by a filter, or all records.
+Delete:
+    Labeled 'delete' 'from' collection=[VectorCollection|ValidID]
+    ('ids' '[' ids+=Literal (',' ids+=Literal)* ']')?
+    (deleteAll?='all')?
+    ('limit' deleteLimit=INT)?
+    WriteScope
+    WriteOptions
+    (filter=FilterBlock)?
+    (extensions+=VendorExtension)*
+;
+
+// Bulk import: server-side ingestion from files, object stores or streams.
+BulkImport:
+    Labeled 'bulk-import' 'into' collection=[VectorCollection|ValidID]
+    'from' location=STRING  // URI; the scheme selects store or stream (s3://, gs://, file://, kafka://)
+    ('format' format=EImportFormat)?
+    ('batch' batchSize=INT)?
+    ('parallel' parallelism=INT)?
+    (continuous?='continuous')?  // continuous pull ingestion (OpenSearch 3.x pull-based ingestion; Chroma Sync PROVISIONAL)
+    ('on-conflict' onConflict=EConflictPolicy)?
+    (async?='async')?
+    WriteScope
+    (extensions+=VendorExtension)*
+;
+
+// Transaction: a group of writes executed atomically where the target supports it.
+Transaction:
+    {Transaction} Labeled 'transaction'
+    ('isolation' isolationLevel=EIsolationLevel)?
+    '{' (methods+=DmlMethod)* '}'
+;
+
+
+// ============================================================================
+// 4. OPERATIONAL STATEMENTS
+// ============================================================================
+
+// Operational statement: lifecycle, maintenance and introspection.
+OperationalMethod:
+    Load | Release | Flush | Compact | Describe | EmbeddingMigration
+    | Snapshot | Restore | DropSnapshot | Clone | RebuildIndex
+    | SwapAlias | RefreshExternal | Truncate | ListObjects | AwaitIndex
+;
+
+// Memory residency: bring a collection into serving memory.
+Load:
+    Labeled 'load' collection=[VectorCollection|ValidID]
+    ('partitions' '[' partitions+=[Partition|ValidID] (',' partitions+=[Partition|ValidID])* ']')?
+    (extensions+=VendorExtension)*
+;
+
+// Memory residency: evict a collection from serving memory.
+Release:
+    Labeled 'release' collection=[VectorCollection|ValidID]
+    ('partitions' '[' partitions+=[Partition|ValidID] (',' partitions+=[Partition|ValidID])* ']')?
+    (extensions+=VendorExtension)*
+;
+
+// Persistence barrier: make buffered writes durable and visible.
+Flush:
+    Labeled 'flush' collection=[VectorCollection|ValidID]
+    (extensions+=VendorExtension)*
+;
+
+// Storage compaction: merge segments and purge deleted records.
+Compact:
+    Labeled 'compact' collection=[VectorCollection|ValidID]
+    ('target-segments' targetSegments=INT)?
+    (async?='async')?
+    (extensions+=VendorExtension)*
+;
+
+// Introspection of one collection.
+Describe:
+    Labeled 'describe' collection=[VectorCollection|ValidID]
+    (includeStats?='stats')?
+    (includeIndexProgress?='index-progress')?
+;
+
+// Re-embedding of a collection under a new embedding model.
+EmbeddingMigration:
+    Labeled 'migrate-embeddings' collection=[VectorCollection|ValidID]
+    'from-model' sourceModel=[EmbeddingModel|ValidID]
+    'to-model' targetModel=[EmbeddingModel|ValidID]
+    ('batch' batchSize=INT)?
+    ('strategy' strategy=EMigrationStrategy)?
+;
+
+// Backup: point-in-time copy of a collection to a location. 'as' names the snapshot that
+// Restore and DropSnapshot refer to; without it the statement label is the snapshot name.
+Snapshot:
+    Labeled 'snapshot' collection=[VectorCollection|ValidID]
+    ('as' snapshotName=STRING)?
+    ('scope' scope=ESnapshotScope)?
+    (incremental?='incremental')?
+    ('tenant' tenant=[Tenant|ValidID])?
+    ('location' location=STRING)?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Restore of a backup into a collection.
+Restore:
+    Labeled 'restore' collection=[VectorCollection|ValidID]
+    'from' snapshotName=STRING
+    ('scope' scope=ESnapshotScope)?
+    ('location' location=STRING)?
+    (async?='async')?
+    (extensions+=VendorExtension)*
+;
+
+// Removal of a backup.
+DropSnapshot:
+    Labeled 'drop-snapshot' snapshotName=STRING
+    ('location' location=STRING)?
+;
+
+// Copy-on-write or materialized clone of a collection or database (D9).
+Clone:
+    Labeled 'clone'
+    ('database' sourceDatabase=[VectorDatabase|ValidID] | sourceCollection=[VectorCollection|ValidID])
+    'to' targetName=STRING
+    ('mode' mode=ECloneMode)?
+    ('as-of' asOf=Literal)?
+    (extensions+=VendorExtension)*
+;
+
+// Index rebuild.
+RebuildIndex:
+    Labeled 'rebuild-index' index=[Index|ValidID]
+    (concurrently?='concurrently')?
+    (extensions+=VendorExtension)*
+;
+
+// Atomic alias switch between two collections.
+SwapAlias:
+    Labeled 'swap-alias' alias=[Alias|ValidID]
+    'from' oldCollection=[VectorCollection|ValidID]
+    'to' newCollection=[VectorCollection|ValidID]
+;
+
+// Resynchronization of a collection derived from an external source.
+RefreshExternal:
+    Labeled 'refresh' collection=[VectorCollection|ValidID]
+    (async?='async')?
+;
+
+// Removal of all records while keeping the schema.
+Truncate:
+    Labeled 'truncate' collection=[VectorCollection|ValidID]
+    ('namespace' namespace=STRING)?
+;
+
+// Listing of schema objects.
+ListObjects:
+    Labeled 'list' kind=EListKind
+    ('in' scope=[Concept|ValidID])?
+    ('prefix' prefix=STRING)?
+    ('limit' listLimit=INT)?
+;
+
+// Wait for an asynchronous index build.
+AwaitIndex:
+    Labeled 'await-index' index=[Index|ValidID]
+    ('until' state=EIndexBuildState)?
+    ('timeout' timeoutSeconds=INT)?
+;
+
+
+// ============================================================================
+// 5. QUERY STATEMENTS
+// ============================================================================
+
+// Query statement: any read.
+QueryMethod:
+    VectorSearch | KeywordSearch | HybridSearch | RecommendSearch | GetById
+    | GenerativeSearch | DistanceMatrix | Count | Scroll | Sample | BatchQuery
+;
+
+// Paging over a result list.
+fragment Paging*:
+    ('offset' offset=INT)?
+    ('cursor' cursor=STRING)?
+;
+
+// Logical slice and read semantics of a query.
+fragment ReadScope*:
+    ('namespace' namespace=STRING)?
+    ('tenant' tenant=[Tenant|ValidID])?
+    ('partitions' '[' partitions+=[Partition|ValidID] (',' partitions+=[Partition|ValidID])* ']')?
+    ('consistency' consistency=EConsistencyLevel)?
+    ('as-of' asOf=Literal)?
+;
+
+// Score form and score bounds (D3).
+fragment ScoreSpec*:
+    ('score' scoreForm=EScoreForm)?
+    ('bounds' bounds=ScoreBounds)?
+;
+
+// Result re-ordering: diversification, boosting and reranking.
+fragment Reordering*:
+    ('mmr' mmr=MmrConfig)?
+    ('boost' boost=BoostBlock)?
+    ('rerank' reranker=[Reranker|ValidID])?
+;
+
+// Shape of the result list.
+fragment ResultShape*:
+    ('group-by' groupBy=FieldPath ('size' groupSize=INT)?)?
+    (withVectors?='with-vectors')?
+    (withTotal?='with-total')?
+    ('exclude' '[' excluded+=[Field|ValidID] (',' excluded+=[Field|ValidID])* ']')?
+    ('highlight' '[' highlighted+=[Field|ValidID] (',' highlighted+=[Field|ValidID])* ']')?
+    ('sort' '{' (sortClauses+=SortClause)+ '}')?
+    ('aggregate' '{' (aggregations+=AggregationClause)+ '}')?
+;
+
+// Projection, filter and vendor extensions closing a query.
+fragment QueryTail*:
+    output=OutputSpec
+    (filter=FilterBlock)?
+    (extensions+=VendorExtension)*
+;
+
+// Nearest-neighbour search over one vector field.
+VectorSearch:
+    Labeled 'vector-search' 'in' collection=[VectorCollection|ValidID]
+    'top' topK=INT
+    input=QueryInput
+    ('using' vectorField=[VectorField|ValidID])?
+    ('metric' metric=EMetric)?
+    ('model' queryModel=[EmbeddingModel|ValidID])?
+    (exact?='exact')?
+    (explain?='explain')?
+    ('within' elementScope=ElementScope)?
+    Paging
+    ReadScope
+    ScoreSpec
+    Reordering
+    ResultShape
+    ('params' params=SearchParams)?
+    ('prefetch' '{' (prefetches+=Prefetch)+ '}')?
+    QueryTail
+;
+
+// Lexical (keyword, full-text) search.
+KeywordSearch:
+    Labeled 'search' 'in' collection=[VectorCollection|ValidID]
+    'top' topK=INT
+    input=QueryInput
+    ('text-query' textQueryType=ETextQueryType)?
+    ('fields' '[' searchFields+=SearchFieldRef (',' searchFields+=SearchFieldRef)* ']')?
+    ('operator' matchOperator=EMatchOperator)?
+    ('min-should-match' minShouldMatch=INT)?
+    ('fuzziness' fuzziness=STRING)?
+    ('slop' slop=INT)?
+    (explain?='explain')?
+    Paging
+    ReadScope
+    ScoreSpec
+    Reordering
+    ResultShape
+    ('params' params=SearchParams)?
+    QueryTail
+;
+
+// Fused search: two or more vector or keyword legs combined by a fusion function.
+// Covers dense plus lexical, dense plus sparse, and multi-vector search.
+HybridSearch:
+    Labeled 'hybrid-search' 'in' collection=[VectorCollection|ValidID]
+    'top' topK=INT
+    (input=QueryInput)?  // shared input inherited by legs without their own
+    ('fusion' fusion=EFusionType)?
+    ('fusion-k' fusionConstant=INT)?
+    ('alpha' alpha=SignedNumber)?  // weight of the first vector leg in [0,1] for two-leg weighted fusion
+    (explain?='explain')?
+    Paging
+    ReadScope
+    ScoreSpec
+    Reordering
+    ResultShape
+    ('params' params=SearchParams)?
+    '{' (legs+=HybridLeg)+ '}'
+    QueryTail
+;
+
+// One leg of a fused search.
+HybridLeg:
+    VectorLeg | KeywordLeg
+;
+
+// Vector leg: dense, sparse or multi-vector similarity over one vector field.
+VectorLeg:
+    {VectorLeg} 'vector' '{'
+        (input=QueryInput)?
+        ('using' vectorField=[VectorField|ValidID])?
+        ('metric' metric=EMetric)?
+        ('weight' weight=SignedNumber)?
+        ('limit' legLimit=INT)?
+        ('bounds' bounds=ScoreBounds)?
+        ('params' params=SearchParams)?
+        (exact?='exact')?
+        (filter=FilterBlock)?
+        (extensions+=VendorExtension)*
+    '}'
+;
+
+// Keyword leg: lexical relevance over text fields.
+KeywordLeg:
+    {KeywordLeg} 'keyword' '{'
+        (input=QueryInput)?
+        ('text-query' textQueryType=ETextQueryType)?
+        ('fields' '[' searchFields+=SearchFieldRef (',' searchFields+=SearchFieldRef)* ']')?
+        ('operator' matchOperator=EMatchOperator)?
+        ('min-should-match' minShouldMatch=INT)?
+        ('weight' weight=SignedNumber)?
+        ('limit' legLimit=INT)?
+        (filter=FilterBlock)?
+        (extensions+=VendorExtension)*
+    '}'
+;
+
+// Recommendation: search from positive and negative examples (ids or vectors).
+RecommendSearch:
+    Labeled 'recommend' 'in' collection=[VectorCollection|ValidID]
+    'top' topK=INT
+    ('positive' '[' positives+=Literal (',' positives+=Literal)* ']')?
+    ('negative' '[' negatives+=Literal (',' negatives+=Literal)* ']')?
+    ('lookup-in' lookupCollection=[VectorCollection|ValidID])?
+    ('using' vectorField=[VectorField|ValidID])?
+    Paging
+    ReadScope
+    ScoreSpec
+    Reordering
+    ResultShape
+    ('params' params=SearchParams)?
+    QueryTail
+;
+
+// Retrieval of records by primary key.
+GetById:
+    Labeled 'get' 'from' collection=[VectorCollection|ValidID]
+    'ids' '[' ids+=Literal (',' ids+=Literal)* ']'
+    (withVectors?='with-vectors')?
+    ReadScope
+    output=OutputSpec
+    (extensions+=VendorExtension)*
+;
+
+// Retrieval-augmented generation over search results.
+GenerativeSearch:
+    Labeled 'generate' 'in' collection=[VectorCollection|ValidID]
+    'top' topK=INT
+    (input=QueryInput)?
+    ('using' vectorField=[VectorField|ValidID])?
+    ('model' generativeModel=[GenerativeModel|ValidID])?
+    ('single-prompt' singlePrompt=Literal)?
+    ('grouped-task' groupedTask=Literal)?
+    ('grouped-fields' '[' groupedFields+=[Field|ValidID] (',' groupedFields+=[Field|ValidID])* ']')?
+    ReadScope
+    Reordering
+    QueryTail
+;
+
+// Pairwise similarity matrix over a sample of records.
+DistanceMatrix:
+    Labeled 'distance-matrix' 'in' collection=[VectorCollection|ValidID]
+    ('using' vectorField=[VectorField|ValidID])?
+    ('sample' sampleSize=INT)?
+    ('limit' matrixLimit=INT)?
+    ReadScope
+    (filter=FilterBlock)?
+    (extensions+=VendorExtension)*
+;
+
+// Record count, exact or approximate.
+Count:
+    Labeled 'count' 'in' collection=[VectorCollection|ValidID]
+    (exact?='exact')?
+    ReadScope
+    (filter=FilterBlock)?
+    (extensions+=VendorExtension)*
+;
+
+// Full iteration over records with stable cursors.
+Scroll:
+    Labeled 'scroll' 'in' collection=[VectorCollection|ValidID]
+    ('limit' scrollLimit=INT)?
+    Paging
+    ('slice' sliceIndex=INT 'of' sliceTotal=INT)?
+    ('sort' '{' (sortClauses+=SortClause)+ '}')?
+    (withVectors?='with-vectors')?
+    ReadScope
+    QueryTail
+;
+
+// Random sample of records.
+Sample:
+    Labeled 'sample' 'in' collection=[VectorCollection|ValidID]
+    'size' sampleSize=INT
+    ('method' method=ESampleMethod)?
+    ReadScope
+    QueryTail
+;
+
+// Several independent queries sent as one request.
+BatchQuery:
+    {BatchQuery} Labeled 'batch-query'
+    '{' (queries+=QueryMethod)+ '}'
+;
+
+
+// ============================================================================
+// 6. QUERY HELPERS
+// ============================================================================
+
+// Query input: the vector, text, id or media the query is about.
+QueryInput:
+    'query' kind=EQueryInputMode value=Literal
+    ('lookup-in' lookupCollection=[VectorCollection|ValidID])?  // query by stored vector: value is an id resolved in this collection
+;
+
+// Projection: the fields returned per hit.
+OutputSpec:
+    'output' (allFields?='*' | '[' fields+=[Field|ValidID] (',' fields+=[Field|ValidID])* ']')
+;
+
+// Score bounds on the canonical similarity, or on the native form when 'score native' is set (D3).
+ScoreBounds:
+    {ScoreBounds}
+    ('min' min=SignedNumber)?
+    ('max' max=SignedNumber)?
+;
+
+// Element scope: search inside arrays of structs or arrays of embeddings.
+ElementScope:
+    field=[Field|ValidID]
+    ('collapse' collapse=EElementCollapse ('collapse-k' collapseK=INT)?)?
+    ('(' condition=OrCondition ')')?
+;
+
+// Diversification by maximal marginal relevance.
+MmrConfig:
+    'lambda' diversityLambda=SignedNumber
+    ('candidates' candidates=INT)?
+    ('using' vectorField=[VectorField|ValidID])?
+;
+
+// Multi-stage retrieval: a candidate stage feeding the enclosing query.
+Prefetch:
+    'stage' (name=ValidID)?
+    (input=QueryInput)?
+    ('using' vectorField=[VectorField|ValidID])?
+    ('weight' weight=SignedNumber)?
+    'limit' stageLimit=INT
+    ('metric' metric=EMetric)?
+    ('params' params=SearchParams)?
+    ('prefetch' '{' (nested+=Prefetch)+ '}')?
+    (filter=FilterBlock)?
+;
+
+// Search-time tuning knobs, named by domain concept rather than vendor parameter.
+SearchParams:
+    {SearchParams} '{'
+        ('target-recall' targetRecall=SignedNumber)?  // D15: declared recall floor, 0 < q < 1; recall 1 is written 'exact'
+        ('candidates' candidatePool=INT)?  // graph or list candidate pool explored per query
+        ('probes' probes=INT)?  // partitions or lists probed per query
+        ('scan-budget' scanBudget=INT)?  // upper bound on scanned entries during filtered search
+        ('timeout' timeoutMillis=INT)?
+        ('oversampling' oversampling=SignedNumber)?
+        (rescore?='rescore')?
+        ('filter-strategy' filterStrategy=EFilterStrategy)?
+        (exhaustive?='exhaustive')?
+        (extensions+=VendorExtension)*
+    '}'
+;
+
+// Weighted text field of a keyword search.
+SearchFieldRef:
+    field=[Field|ValidID] ('boost' boost=SignedNumber)?
+;
+
+// Sort key: a field path or the relevance score.
+SortClause:
+    'sort-by' (byRelevance?='relevance' | field=FieldPath) direction=ESortDirection
+;
+
+// Aggregation over the matching records.
+AggregationClause:
+    'agg' kind=EAggregationType 'on' field=FieldPath
+    ('as' alias=ValidID)?
+    ('interval' interval=STRING)?
+    ('size' bucketCount=INT)?
+;
+
+// Generic scoring (D8): a set of boost functions and their combination.
+BoostBlock:
+    '{'
+        (functions+=BoostFunction)+
+        ('combine' combine=EBoostCombine)?  // how boost functions combine with each other
+        ('apply' apply=EBoostCombine)?  // how the combined boost merges with the relevance score
+    '}'
+;
+
+// Boost function: field value, decay or condition boost with a weight (D8).
+BoostFunction:
+    'boost-fn' (name=ValidID)? 'kind' kind=EBoostKind
+    ('field' target=FieldPath)?
+    ('weight' weight=SignedNumber)?
+    ('decay' shape=EDecayShape 'origin' origin=Literal 'scale' scale=Literal
+        ('offset' decayOffset=Literal)? ('rate' decayRate=SignedNumber)?)?
+    ('when' condition=OrCondition)?
+;
+
+
+// ============================================================================
+// 7. FILTER EXPRESSIONS
+// ============================================================================
+
+// Filter: a boolean condition over record fields.
+FilterBlock:
+    'where' condition=OrCondition
+;
+
+// Disjunction (lowest precedence).
+OrCondition returns Condition:
+    AndCondition ({OrCondition.left=current} 'or' right=AndCondition)*
+;
+
+// Conjunction.
+AndCondition returns Condition:
+    NotCondition ({AndCondition.left=current} 'and' right=NotCondition)*
+;
+
+// Negation (highest precedence).
+NotCondition returns Condition:
+    {NotCondition} 'not' operand=PrimaryCondition
+    | PrimaryCondition
+;
+
+// Atomic or parenthesized condition.
+PrimaryCondition returns Condition:
+    '(' OrCondition ')'
+    | Predicate
+    | GeoPredicate
+    | ElementPredicate
+;
+
+// Field predicate: comparison, unary test, text match, range or array length.
+Predicate:
+    target=FieldPath
+    ( op=EComparisonOp value=Literal
+    | unaryOp=EUnaryOp
+    | textOp=ETextOp text=Literal
+    | 'between' lower=Literal 'to' upper=Literal
+    | 'length' lengthOp=EComparisonOp length=INT
+    )
+;
+
+// Field path: a field resolved by simple name in the target collection (D6), with
+// nested sub-fields, or a raw path for undeclared (dynamic) fields.
+FieldPath:
+    field=[Field|ValidID] ('.' subFields+=[Field|ValidID])*
+    | 'path' rawPath=STRING
+;
+
+// Geospatial predicate.
+GeoPredicate:
+    'geo' target=FieldPath
+    ( 'radius' center=GeoPoint distance=SignedNumber unit=EGeoUnit
+    | 'box' topLeft=GeoPoint 'to' bottomRight=GeoPoint
+    | 'polygon' '[' vertices+=GeoPoint (',' vertices+=GeoPoint)* ']'
+    | 'relation' relation=EGeoRelation 'wkt' wkt=STRING
+    )
+;
+
+// Geographic point (latitude, longitude).
+GeoPoint:
+    '(' latitude=SignedNumber ',' longitude=SignedNumber ')'
+;
+
+// Element predicate: some element of an array of structs satisfies a condition.
+ElementPredicate:
+    'any' target=FieldPath '(' condition=OrCondition ')'
+;
+
+
+// ============================================================================
+// 8. LITERALS
+// ============================================================================
+
+// Value: scalar, list, sparse vector, parameter or environment reference.
+Literal:
+    StringLit | NumberLit | BoolLit | NullLit | ListLit | SparseLit | ParamRef | EnvRef
+;
+
+// String value.
+StringLit:
+    value=STRING
+;
+
+// Numeric value.
+NumberLit:
+    value=SignedNumber
+;
+
+// Boolean value.
+BoolLit:
+    {BoolLit} (value?='true' | 'false')
+;
+
+// Absent value.
+NullLit:
+    {NullLit} 'null'
+;
+
+// List value: dense vector, id list, IN list, or matrix for multi-vector queries.
+ListLit:
+    {ListLit} '[' (items+=Literal (',' items+=Literal)*)? ']'
+;
+
+// Sparse vector value: index-weight pairs.
+SparseLit:
+    {SparseLit} 'sparse' '{' (entries+=SparseEntry (',' entries+=SparseEntry)*)? '}'
+;
+
+// One non-zero dimension of a sparse vector.
+SparseEntry:
+    index=INT ':' weight=SignedNumber
+;
+
+// Reference to a program parameter.
+ParamRef:
+    '$' param=[Parameter|ValidID]
+;
+
+// Reference to an environment variable (secrets stay out of program text).
+EnvRef:
+    'env' '(' variable=STRING ')'
+;
+
+// Secret value: literal string or environment reference.
+SecretRef returns Literal:
+    StringLit | EnvRef
+;
+
+
+// ============================================================================
+// 9. STRUCTURAL CONCEPTS
+// ============================================================================
+
+// Structural concept: anything a DDL statement can create, alter or drop.
+Concept:
+    VectorDatabase | Database | Cluster | VectorCollection | Partition
+    | Tenant | Alias | Namespace | Function | Connection | Field | Index | Limit
+    | EmbeddingModel | GenerativeModel | Reranker | Analyzer | AnalyzerFilter | FileResource
+    | Quantization | ReplicationConfig | ShardConfig | StorageConfig
+    | AuthConfig | RoleBinding | MetricsConfig | BackupSchedule
+;
+
+// Connection: endpoint and credentials of a deployment.
+Connection:
+    'connection' name=ValidID
+    ( 'host' host=STRING ('port' port=INT)?
+    | 'uri' uri=STRING
+    | 'path' localPath=STRING
+    | inMemory?='in-memory'
+    )?
+    ('grpc-port' grpcPort=INT)?
+    ('api-key' apiKey=SecretRef)?
+    ('username' username=STRING)?
+    ('password' password=SecretRef)?
+    ('token' token=SecretRef)?
+    (tls?='tls')?
+    ('cloud' cloud=STRING)?
+    ('region' region=STRING)?
+    ('project' project=STRING)?
+    ('database' databaseName=STRING)?
+    ('deployment' deployment=EDeploymentMode)?
+    ('timeout' timeoutMillis=INT)?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Deployment: one vector database installation or service account (D12).
+VectorDatabase:
+    'database' name=ValidID '{'
+        connection=Connection
+        (clusters+=Cluster)*
+        (databases+=Database)*
+        (auth=AuthConfig)?
+        (metrics=MetricsConfig)?
+    '}'
+    ('description' description=STRING)?
+;
+
+// Logical database: a named container of collections inside a deployment.
+Database:
+    'logical-db' name=ValidID
+    '{' (collections+=VectorCollection)* '}'
+    ('description' description=STRING)?
+;
+
+// Cluster: a group of nodes serving collections, with replication and sharding.
+Cluster:
+    'cluster' name=ValidID
+    ('{'
+        (extensions+=VendorExtension)*  // container extensions precede members
+        (collections+=VectorCollection)*
+        (limits+=ClusterLimit)*
+        (replication=ReplicationConfig)?
+        (sharding=ShardConfig)?
+    '}')?
+    ('description' description=STRING)?
+;
+
+// Collection: a set of records sharing a schema, one or more vector fields (D5),
+// payload fields, indexes and logical slices.
+VectorCollection:
+    'collection' name=ValidID
+    ('in' cluster=[Cluster|ValidID])?
+    (dynamic?='dynamic')?
+    (autoId?='auto-id')?
+    ('id-type' idType=EIdType)?
+    ('ttl' ttlSeconds=INT)?
+    ('ttl-field' ttlField=[Field|ValidID])?
+    ('consistency' consistency=EConsistencyLevel)?
+    ('embedding-model' embeddingModel=[EmbeddingModel|ValidID])?
+    ('generative-model' generativeModel=[GenerativeModel|ValidID])?
+    ('tags' '[' tags+=STRING (',' tags+=STRING)* ']')?
+    (deletionProtection?='deletion-protection')?
+    (external=ExternalSource)?
+    '{'
+        'primary' primaryKey=[Field|ValidID]
+        ('default-partition' defaultPartition=[Partition|ValidID])?
+        (extensions+=VendorExtension)*  // container extensions precede members (no dangling-extension ambiguity)
+        (analyzers+=Analyzer)*  // declared before fields, which reference them
+        (fields+=Field)*
+        (indexes+=Index)*
+        (partitions+=Partition)*
+        (functions+=Function)*
+        (namespaces+=Namespace)*
+        (tenants+=Tenant)*
+        (aliases+=Alias)*
+        (limits+=CollectionLimit)*
+        (generativeModels+=GenerativeModel)*
+        (storage=StorageConfig)?
+        ('stored-source' '[' storedSourceFields+=[Field|ValidID] (',' storedSourceFields+=[Field|ValidID])* ']')?
+        ('cross-ref' '[' crossReferences+=[VectorCollection|ValidID] (',' crossReferences+=[VectorCollection|ValidID])* ']')?
+    '}'
+    ('description' description=STRING)?
+;
+
+// External source: a collection served from an external lake table.
+ExternalSource:
+    'derived-from' location=STRING
+    ('format' format=EExternalFormat)?
+;
+
+// Partition: a physical slice of one collection.
+Partition:
+    'partition' name=ValidID
+    ('strategy' strategy=EPartitionStrategy)?
+    ('key' key=[Field|ValidID])?
+    (isDefault?='default')?
+    ('{' (subPartitions+=Partition)* '}')?
+    ('description' description=STRING)?
+;
+
+// Tenant: an isolation unit with its own data inside one collection.
+Tenant:
+    'tenant' name=ValidID
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Alias: an alternative, switchable name of a collection.
+Alias:
+    'alias' name=ValidID 'for' collection=[VectorCollection|ValidID]
+    ('description' description=STRING)?
+;
+
+// Namespace: a schema-less logical slice of records.
+Namespace:
+    'namespace' name=ValidID 'key' key=STRING
+    ('description' description=STRING)?
+;
+
+// Backup schedule: recurring snapshots with retention.
+BackupSchedule:
+    'backup-schedule' name=ValidID
+    'for' collection=[VectorCollection|ValidID]
+    'interval' interval=STRING
+    ('retention' retentionCount=INT)?
+    ('location' location=STRING)?
+    ('description' description=STRING)?
+;
+
+// Server-side function: derives one field from others (BM25, embedding, sparse encoding, rerank).
+Function:
+    'function' name=ValidID
+    'type' type=EFunctionType
+    'input' '[' inputs+=[Field|ValidID] (',' inputs+=[Field|ValidID])* ']'
+    'output' '[' outputs+=[Field|ValidID] (',' outputs+=[Field|ValidID])* ']'
+    ('model' model=[EmbeddingModel|ValidID])?
+    ('analyzer' analyzer=[Analyzer|ValidID])?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+
+// ============================================================================
+// 10. FIELDS
+// ============================================================================
+
+// Field: a typed attribute of a record.
+Field:
+    VectorField | PayloadField
+;
+
+// Vector field: a named vector space of a collection (D5). The name is optional for a
+// single-vector collection; the qualified name provider then supplies the default name 'vector'.
+VectorField:
+    'vector-field' (name=ValidID)?
+    'type' type=EVectorDType
+    ('dim' dimension=INT)?  // optional for sparse vectors
+    ('metric' metric=EMetric)?
+    (normalized?='normalized')?  // vectors are unit length; generators may select dot-product kernels
+    (multiVector?='multivector' ('comparator' comparator=EMultiVectorComparator)?)?
+    ('modifier' modifier=ESparseModifier)?
+    ('model' model=[EmbeddingModel|ValidID]
+        ('from' '[' sourceFields+=[Field|ValidID] (',' sourceFields+=[Field|ValidID])* ']')?)?
+    (nullable?='nullable')?
+    (onDisk?='on-disk')?
+    ('description' description=STRING)?
+    (limits+=FieldLimit)*  // after the field description, which a limit could otherwise claim
+    ('{'
+        (index=VectorIndex)?
+        (extensions+=VendorExtension)*
+    '}')?
+;
+
+// Payload field: a scalar, text, temporal, spatial or structured attribute.
+PayloadField:
+    'field' name=ValidID
+    'type' type=EScalarDType
+    ('max-length' maxLength=INT)?
+    ('element-type' elementType=EScalarDType)?
+    (nullable?='nullable')?
+    (nested?='nested')?
+    ('default' defaultValue=Literal)?
+    (partitionKey?='partition-key')?
+    (documentBody?='document-body')?
+    (fullText?='full-text')?
+    ('analyzer' analyzer=[Analyzer|ValidID])?
+    ('description' description=STRING)?
+    (limits+=FieldLimit)*  // after the field description, which a limit could otherwise claim
+    ('{'
+        (subFields+=Field)*
+        (extensions+=VendorExtension)*
+    '}')?
+;
+
+
+// ============================================================================
+// 11. INDEXES
+// ============================================================================
+
+// Index: an access structure over a vector or payload field.
+Index:
+    VectorIndex | PayloadIndex
+;
+
+// Vector index (D4): family, accelerator, structural parameters, quantization and
+// vendor parameters in an extension block. 'on' is omitted when the index is declared
+// inside its vector field.
+VectorIndex:
+    'vector-index' name=ValidID
+    ('on' field=[VectorField|ValidID])?
+    'family' family=EIndexFamily
+    ('metric' metric=EMetric)?
+    ('accelerator' accelerator=EAccelerator)?
+    ('max-degree' maxDegree=INT)?  // graph out-degree
+    ('build-candidates' buildCandidates=INT)?  // candidate pool during graph construction
+    ('search-candidates' searchCandidates=INT)?  // default candidate pool at query time
+    ('centroids' centroids=INT)?  // number of partitions or lists for IVF
+    (onDisk?='on-disk')?
+    (online?='online')?  // build without blocking writes
+    ('{'
+        (extensions+=VendorExtension)*  // index extensions precede the quantization member
+        (quantization=Quantization)?
+    '}')?
+    ('description' description=STRING)?
+;
+
+// Payload index (D10): a generic secondary index over a payload field or JSON path.
+PayloadIndex:
+    'payload-index' name=ValidID
+    'on' target=FieldPath
+    'kind' kind=EPayloadIndexKind
+    ('structure' structure=EPayloadIndexStructure)?
+    ('cast' castType=EScalarDType)?  // value type for JSON paths
+    ('analyzer' analyzer=[Analyzer|ValidID])?
+    (onDisk?='on-disk')?
+    (lowercase?='lowercase')?
+    (prefixMatch?='prefix-match')?
+    ('min-token-len' minTokenLength=INT)?
+    ('max-token-len' maxTokenLength=INT)?
+    ('{' (extensions+=VendorExtension)* '}')?
+    ('description' description=STRING)?
+;
+
+
+// ============================================================================
+// 12. LIMITS
+// ============================================================================
+
+// Declared capacity limit.
+Limit:
+    ClusterLimit | CollectionLimit | FieldLimit
+;
+
+// Cluster capacity limit.
+ClusterLimit:
+    'cluster-limit' name=ValidID type=EClusterLimit '=' value=INT
+    ('description' description=STRING)?
+;
+
+// Collection capacity limit.
+CollectionLimit:
+    'collection-limit' name=ValidID type=ECollectionLimit '=' value=INT
+    ('description' description=STRING)?
+;
+
+// Field capacity limit.
+FieldLimit:
+    'field-limit' name=ValidID type=EFieldLimit '=' value=INT
+    ('description' description=STRING)?
+;
+
+
+// ============================================================================
+// 13. MODELS, TEXT ANALYSIS, QUANTIZATION
+// ============================================================================
+
+// Embedding model: the model producing vectors, at the engine or at the client.
+EmbeddingModel:
+    'embedding-model' name=ValidID
+    ('provider' provider=STRING)?  // validated against the provider catalogue (D13)
+    ('model-id' modelId=STRING)?
+    ('dim' dimension=INT)?
+    (builtIn?='built-in')?
+    ('version' version=STRING)?
+    (deprecated?='deprecated')?
+    ('replaced-by' replacedBy=[EmbeddingModel|ValidID])?
+    ('path' localPath=STRING)?
+    ('chunk-strategy' chunkStrategy=EChunkStrategy)?
+    ('chunk-size' chunkSize=INT)?
+    ('chunk-overlap' chunkOverlap=INT)?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Generative model: the language model used for retrieval-augmented generation.
+GenerativeModel:
+    'generative-model' name=ValidID
+    ('provider' provider=STRING)?
+    ('model-id' modelId=STRING)?
+    ('temperature' temperature=SignedNumber)?
+    ('max-tokens' maxTokens=INT)?
+    ('top-p' topP=SignedNumber)?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Reranker: a cross-encoder or service that reorders candidate hits.
+Reranker:
+    'reranker' name=ValidID
+    ('provider' provider=STRING)?
+    ('model' modelId=STRING)?
+    ('top-n' topN=INT)?
+    ('field' field=[Field|ValidID])?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Text analyzer: tokenization and token filters for lexical search.
+Analyzer:
+    'analyzer' name=ValidID
+    'tokenizer' tokenizer=ETokenizer
+    ('language' language=STRING)?
+    ('stopwords' stopwords=STRING)?
+    ('bm25-k1' bm25K1=SignedNumber)?
+    ('bm25-b' bm25B=SignedNumber)?
+    ('resources' '[' resources+=[FileResource|ValidID] (',' resources+=[FileResource|ValidID])* ']')?
+    ('{' (filters+=AnalyzerFilter)* '}')?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Token filter of an analyzer.
+AnalyzerFilter:
+    'filter' name=ValidID 'type' type=EAnalyzerFilterType
+    ('description' description=STRING)?
+;
+
+// File resource: dictionary, synonym list, stopword list or model file.
+FileResource:
+    'file-resource' name=ValidID
+    'type' type=EFileResourceType
+    ('path' path=STRING)?
+    ('description' description=STRING)?
+;
+
+// Vector quantization (D4): compression of stored vectors.
+Quantization:
+    'quantization' (name=ValidID)?
+    'type' type=EQuantizationKind
+    ('bits' bits=SignedNumber)?  // bits per dimension (scalar 8/4/2/1; binary 1, 1.5, 2)
+    ('subvectors' subvectors=INT)?  // product quantization sub-vector count
+    (rescore?='rescore')?
+    ('oversampling' oversampling=SignedNumber)?
+    (keepOriginals?='keep-originals')?
+    ('truncate-dim' truncateDimension=INT)?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+
+// ============================================================================
+// 14. INFRASTRUCTURE
+// ============================================================================
+
+// Replication: number of copies of each shard.
+ReplicationConfig:
+    'replication' (name=ValidID)?
+    'factor' factor=INT
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Sharding: distribution of a collection over nodes.
+ShardConfig:
+    'sharding' (name=ValidID)?
+    'shards' shards=INT
+    ('strategy' strategy=EPartitionStrategy)?
+    ('key' key=[Field|ValidID])?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+// Storage: medium and location of collection data.
+StorageConfig:
+    'storage' (name=ValidID)?
+    'type' type=EStorageType
+    ('location' location=STRING)?
+    (mmap?='mmap')?
+    (tiered?='tiered')?
+    ('description' description=STRING)?
+    (extensions+=VendorExtension)*
+;
+
+
+// ============================================================================
+// 15. SECURITY AND OBSERVABILITY
+// ============================================================================
+
+// Authentication and encryption settings of a deployment.
+AuthConfig:
+    'auth' name=ValidID
+    'type' type=EAuthType
+    ('token' token=SecretRef)?
+    ('certificate' certificatePath=STRING)?
+    ('cmek' cmekKeyId=STRING)?
+    (auditLog?='audit-log')?
+    (fieldEncryption?='field-encryption')?
+    ('{' (roles+=RoleBinding)* '}')?
+    ('description' description=STRING)?
+;
+
+// Role binding: privileges granted on a collection.
+RoleBinding:
+    'role' name=ValidID roleName=STRING
+    ('privileges' '[' privileges+=STRING (',' privileges+=STRING)* ']')?
+    ('collection' collection=[VectorCollection|ValidID])?
+    ('description' description=STRING)?
+;
+
+// Observability: metric export and client-side instrumentation.
+MetricsConfig:
+    'metrics' name=ValidID
+    (enabled?='enabled')?
+    ('endpoint' endpoint=STRING)?
+    (latency?='latency')?
+    (recall?='recall')?
+    ('description' description=STRING)?
+;
+
+
+// ============================================================================
+// 16. GENERATOR METADATA
+// ============================================================================
+
+// Generator hint: code-shape preference for generated client code.
+GeneratorHint:
+    'hint' type=EGeneratorHintType '=' value=STRING
+;
+
+// Provenance: record of the generator run that produced or last touched the program.
+ProvenanceMetadata:
+    'provenance'
+    'generator' generatedBy=STRING
+    'at' generatedAt=STRING
+    'template' templateVersion=STRING
+    ('model-hash' sourceModelHash=STRING)?
+;
+
+
+// ============================================================================
+// 17. EXTENSION MECHANISM (D2, D8, D10, D13, D14)
+// ============================================================================
+
+// Vendor extension block: parameters and constructs of one vendor, ignored by the
+// generators of every other target. Legal hosts are the constructs that declare an
+// 'extensions' feature; per-vendor legality of keys and items at each host is decided
+// by the vendor capability manifest, not by syntax. (EClass named VendorExtension to avoid
+// a clash with Xtend's @Extension annotation in generator templates.)
+VendorExtension:
+    'extension' vendor=VendorId '{' (items+=ExtensionItem)* '}'
+;
+
+// Extension content: an open key-value parameter or a structured vendor construct.
+ExtensionItem:
+    ExtParam
+    | PhasedRankProfile | RankProfileUse | ModelDeployment  // vespa
+    | SegmentOptimizers  // qdrant
+    | ContextSearch | RelevanceFeedback  // qdrant
+    | InvertedIndexSettings  // weaviate
+;
+
+// Open vendor parameter (D2): key and value validated against the capability manifest.
+// A key that equals a vecDSL keyword (memory, strategy, timeout, ...) is written quoted.
+ExtParam:
+    (key=ExtKey | quotedKey=STRING) '=' value=Literal
+;
+
+// --- 17.1 vespa (Vespa 8.781.11) -------------------------------------------
+
+// Phased ranking profile (D8): named, inheritable, multi-phase ranking expressions.
+PhasedRankProfile:
+    'rank-profile' name=ValidID
+    ('inherits' parent=[PhasedRankProfile|ValidID])?
+    ('inputs' '{' (inputs+=TensorInput)* '}')?
+    ('functions' '{' (functions+=RankFunction)* '}')?
+    ('first-phase' firstPhase=STRING)?
+    ('second-phase' secondPhase=STRING)?
+    ('global-phase' globalPhase=STRING)?
+    ('rerank-count' rerankCount=INT)?
+    ('model' model=[ModelDeployment|ValidID])?
+    ('params' '{' (params+=ExtParam)* '}')?  // keep_rank_count, rank_score_drop_limit, num_threads_per_search, match_features, summary_features
+    ('description' description=STRING)?
+;
+
+// Query-time selection of a phased ranking profile.
+RankProfileUse:
+    'rank' profile=[PhasedRankProfile|ValidID]
+;
+
+// Typed query input of a ranking profile.
+TensorInput:
+    'input' name=ValidID tensorType=STRING
+;
+
+// Named ranking function of a ranking profile.
+RankFunction:
+    'rank-function' name=ValidID 'expression' expression=STRING
+;
+
+// Machine-learned model deployed for ranking (ONNX and tree ensembles).
+ModelDeployment:
+    'ml-model' name=ValidID
+    'format' format=EModelFormat
+    ('path' path=STRING)?
+    ('inputs' '{' (inputs+=ModelIOBinding)* '}')?
+    ('outputs' '{' (outputs+=ModelIOBinding)* '}')?
+    ('description' description=STRING)?
+;
+
+// Binding of a model tensor to a document or query source.
+ModelIOBinding:
+    'binding' tensorName=STRING 'source' source=STRING
+;
+
+// --- 17.2 qdrant (Qdrant 1.20.0) ---------------------------------------------
+
+// Segment optimizer settings (D10).
+SegmentOptimizers:
+    {SegmentOptimizers} 'optimizers'
+    ('indexing-threshold' indexingThreshold=INT)?
+    ('memmap-threshold' memmapThreshold=INT)?
+    ('default-segment-number' defaultSegmentNumber=INT)?
+    ('max-segment-size' maxSegmentSize=INT)?
+    ('flush-interval' flushIntervalSec=INT)?
+;
+
+// Discovery search: constrained search driven by positive-negative context pairs.
+ContextSearch:
+    {ContextSearch} 'discover'
+    ('target' target=Literal)?
+    '{' (pairs+=ContextPair)+ '}'
+;
+
+// Positive-negative example pair of a discovery search.
+ContextPair:
+    'context' positive=Literal 'vs' negative=Literal
+;
+
+// Relevance feedback search (Qdrant 1.17+): scored examples steer the query.
+RelevanceFeedback:
+    {RelevanceFeedback} 'feedback'
+    ('strategy' strategy=STRING)?
+    '{' (examples+=FeedbackExample)+ '}'
+;
+
+// Scored example of a relevance feedback search.
+FeedbackExample:
+    'example' example=Literal 'score' score=SignedNumber
+;
+
+// --- 17.3 weaviate (Weaviate 1.40; preview features of 1.38 are PROVISIONAL, D14) ---
+
+// Inverted index settings of a collection (D10).
+InvertedIndexSettings:
+    {InvertedIndexSettings} 'inverted-index'
+    (indexTimestamps?='index-timestamps')?
+    (indexNullState?='index-null-state')?
+    (indexPropertyLength?='index-property-length')?
+    ('bm25-k1' bm25K1=SignedNumber)?
+    ('bm25-b' bm25B=SignedNumber)?
+    ('stopwords' stopwords=STRING)?
+;
+
+// --- 17.4 parameter-only vendors --------------------------------------------
+// milvus, pinecone, chroma, pgvector, redis, mongodb, oracledb, elasticsearch,
+// opensearch and lancedb contribute ExtParam keys only. Keys and value types are listed
+// in the vendor capability manifests (see the extension mechanism specification).
+
+
+// ============================================================================
+// 18. DATATYPE RULES
+// ============================================================================
+
+// Vendor identifier (D13): the only place vendor names occur in the grammar. Returns a
+// plain string, so the metamodel holds no vendor enumeration. The P2 Oracle member is
+// identified by product line; the release stamp (AI Database 26ai, RU 23.26.x) lives in
+// its manifest.
+VendorId returns ecore::EString:
+    'milvus' | 'pinecone' | 'weaviate' | 'qdrant' | 'chroma'
+    | 'pgvector' | 'redis' | 'mongodb' | 'oracledb'
+    | 'elasticsearch' | 'opensearch' | 'vespa'
+    | 'lancedb'
+;
+
+// Identifier with soft keywords (D7): common record attribute names remain usable as
+// names although they are keywords elsewhere. '^' escapes any other keyword.
+ValidID returns ecore::EString:
+    ID
+    | 'title' | 'score' | 'version' | 'name' | 'type' | 'text' | 'id' | 'status'  // D7
+    | 'date' | 'datetime' | 'json' | 'image' | 'audio' | 'video'  // v7 proposal, retained
+    | 'key' | 'source' | 'region' | 'tags' | 'model' | 'format' | 'size'
+;
+
+// Extension parameter key: snake_case segments separated by dots.
+ExtKey returns ecore::EString:
+    ValidID ('.' ValidID)*
+;
+
+// Signed number: integers and decimals with an optional minus sign.
+SignedNumber returns ecore::EDouble:
+    '-'? (INT | DECIMAL)
+;
+
+
+// ============================================================================
+// 19. ENUMERATIONS (vendor-neutral, D13)
+// ============================================================================
+
+// Host language of generated client code.
+enum EHostLanguage:
+    PYTHON='python' | TYPESCRIPT='typescript' | JAVA='java' |
+    GO='go' | RUST='rust' | DOTNET='dotnet'
+;
+
+// Type of a program parameter.
+enum EParamType:
+    VECTOR='vector' | SPARSE_VECTOR='sparse_vector' | MULTI_VECTOR='multi_vector' |
+    TEXT='text' | INT='int' | FLOAT='float' | BOOL='bool' |
+    STRING_LIST='string_list' | RECORDS='records' | JSON='json'
+;
+
+// Similarity metric (canonical set; aliases removed, see REMOVED IN V7).
+enum EMetric:
+    COSINE='cosine' | EUCLIDEAN='euclidean' | DOT='dot' |
+    MANHATTAN='manhattan' | HAMMING='hamming' | JACCARD='jaccard'
+;
+
+// Aggregation of per-vector similarities in late-interaction (multi-vector) fields.
+enum EMultiVectorComparator:
+    MAX_SIM='max_sim'
+;
+
+// Score form of query results (D3).
+enum EScoreForm:
+    SIMILARITY='similarity' | NATIVE='native'
+;
+
+// Scalar and structured payload types.
+enum EScalarDType:
+    INT='int' | BIGINT='bigint' | INT8='int8' | FLOAT='float' | DOUBLE='double' |
+    BOOL='bool' | VARCHAR='varchar' | TEXT='text' |
+    DATE='date' | DATETIME='datetime' | TIMESTAMPTZ='timestamptz' |
+    UUID='uuid' | BYTES='bytes' | JSON='json' | ARRAY='array' | MAP='map' | STRUCT='struct' |
+    GEO_POINT='geo_point' | GEOMETRY='geometry' |
+    IMAGE='image' | AUDIO='audio' | VIDEO='video'
+;
+
+// Element types of vector fields.
+enum EVectorDType:
+    FLOAT_VECTOR='float_vector' | FLOAT16_VECTOR='float16_vector' |
+    BFLOAT16_VECTOR='bfloat16_vector' | FLOAT64_VECTOR='float64_vector' |
+    INT8_VECTOR='int8_vector' | UINT8_VECTOR='uint8_vector' |
+    BINARY_VECTOR='binary_vector' | SPARSE_FLOAT_VECTOR='sparse_float_vector'
+;
+
+// Vector index family (D4).
+enum EIndexFamily:
+    AUTO='auto' | FLAT='flat' | HNSW='hnsw' | IVF='ivf' |
+    VAMANA='vamana' | SPARSE_INVERTED='sparse_inverted'
+;
+
+// Hardware used to build or serve an index (D4).
+enum EAccelerator:
+    CPU='cpu' | GPU='gpu'
+;
+
+// Quantization method (D4).
+enum EQuantizationKind:
+    NONE='none' | SCALAR='scalar' | BINARY='binary' | PRODUCT='product'
+;
+
+// Value kind covered by a payload index (D10).
+enum EPayloadIndexKind:
+    KEYWORD='keyword' | FULL_TEXT='full_text' | INTEGER='integer' | FLOAT='float' |
+    DATETIME='datetime' | BOOL='bool' | UUID='uuid' | GEO='geo' | JSON='json'
+;
+
+// Data structure of a payload index (D10).
+enum EPayloadIndexStructure:
+    AUTO='auto' | INVERTED='inverted' | BITMAP='bitmap' | BTREE='btree'
+;
+
+// Placement of filtering relative to the approximate search.
+enum EFilterStrategy:
+    AUTO='auto' | PRE_FILTER='pre_filter' | POST_FILTER='post_filter' | ITERATIVE='iterative'
+;
+
+// Term weighting applied to sparse vectors.
+enum ESparseModifier:
+    NONE='none' | IDF='idf'
+;
+
+// Lexical query type.
+enum ETextQueryType:
+    MATCH='match' | PHRASE='phrase' | PHRASE_PREFIX='phrase_prefix' |
+    QUERY_STRING='query_string' | TERM='term' | FUZZY='fuzzy' |
+    PREFIX='prefix' | WILDCARD='wildcard' | REGEXP='regexp'
+;
+
+// Term combination in a lexical query.
+enum EMatchOperator:
+    AND='and' | OR='or'
+;
+
+// Kind of query input.
+enum EQueryInputMode:
+    VECTOR='vector' | SPARSE_VECTOR='sparse_vector' | MULTI_VECTOR='multi_vector' |
+    TEXT='text' | ID='id' | IMAGE='image'
+;
+
+// Sampling method.
+enum ESampleMethod:
+    RANDOM='random' | FIRST='first'
+;
+
+// Behaviour of insert on an existing id.
+enum EConflictPolicy:
+    ERROR='error' | IGNORE='ignore' | UPDATE='update' | REPLACE='replace'
+;
+
+// Primary key type.
+enum EIdType:
+    AUTO='auto' | INT='int' | UUID='uuid' | STRING='string'
+;
+
+// Partitioning or sharding strategy.
+enum EPartitionStrategy:
+    HASH='hash' | RANGE='range' | LIST='list' | KEY='key' | TENANT='tenant'
+;
+
+// Portable collection property changeable by 'alter ... set'.
+enum ECollectionProperty:
+    TTL='ttl' | DESCRIPTION='description' | CONSISTENCY='consistency' |
+    DELETION_PROTECTION='deletion-protection' | DYNAMIC='dynamic' | TAGS='tags'
+;
+
+// Comparison operator of a predicate.
+enum EComparisonOp:
+    EQ='eq' | NEQ='neq' | GT='gt' | GTE='gte' | LT='lt' | LTE='lte' |
+    IN='in' | NOT_IN='not_in' | LIKE='like' | PREFIX='prefix' |
+    CONTAINS='contains' | CONTAINS_ANY='contains_any' | CONTAINS_ALL='contains_all'
+;
+
+// Unary test of a predicate.
+enum EUnaryOp:
+    IS_NULL='is_null' | IS_NOT_NULL='is_not_null' |
+    EXISTS='exists' | NOT_EXISTS='not_exists' | IS_EMPTY='is_empty'
+;
+
+// Text match operator of a predicate.
+enum ETextOp:
+    MATCH='match' | MATCH_ALL_TERMS='match_all_terms' | MATCH_ANY_TERM='match_any_term' |
+    PHRASE='phrase' | FUZZY='fuzzy' | WILDCARD='wildcard' | REGEX='regex' |
+    CONTAINS_TEXT='contains_text'
+;
+
+// Kind of object listed by 'list'.
+enum EListKind:
+    COLLECTIONS='collections' | INDEXES='indexes' | ALIASES='aliases' |
+    TENANTS='tenants' | PARTITIONS='partitions' | NAMESPACES='namespaces' |
+    SNAPSHOTS='snapshots' | DATABASES='databases'
+;
+
+// Cluster limit kind.
+enum EClusterLimit:
+    MAX_COLLECTIONS='max_collections'
+;
+
+// Collection limit kind.
+enum ECollectionLimit:
+    MAX_PARTITIONS='max_partitions' | MAX_FIELDS='max_fields' |
+    MAX_SHARDS='max_shards' | MAX_VECTOR_DIM='max_vector_dim'
+;
+
+// Field limit kind.
+enum EFieldLimit:
+    VECTOR_DIM='vector_dim' | ARRAY_LEN='array_len' | MAX_SIZE='max_size'
+;
+
+// Fusion function of a fused search.
+//   rrf             sum over legs of 1 / (k + rank); range (0, legs / (k + 1)]
+//   weighted        sum over legs of weight * leg similarity
+//   relative_score  sum over legs of weight * min-max normalized leg score; range [0, sum of weights]
+enum EFusionType:
+    RRF='rrf' | WEIGHTED='weighted' | RELATIVE_SCORE='relative_score'
+;
+
+// Read consistency level.
+enum EConsistencyLevel:
+    STRONG='strong' | BOUNDED='bounded' | SESSION='session' | EVENTUAL='eventual'
+;
+
+// Write acknowledgement level.
+enum EWriteConsistency:
+    ONE='one' | QUORUM='quorum' | ALL='all'
+;
+
+// Tokenizer of an analyzer.
+enum ETokenizer:
+    STANDARD='standard' | WHITESPACE='whitespace' | KEYWORD='keyword' |
+    NGRAM='ngram' | EDGE_NGRAM='edge_ngram' | ICU='icu' | LANGUAGE='language'
+;
+
+// Token filter kind.
+enum EAnalyzerFilterType:
+    LOWERCASE='lowercase' | STOP='stop' | STEMMER='stemmer' | LENGTH='length' |
+    ASCII_FOLDING='ascii_folding' | SYNONYM='synonym' | DECOMPOUNDER='decompounder' |
+    PHONETIC='phonetic'
+;
+
+// File resource kind.
+enum EFileResourceType:
+    DICTIONARY='dictionary' | SYNONYMS='synonyms' | STOPWORDS='stopwords' | MODEL='model'
+;
+
+// Server-side function kind.
+enum EFunctionType:
+    BM25='bm25' | TEXT_EMBEDDING='text_embedding' | SPARSE_ENCODING='sparse_encoding' |
+    RERANK='rerank' | CUSTOM='custom'
+;
+
+// Scope of a snapshot.
+enum ESnapshotScope:
+    COLLECTION='collection' | FULL='full' | TENANT='tenant' | SHARD='shard'
+;
+
+// Clone mode (D9).
+enum ECloneMode:
+    SHALLOW='shallow' | SNAPSHOT='snapshot'
+;
+
+// Bulk import file format.
+enum EImportFormat:
+    JSON='json' | PARQUET='parquet' | CSV='csv' | NUMPY='numpy' |
+    LANCE='lance' | ICEBERG='iceberg' | VORTEX='vortex'
+;
+
+// Format of an external lake table.
+enum EExternalFormat:
+    PARQUET='parquet' | LANCE='lance' | ICEBERG='iceberg' | VORTEX='vortex'
+;
+
+// Format of a deployed ranking model (extension use).
+enum EModelFormat:
+    ONNX='onnx' | XGBOOST='xgboost' | LIGHTGBM='lightgbm' | TENSORFLOW='tensorflow' | CUSTOM='custom'
+;
+
+// Storage medium.
+enum EStorageType:
+    MEMORY='memory' | DISK='disk' | OBJECT_STORAGE='object_storage' | EMBEDDED='embedded'
+;
+
+// Aggregation function.
+enum EAggregationType:
+    COUNT='count' | SUM='sum' | AVG='avg' | MIN='min' | MAX='max' |
+    DISTINCT_COUNT='distinct_count' | FACET='facet' | TERMS='terms' |
+    HISTOGRAM='histogram' | DATE_HISTOGRAM='date_histogram' | RANGE='range' |
+    STATS='stats' | CARDINALITY='cardinality' | PERCENTILES='percentiles'
+;
+
+// Document chunking strategy of engine-side embedding.
+enum EChunkStrategy:
+    NONE='none' | FIXED_SIZE='fixed_size' | SENTENCE='sentence' |
+    PARAGRAPH='paragraph' | SEMANTIC='semantic' | AST_AWARE='ast_aware'
+;
+
+// Deployment mode of a connection.
+enum EDeploymentMode:
+    CLIENT_SERVER='client_server' | EMBEDDED='embedded' | SERVERLESS='serverless' |
+    BYOC='byoc' | EDGE='edge'
+;
+
+// Sort direction.
+enum ESortDirection:
+    ASC='asc' | DESC='desc'
+;
+
+// Update mode: merge into or replace existing records.
+enum EUpdateMode:
+    MERGE='merge' | REPLACE='replace'
+;
+
+// Transaction isolation level.
+enum EIsolationLevel:
+    READ_UNCOMMITTED='read_uncommitted' | READ_COMMITTED='read_committed' |
+    REPEATABLE_READ='repeatable_read' | SERIALIZABLE='serializable' | SNAPSHOT='snapshot'
+;
+
+// Embedding migration strategy.
+enum EMigrationStrategy:
+    IN_PLACE='in_place' | DUAL_WRITE='dual_write' | SHADOW='shadow' | BLUE_GREEN='blue_green'
+;
+
+// Generator hint kind.
+enum EGeneratorHintType:
+    IMPORT='import' | ASYNC='async' | ERROR_HANDLING='error_handling' |
+    RETRY_POLICY='retry_policy' | POOL_SIZE='pool_size' | TIMEOUT_DEFAULT='timeout_default'
+;
+
+// Authentication method.
+enum EAuthType:
+    NONE='none' | API_KEY='api_key' | USERNAME_PASSWORD='username_password' |
+    TOKEN='token' | MTLS='mtls' | SSO='sso'
+;
+
+// Boost function kind (D8).
+enum EBoostKind:
+    FIELD_VALUE='field_value' | DECAY='decay' | CONDITION='condition'
+;
+
+// Decay curve of a decay boost (D8).
+enum EDecayShape:
+    GAUSS='gauss' | EXP='exp' | LINEAR='linear'
+;
+
+// Combination of boost values (D8).
+enum EBoostCombine:
+    SUM='sum' | MULTIPLY='multiply' | MAX='max' | AVG='avg' | REPLACE='replace'
+;
+
+// Build state of an asynchronous index.
+enum EIndexBuildState:
+    PENDING='pending' | BUILDING='building' | READY='ready' | FAILED='failed'
+;
+
+// Collapse of element scores to one score per record.
+enum EElementCollapse:
+    MAX='max' | SUM='sum' | AVG='avg' | TOP_K='top_k'
+;
+
+// Distance unit of geospatial predicates.
+enum EGeoUnit:
+    METERS='meters' | KILOMETERS='km' | MILES='miles'
+;
+
+// Spatial relation between a field geometry and a WKT geometry.
+enum EGeoRelation:
+    INTERSECTS='intersects' | WITHIN='within' | CONTAINS='contains' | DISJOINT='disjoint'
+;
+
+
+// ============================================================================
+// 20. TERMINALS
+// ============================================================================
+
+// Decimal number literal without sign and exponent; the sign is handled by SignedNumber.
+terminal DECIMAL returns ecore::EDouble:
+    INT '.' INT
+;
+
+
+// ============================================================================
+// CHANGED IN V7.1
+// (additive release: every v7.0 program parses with the same meaning; namespace URI stays /7.
+// Change -> effect; decision number; date.)
+// ============================================================================
+//
+//   SearchParams 'target-recall' targetRecall=SignedNumber -> declared recall floor, first element,
+//     checked by WF-Recall; realizable only where the target exposes a query-time accuracy target   D15  6 Nov 2026
+//   OptNameID for optional names before soft keywords      -> not adopted: v7.0 already parses these
+//     positions unambiguously, and excluding soft keywords from optional names contradicts D7 and
+//     would reject v7.0 programs such as "vector-field type type float_vector"                    D16  6 Nov 2026
+//   Documentation versions re-pinned from one source type per system (header)                       -    6 Nov 2026
+//     v7.0 pins: Milvus 3.0.0, Weaviate 1.40, Qdrant 1.19.2, Chroma 1.5.8, pgvector 0.8.2, Redis 8.4,
+//     Atlas changelog 2026-10-19, Oracle RU 23.26.2, Elasticsearch 9.4.8, OpenSearch 3.7,
+//     Vespa unverified, LanceDB 0.30 / Lance 4.0
+//   Snapshot ('as' snapshotName=STRING)?                    -> optional snapshot name, the string that
+//     Restore and DropSnapshot refer to; default is the statement label (additive)              -    8 Nov 2026
+//   Extension banners 17.1 and 17.2 pinned to Vespa 8.781.11 and Qdrant 1.20.0, content       -    8 Nov 2026
+//     re-checked against the pinned documentation (17.1 placeholder removed)
+//
+// ============================================================================
+// REMOVED IN V7
+// (v6 construct -> v7 replacement; decision number. "Rv" cites an accepted finding of the
+// v7 review, adopted together with the decisions.)
+// ============================================================================
+//
+// Program and vendor identity
+//   'script' vendor=EVendorName idNumber=INT          -> 'script' name ['targets' [..]]      D1
+//   'access' accessParadigm=EAccessParadigm           -> removed (paradigm follows target)  D1
+//   enum EVendorName (30 literals)                    -> VendorId datatype rule (13 ids)    D13
+//   enum EAccessParadigm                              -> removed                             D1
+//
+// Index split
+//   enum EVIdxType (47 literals)                      -> EIndexFamily + EQuantizationKind + EAccelerator + extension  D4
+//     flat, exhaustive_knn, bin_flat, int8_flat, int4_flat, bbq_flat   -> family flat (+ quantization)
+//     hnsw, pgvector_hnsw, int8_hnsw, int4_hnsw, bbq_hnsw              -> family hnsw (+ quantization)
+//     ivf_flat, pgvector_ivfflat, ivf_sq8, ivf_pq, lance_ivf_pq,
+//     ivf_rabitq, ivf_hnsw_pq, bin_ivf_flat, scann, spann, hfresh,
+//     bbq_disk                                                         -> family ivf (+ quantization, on-disk, extension)
+//     diskann, svs_vamana                                              -> family vamana (+ on-disk)
+//     gpu_ivf_flat, gpu_ivf_pq, cagra                                  -> family ivf or hnsw + accelerator gpu
+//     sparse_inverted, sparse_wand, seismic, sindi                     -> family sparse_inverted + extension algorithm
+//     autoindex, dynamic                                               -> family auto (+ extension threshold)
+//     minhash_lsh, faiss (factory), emb_list, aisaq, ngt_anng, ngt_onng,
+//     spfresh, vectorchord, sai, hybrid_vector                         -> extension of the owning vendor or dropped (outside the 13)
+//   VectorIndex 'm' / 'ef-construction' / 'ef-search' / 'nlist'         -> 'max-degree' / 'build-candidates' / 'search-candidates' / 'centroids'  D4
+//   VectorIndex 'num-subvectors'                                       -> Quantization 'subvectors'      D4
+//   VectorIndex 'gpu'                                                  -> 'accelerator gpu'               D4
+//   VectorIndex 'refine', 'refine-type', 'engine', 'organization', 'include', 'local',
+//     'target-accuracy', 'factory', 'distribution', 'full-scan-threshold', 'epsilon',
+//     'params [..]', 'samples-per-partition', 'min-vectors-per-partition' -> ExtParam           D2, D4
+//   VectorIndex 'expression' (function-based), 'partial' (partial index) -> ExtParam (oracledb, pgvector)  D2
+//   VectorIndex 'storage-layout'                                       -> removed                         D11
+//   VectorIndex 'initial-cap', 'block-size' (deprecated in Redis 8.0.2) -> removed                        D2
+//   enums EVectorEngine, EIndexOrganization, EVectorIndexDistribution  -> extension values               D4, D13
+//   enum EIndexLimit, rule IndexLimit                                  -> index parameters                D4
+//
+// Vector fields
+//   rule NamedVectorConfig ('named-vector')           -> VectorField                          D5
+//   AddVectorOp ('add-vector'), DropVectorOp ('drop-vector') -> AddFieldOp, DropFieldOp      D5
+//   'vector-name' on queries and prefetch             -> 'using' [VectorField]                 D5
+//   VectorField 'sparse' flag                         -> type sparse_float_vector              D5
+//   VectorField 'tensor-type', 'encoding', 'indexing [..]', 'paged', 'fast-search',
+//     'profile', 'external-field', 'primary', 'partition-key', 'nested', 'default',
+//     'analyzer', 'indexes [..]'                      -> ExtParam or removed                   D2, D5
+//   VectorField 'memory' (EMemoryTier)                -> ExtParam qdrant memory               D2
+//   NamedVectorConfig 'optimizers'                    -> extension qdrant optimizers          D10
+//   enums EMemoryTier, EVectorEncoding, EIndexingMode -> extension values                     D2
+//   rule VectorProfile, field 'profile'               -> removed (no target among the 13)     D2
+//
+// Scoring and ranking
+//   rule RankProfile (core), query 'rank'             -> PhasedRankProfile, RankProfileUse in extension vespa  D8
+//   RankProfile 'semantic-ranker', 'semantic-fields'  -> removed (no target among the 13)     D8
+//   RankProfile 'boosts', BoostFunction 'boost-fn' 'type' EBoostType -> core BoostBlock, BoostFunction 'kind'  D8
+//   rule MLModel                                      -> ModelDeployment in extension vespa   D8
+//   enum EBoostType                                   -> EBoostKind + EDecayShape              D8
+//
+// Scores (D3)
+//   'score-threshold', 'range', 'radius', 'distance-range' -> 'bounds' on canonical similarity   D3
+//   'min-score' (keyword search)                      -> 'bounds'                              D3
+//   EMetricType aliases ip, max_inner_product -> dot; l2_squared -> euclidean;
+//     prenormalized_angular -> cosine + normalized; bm25 -> keyword search; max_sim -> comparator  D3
+//
+// Clone (D9)
+//   rules Fork ('fork'), Branch ('branch')            -> Clone ('clone' .. 'mode')             D9
+//
+// Configuration moved to extensions (D10)
+//   rule OptimizersConfig, collection 'optimizers'    -> SegmentOptimizers in extension qdrant  D10
+//   rule InvertedIndexConfig, collection 'inverted-index' -> InvertedIndexSettings in extension weaviate  D10
+//   rule NonVectorIndex ('scalar-index'), enum ENVIdxType -> PayloadIndex, EPayloadIndexKind, EPayloadIndexStructure  D10
+//   NonVectorIndex 'tokenizer', 'json-path', 'params [..]', 'enable-hnsw', 'prefix-only' -> analyzer ref, FieldPath 'path', ExtParam  D2, D10
+//   NonVectorField 'filterable', 'facetable', 'range-filterable', 'fast-search', 'indexes [..]' -> PayloadIndex  D10
+//
+// Deployment structure (D12)
+//   VectorDatabase 'vectordb=Cluster'                 -> clusters+=Cluster                     D12
+//   Cluster 'max-collections'                         -> ClusterLimit                          Rv
+//   Database (logical-db) containing clusters         -> containing collections               Rv
+//
+// Weaviate preview features (D14)
+//   ReindexFieldOp ('reindex-field'), Boost API binding, Namespaces preview, nested
+//   filtering on Weaviate                             -> extension weaviate, PROVISIONAL only  D14
+//
+// Single-vendor parameters moved to ExtParam (D2)
+//   Collection: 'pod-type', 'pod-size', 'pod-env', 'read-capacity', 'node-type', 'nodes' (pinecone),
+//     'strict-mode' (qdrant), 'storage-model', 'key-prefix' (redis),
+//     'auto-tenant-creation', 'auto-tenant-activation' (weaviate)
+//   Tenant: 'status' (ETenantStatus), 'offload-to' (weaviate), 'payload-key' (qdrant)
+//   Connection: 'environment' (pinecone), 'vector-memory' (oracledb), 'schema', 'role',
+//     'privilege', 'private-endpoint', 'isolation'
+//   DML: 'ordering' (EWriteOrdering, qdrant); Update 'type' overwrite_payload, clear_payload, increment
+//   Load: 'replicas', 'resources [..]' (milvus); Compact: 'clustering-key' (milvus)
+//   Restore: 'cloud', 'region' (pinecone, PROVISIONAL)
+//   SearchParams: 'ef', 'nprobe', 'search-k', 'drop-ratio-search', 'dim-max-score-ratio',
+//     'max-scan-tuples', 'max-probes', 'scan-factor', 'shard-k-ratio', 'visit-percentage',
+//     'epsilon', 'indexed-only', 'batch-size', 'iterative-scan' (EIterativeScan)
+//   Queries: 'num-candidates', 'explore-hits', 'nprobe', 'ef' (-> params), 'autocut' (weaviate),
+//     'version-tag' (-> 'as-of'), 'where-document' (-> contains_text), 'id-prefix' (-> prefix predicate)
+//   Keyword search: 'token-pruning' (TokenPruningConfig, elasticsearch/opensearch), 'full-text' flag
+//   Recommend: 'strategy' (ERecommendStrategy, qdrant), 'positive-vectors', 'negative-vectors' (-> Literal lists)
+//   Quantization: 'always-ram', 'memory', 'compression', 'quantized-type', 'rescore-storage'
+//   Quantization kinds rabitq, rotational, lvq, leanvec, turboquant, matryoshka, int4, int2, int1
+//     -> scalar with 'bits', binary, product, or ExtParam method
+//   ReplicationConfig 'async', 'deletion-strategy'; ShardConfig 'virtual-per-physical'
+//   StorageConfig 'path', 'bucket', 'region', 'cold-store' (-> 'location' URI)
+//   VectorCollection 'derived-from' 'external-spec', 'snapshot-id' (milvus)
+//   Fusion dbsf (qdrant), linear (-> weighted), z_score (opensearch)
+//
+// Query types (Rv, D2)
+//   rule MultiVectorSearch                            -> HybridSearch with vector legs          Rv
+//   rule NonVectorSearch ('search')                   -> KeywordSearch ('search'), input via QueryInput  Rv
+//   rules DiscoverySearch, FeedbackSearch (qdrant only) -> ContextSearch, RelevanceFeedback in extension qdrant  D2
+//
+// Filters (Rv)
+//   rules Filter, StandardFilter, GeoFilter, enum EOperator -> FilterBlock expression grammar  Rv
+//   enum EGeoConditionType                            -> EGeoRelation and GeoPredicate forms   Rv
+//
+// Vendor names in enums (D13)
+//   enums EEmbeddingProvider, EGenerativeProvider     -> provider=STRING validated by catalogue  D13
+//   enums EObjectStore, EStreamSource                 -> location URI scheme                   D13
+//   EExternalFormat milvus_table                      -> ExtParam milvus                       D13
+//   ETokenizerType jieba, lindera                     -> 'tokenizer language' + ExtParam        D13
+//   enum EStorageModel, EReadCapacityMode             -> ExtParam                               D13
+//
+// Other removals (Rv)
+//   Alter 'type' EAlterType, Alter filter, Drop filter -> AlterOperation list; Delete for record removal
+//   SetPropertyOp 'set' STRING '=' STRING             -> 'set' ECollectionProperty '=' Literal
+//   GetById 'top'                                     -> removed
+//   Concept members GeneratorHint, ProvenanceMetadata -> Script-level only
+//   Function 'input'/'output' STRING names            -> field cross-references
+//   EmbeddingModel 'auto-embed', 'source-field', 'target-field', 'onnx-path', containment Analyzer
+//                                                     -> VectorField 'model .. from [..]', 'path', analyzer reference
+//   NonVectorField 'enable-match', 'semantic-text'    -> 'full-text', VectorField 'model .. from [..]'
+//   ScalarDType timestamp, tensor, weighted_set, predicate, raw, object_id, blob_hash
+//                                                     -> datetime or ExtParam
+//   ETenantStatus, EUpdateType, EWriteOrdering, ERecommendStrategy, EIterativeScan, ERescoreStorage
+//                                                     -> removed or ExtParam
+//   EConsistencyLevel 'eventually'                    -> 'eventual'
+//   Literal 'true' flags ('wait' x?='true')           -> keyword flags ('wait')
+//   DECIMAL-only numbers                              -> SignedNumber

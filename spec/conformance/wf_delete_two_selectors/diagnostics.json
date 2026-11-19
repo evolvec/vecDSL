@@ -1,0 +1,12 @@
+{
+  "vecdsl-ir": "1.0",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "wf.delete.severalSelectors",
+      "message": "a delete takes exactly one selector: 'ids', 'all' or 'where'",
+      "line": 14,
+      "column": 20
+    }
+  ]
+}

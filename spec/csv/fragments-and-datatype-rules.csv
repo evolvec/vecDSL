@@ -1,0 +1,14 @@
+rule,kind,returns
+Labeled,fragment,
+WriteScope,fragment,
+WriteOptions,fragment,
+Paging,fragment,
+ReadScope,fragment,
+ScoreSpec,fragment,
+Reordering,fragment,
+ResultShape,fragment,
+QueryTail,fragment,
+VendorId,datatype,ecore::EString
+ValidID,datatype,ecore::EString
+ExtKey,datatype,ecore::EString
+SignedNumber,datatype,ecore::EDouble

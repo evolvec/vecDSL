@@ -1,0 +1,26 @@
+# {{product}} {{server.version}} for the generated programs: the Query Engine, {{query.engine}}, and JSON, {{json.module}},
+# are part of the server. Image {{server.image}} (official image, docker-library-redis tag v{{server.version}}, commit
+# {{server.image.commit}}); it loads the bundled modules when the command is redis-server. Port {{server.port}} on 127.0.0.1 only.
+# The password comes only from the environment variable VECDSL_REDIS_PASSWORD, which compose refuses to start without; it is
+# the password of the default user (requirepass). Append-only persistence is on, so WAITAOF (the 'wait' and 'flush' of the
+# programs) can confirm an fsync. Data persists in the named volume {{storage.volume}}; docker compose down -v removes it.
+# Start with: docker compose up -d   Health: PING and FT._LIST (fails unless the Query Engine is loaded).
+services:
+  redis:
+    image: {{server.image}}
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--requirepass", "${VECDSL_REDIS_PASSWORD:?set VECDSL_REDIS_PASSWORD}"]
+    ports:
+      - "127.0.0.1:{{server.port}}:6379"
+    environment:
+      REDISCLI_AUTH: ${VECDSL_REDIS_PASSWORD:?set VECDSL_REDIS_PASSWORD}
+    volumes:
+      - {{storage.volume}}:{{storage.path}}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 PING | grep -q PONG && redis-cli -h 127.0.0.1 FT._LIST > /dev/null && redis-cli -h 127.0.0.1 MODULE LIST | grep -q search"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 5s
+
+volumes:
+  {{storage.volume}}:

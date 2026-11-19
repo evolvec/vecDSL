@@ -1,0 +1,5180 @@
+{
+  "vecdsl-ir": "1.0",
+  "program": {
+    "$type": "Script",
+    "name": "qdrantCoverage",
+    "targets": ["qdrant"],
+    "version": "1.0",
+    "hostLanguage": null,
+    "description": "Every native and concealed Qdrant construct of vecDSL 7.1, in an order that runs on a fresh server",
+    "createdAt": null,
+    "lastModifiedAt": null,
+    "hints": [],
+    "provenance": null,
+    "parameters": [
+      {
+        "$type": "Parameter",
+        "name": "queryVector",
+        "type": "vector",
+        "defaultValue": {
+          "$type": "ListLit",
+          "items": [
+            {
+              "$type": "NumberLit",
+              "value": 0.9
+            },
+            {
+              "$type": "NumberLit",
+              "value": 0.1
+            },
+            {
+              "$type": "NumberLit",
+              "value": 0
+            },
+            {
+              "$type": "NumberLit",
+              "value": 0.1
+            }
+          ]
+        }
+      }
+    ],
+    "methods": [
+      {
+        "$type": "Create",
+        "name": "connectLocal",
+        "target": null,
+        "definition": {
+          "$type": "Connection",
+          "name": "local",
+          "description": null,
+          "host": null,
+          "port": null,
+          "uri": "http://localhost:6333",
+          "localPath": null,
+          "inMemory": false,
+          "grpcPort": 6334,
+          "apiKey": null,
+          "username": null,
+          "password": null,
+          "token": null,
+          "tls": false,
+          "cloud": null,
+          "region": null,
+          "project": null,
+          "databaseName": null,
+          "deployment": null,
+          "timeoutMillis": null,
+          "extensions": {}
+        },
+        "ifNotExists": false,
+        "nested": []
+      },
+      {
+        "$type": "Create",
+        "name": "createBooks",
+        "target": null,
+        "definition": {
+          "$type": "VectorCollection",
+          "name": "books",
+          "description": "Books about databases",
+          "cluster": null,
+          "dynamic": false,
+          "autoId": false,
+          "idType": null,
+          "ttlSeconds": null,
+          "ttlField": null,
+          "consistency": null,
+          "embeddingModel": null,
+          "generativeModel": null,
+          "tags": ["catalog"],
+          "deletionProtection": false,
+          "external": null,
+          "primaryKey": "books.id",
+          "defaultPartition": null,
+          "extensions": {},
+          "analyzers": [
+            {
+              "$type": "Analyzer",
+              "name": "english",
+              "description": null,
+              "tokenizer": "standard",
+              "language": "en",
+              "stopwords": null,
+              "bm25K1": null,
+              "bm25B": null,
+              "resources": [],
+              "filters": [
+                {
+                  "$type": "AnalyzerFilter",
+                  "name": "lower",
+                  "description": null,
+                  "type": "lowercase"
+                }
+              ],
+              "extensions": {}
+            }
+          ],
+          "fields": [
+            {
+              "$type": "PayloadField",
+              "name": "id",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "int",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "title",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "varchar",
+              "maxLength": 256,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": true,
+              "analyzer": "books.english",
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "genre",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "varchar",
+              "maxLength": 64,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "price",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "float",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "tags",
+              "description": null,
+              "nullable": false,
+              "limits": [
+                {
+                  "$type": "FieldLimit",
+                  "name": "tagLimit",
+                  "description": null,
+                  "value": 8,
+                  "type": "array_len"
+                }
+              ],
+              "extensions": {},
+              "type": "array",
+              "maxLength": null,
+              "elementType": "varchar",
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "meta",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "varchar",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "note",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "varchar",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "VectorField",
+              "name": "embedding",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "float_vector",
+              "dimension": 4,
+              "metric": "cosine",
+              "normalized": false,
+              "multiVector": false,
+              "comparator": null,
+              "modifier": null,
+              "model": null,
+              "sourceFields": [],
+              "onDisk": false,
+              "index": {
+                "$type": "VectorIndex",
+                "name": "embeddingIndex",
+                "description": null,
+                "onDisk": false,
+                "extensions": {},
+                "field": null,
+                "family": "hnsw",
+                "metric": null,
+                "accelerator": null,
+                "maxDegree": 16,
+                "buildCandidates": 200,
+                "searchCandidates": null,
+                "centroids": null,
+                "online": false,
+                "quantization": null,
+                "$norm": {
+                  "field": "books.embedding",
+                  "family": "hnsw",
+                  "accelerator": null,
+                  "quantization": null
+                }
+              },
+              "$norm": {
+                "name": "embedding",
+                "index": "books.embedding.embeddingIndex"
+              }
+            },
+            {
+              "$type": "VectorField",
+              "name": "sketch",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "float_vector",
+              "dimension": 2,
+              "metric": "euclidean",
+              "normalized": false,
+              "multiVector": false,
+              "comparator": null,
+              "modifier": null,
+              "model": null,
+              "sourceFields": [],
+              "onDisk": false,
+              "index": null,
+              "$norm": {
+                "name": "sketch",
+                "index": null
+              }
+            }
+          ],
+          "indexes": [
+            {
+              "$type": "PayloadIndex",
+              "name": "genreIndex",
+              "description": null,
+              "onDisk": false,
+              "extensions": {},
+              "target": {
+                "$type": "FieldPath",
+                "field": "books.genre",
+                "subFields": [],
+                "rawPath": null
+              },
+              "kind": "keyword",
+              "structure": null,
+              "castType": null,
+              "analyzer": null,
+              "lowercase": false,
+              "prefixMatch": false,
+              "minTokenLength": null,
+              "maxTokenLength": null
+            },
+            {
+              "$type": "PayloadIndex",
+              "name": "priceIndex",
+              "description": null,
+              "onDisk": false,
+              "extensions": {},
+              "target": {
+                "$type": "FieldPath",
+                "field": "books.price",
+                "subFields": [],
+                "rawPath": null
+              },
+              "kind": "float",
+              "structure": null,
+              "castType": null,
+              "analyzer": null,
+              "lowercase": false,
+              "prefixMatch": false,
+              "minTokenLength": null,
+              "maxTokenLength": null
+            }
+          ],
+          "partitions": [],
+          "functions": [],
+          "namespaces": [],
+          "tenants": [],
+          "aliases": [
+            {
+              "$type": "Alias",
+              "name": "shelf",
+              "description": null,
+              "collection": "books"
+            }
+          ],
+          "limits": [],
+          "generativeModels": [],
+          "storage": null,
+          "storedSourceFields": [],
+          "crossReferences": []
+        },
+        "ifNotExists": false,
+        "nested": []
+      },
+      {
+        "$type": "Create",
+        "name": "createNotes",
+        "target": null,
+        "definition": {
+          "$type": "VectorCollection",
+          "name": "notes",
+          "description": null,
+          "cluster": null,
+          "dynamic": false,
+          "autoId": false,
+          "idType": null,
+          "ttlSeconds": null,
+          "ttlField": null,
+          "consistency": null,
+          "embeddingModel": null,
+          "generativeModel": null,
+          "tags": [],
+          "deletionProtection": false,
+          "external": null,
+          "primaryKey": "notes.id",
+          "defaultPartition": null,
+          "extensions": {},
+          "analyzers": [],
+          "fields": [
+            {
+              "$type": "PayloadField",
+              "name": "id",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "int",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "body",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "varchar",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "VectorField",
+              "name": "noteVector",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "float_vector",
+              "dimension": 2,
+              "metric": "cosine",
+              "normalized": false,
+              "multiVector": false,
+              "comparator": null,
+              "modifier": null,
+              "model": null,
+              "sourceFields": [],
+              "onDisk": false,
+              "index": null,
+              "$norm": {
+                "name": "noteVector",
+                "index": null
+              }
+            }
+          ],
+          "indexes": [],
+          "partitions": [],
+          "functions": [],
+          "namespaces": [
+            {
+              "$type": "Namespace",
+              "name": "teamA",
+              "description": null,
+              "key": "team-a"
+            }
+          ],
+          "tenants": [
+            {
+              "$type": "Tenant",
+              "name": "north",
+              "description": null,
+              "extensions": {}
+            },
+            {
+              "$type": "Tenant",
+              "name": "beta",
+              "description": null,
+              "extensions": {}
+            }
+          ],
+          "aliases": [],
+          "limits": [],
+          "generativeModels": [],
+          "storage": null,
+          "storedSourceFields": [],
+          "crossReferences": []
+        },
+        "ifNotExists": false,
+        "nested": []
+      },
+      {
+        "$type": "Create",
+        "name": "createOrders",
+        "target": null,
+        "definition": {
+          "$type": "VectorCollection",
+          "name": "orders",
+          "description": null,
+          "cluster": null,
+          "dynamic": false,
+          "autoId": false,
+          "idType": null,
+          "ttlSeconds": null,
+          "ttlField": null,
+          "consistency": null,
+          "embeddingModel": null,
+          "generativeModel": null,
+          "tags": [],
+          "deletionProtection": false,
+          "external": null,
+          "primaryKey": "orders.id",
+          "defaultPartition": "orders.gamma",
+          "extensions": {},
+          "analyzers": [],
+          "fields": [
+            {
+              "$type": "PayloadField",
+              "name": "id",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "int",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "PayloadField",
+              "name": "item",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "varchar",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "VectorField",
+              "name": "orderVector",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "float_vector",
+              "dimension": 2,
+              "metric": "dot",
+              "normalized": false,
+              "multiVector": false,
+              "comparator": null,
+              "modifier": null,
+              "model": null,
+              "sourceFields": [],
+              "onDisk": false,
+              "index": null,
+              "$norm": {
+                "name": "orderVector",
+                "index": null
+              }
+            }
+          ],
+          "indexes": [],
+          "partitions": [
+            {
+              "$type": "Partition",
+              "name": "gamma",
+              "description": null,
+              "strategy": null,
+              "key": null,
+              "isDefault": false,
+              "subPartitions": []
+            },
+            {
+              "$type": "Partition",
+              "name": "delta",
+              "description": null,
+              "strategy": null,
+              "key": null,
+              "isDefault": false,
+              "subPartitions": []
+            }
+          ],
+          "functions": [],
+          "namespaces": [],
+          "tenants": [],
+          "aliases": [],
+          "limits": [],
+          "generativeModels": [],
+          "storage": null,
+          "storedSourceFields": [],
+          "crossReferences": []
+        },
+        "ifNotExists": false,
+        "nested": []
+      },
+      {
+        "$type": "Insert",
+        "name": "seed",
+        "collection": "books",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "source": {
+          "$type": "InlineRecords",
+          "records": [
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 1
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.title",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "Vector database design"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.genre",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "databases"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.price",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 35
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.tags",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "StringLit",
+                        "value": "vector"
+                      },
+                      {
+                        "$type": "StringLit",
+                        "value": "database"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.meta",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "first"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.note",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "draft"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.embedding",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.9
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.1
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.1
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.sketch",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 1
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 2
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.title",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "Approximate nearest neighbour search"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.genre",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "databases"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.price",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 52
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.tags",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "StringLit",
+                        "value": "ann"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.meta",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "second"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.embedding",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.8
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.2
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.1
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 3
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.title",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "Espresso at home"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.genre",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "kitchen"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.price",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 249
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.tags",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "StringLit",
+                        "value": "coffee"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.embedding",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.1
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.9
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.3
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 4
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.title",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "Graph databases explained"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.genre",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "databases"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.price",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 30
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.tags",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "StringLit",
+                        "value": "graph"
+                      },
+                      {
+                        "$type": "StringLit",
+                        "value": "database"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.embedding",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.5
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.5
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.2
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.1
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "recordCountHint": null,
+        "ttlSeconds": null,
+        "onConflict": null,
+        "writeConsistency": null,
+        "waitForPersistence": true
+      },
+      {
+        "$type": "BulkImport",
+        "name": "localImport",
+        "collection": "books",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "location": "file://../books.jsonl",
+        "format": "json",
+        "batchSize": null,
+        "parallelism": null,
+        "continuous": false,
+        "onConflict": null,
+        "async": false
+      },
+      {
+        "$type": "Alter",
+        "name": "evolveBooks",
+        "target": "books",
+        "newName": null,
+        "operations": [
+          {
+            "$type": "AddFieldOp",
+            "newField": {
+              "$type": "PayloadField",
+              "name": "pages",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "int",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": {
+                "$type": "NumberLit",
+                "value": 100
+              },
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            }
+          },
+          {
+            "$type": "AddFieldOp",
+            "newField": {
+              "$type": "VectorField",
+              "name": "summaryVector",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "float_vector",
+              "dimension": 2,
+              "metric": "euclidean",
+              "normalized": false,
+              "multiVector": false,
+              "comparator": null,
+              "modifier": null,
+              "model": null,
+              "sourceFields": [],
+              "onDisk": false,
+              "index": null,
+              "$norm": {
+                "name": "summaryVector",
+                "index": null
+              }
+            }
+          },
+          {
+            "$type": "SetPropertyOp",
+            "property": "description",
+            "value": {
+              "$type": "StringLit",
+              "value": "Books about vector databases"
+            }
+          },
+          {
+            "$type": "SetPropertyOp",
+            "property": "tags",
+            "value": {
+              "$type": "ListLit",
+              "items": [
+                {
+                  "$type": "StringLit",
+                  "value": "catalog"
+                },
+                {
+                  "$type": "StringLit",
+                  "value": "vectors"
+                }
+              ]
+            }
+          },
+          {
+            "$type": "SetPropertyOp",
+            "property": "dynamic",
+            "value": {
+              "$type": "BoolLit",
+              "value": true
+            }
+          },
+          {
+            "$type": "AddAliasOp",
+            "newAlias": {
+              "$type": "Alias",
+              "name": "stacks",
+              "description": null,
+              "collection": "books"
+            }
+          }
+        ]
+      },
+      {
+        "$type": "Alter",
+        "name": "renameMeta",
+        "target": "books",
+        "newName": null,
+        "operations": [
+          {
+            "$type": "RenameFieldOp",
+            "field": "books.meta",
+            "newName": "remark"
+          }
+        ]
+      },
+      {
+        "$type": "Alter",
+        "name": "pruneBooks",
+        "target": "books",
+        "newName": null,
+        "operations": [
+          {
+            "$type": "DropFieldOp",
+            "field": "books.sketch"
+          },
+          {
+            "$type": "DropFieldOp",
+            "field": "books.note"
+          }
+        ]
+      },
+      {
+        "$type": "Create",
+        "name": "addTagIndex",
+        "target": "books",
+        "definition": null,
+        "ifNotExists": true,
+        "nested": [
+          {
+            "$type": "Create",
+            "name": null,
+            "target": null,
+            "definition": {
+              "$type": "PayloadIndex",
+              "name": "tagIndex",
+              "description": null,
+              "onDisk": false,
+              "extensions": {},
+              "target": {
+                "$type": "FieldPath",
+                "field": "books.tags",
+                "subFields": [],
+                "rawPath": null
+              },
+              "kind": "keyword",
+              "structure": null,
+              "castType": null,
+              "analyzer": null,
+              "lowercase": false,
+              "prefixMatch": false,
+              "minTokenLength": null,
+              "maxTokenLength": null
+            },
+            "ifNotExists": false,
+            "nested": []
+          }
+        ]
+      },
+      {
+        "$type": "Upsert",
+        "name": "restock",
+        "collection": "books",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "source": {
+          "$type": "InlineRecords",
+          "records": [
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 3
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.title",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "Espresso at home"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.genre",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "kitchen"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.price",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 239
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.tags",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "StringLit",
+                        "value": "coffee"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "books.embedding",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.1
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.9
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.3
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "recordCountHint": null,
+        "batchSize": null,
+        "ttlSeconds": null,
+        "writeConsistency": null,
+        "waitForPersistence": true
+      },
+      {
+        "$type": "Update",
+        "name": "reprice",
+        "collection": "books",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "source": null,
+        "values": {
+          "$type": "RecordLiteral",
+          "entries": [
+            {
+              "$type": "RecordEntry",
+              "field": "books.price",
+              "value": {
+                "$type": "NumberLit",
+                "value": 32
+              }
+            }
+          ]
+        },
+        "mode": null,
+        "ids": [
+          {
+            "$type": "NumberLit",
+            "value": 4
+          }
+        ],
+        "removedFields": [],
+        "appendFields": [],
+        "arrayRemoveFields": [],
+        "ifVersion": null,
+        "writeConsistency": null,
+        "waitForPersistence": true,
+        "filter": null
+      },
+      {
+        "$type": "Update",
+        "name": "tagMore",
+        "collection": "books",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "source": null,
+        "values": {
+          "$type": "RecordLiteral",
+          "entries": [
+            {
+              "$type": "RecordEntry",
+              "field": "books.tags",
+              "value": {
+                "$type": "ListLit",
+                "items": [
+                  {
+                    "$type": "StringLit",
+                    "value": "classic"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "mode": null,
+        "ids": [
+          {
+            "$type": "NumberLit",
+            "value": 4
+          }
+        ],
+        "removedFields": [],
+        "appendFields": ["books.tags"],
+        "arrayRemoveFields": [],
+        "ifVersion": null,
+        "writeConsistency": null,
+        "waitForPersistence": true,
+        "filter": null
+      },
+      {
+        "$type": "Update",
+        "name": "untag",
+        "collection": "books",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "source": null,
+        "values": {
+          "$type": "RecordLiteral",
+          "entries": [
+            {
+              "$type": "RecordEntry",
+              "field": "books.tags",
+              "value": {
+                "$type": "ListLit",
+                "items": [
+                  {
+                    "$type": "StringLit",
+                    "value": "graph"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "mode": null,
+        "ids": [
+          {
+            "$type": "NumberLit",
+            "value": 4
+          }
+        ],
+        "removedFields": [],
+        "appendFields": [],
+        "arrayRemoveFields": ["books.tags"],
+        "ifVersion": null,
+        "writeConsistency": null,
+        "waitForPersistence": true,
+        "filter": null
+      },
+      {
+        "$type": "Delete",
+        "name": "trimKitchen",
+        "collection": "books",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "ids": [],
+        "deleteAll": false,
+        "deleteLimit": 1,
+        "writeConsistency": null,
+        "waitForPersistence": true,
+        "filter": {
+          "$type": "FilterBlock",
+          "condition": {
+            "$type": "Predicate",
+            "target": {
+              "$type": "FieldPath",
+              "field": "books.genre",
+              "subFields": [],
+              "rawPath": null
+            },
+            "op": "eq",
+            "value": {
+              "$type": "StringLit",
+              "value": "kitchen"
+            },
+            "unaryOp": null,
+            "textOp": null,
+            "text": null,
+            "lower": null,
+            "upper": null,
+            "lengthOp": null,
+            "length": null
+          }
+        }
+      },
+      {
+        "$type": "Insert",
+        "name": "writeNorth",
+        "collection": "notes",
+        "namespace": null,
+        "tenant": "notes.north",
+        "partition": null,
+        "extensions": {},
+        "source": {
+          "$type": "InlineRecords",
+          "records": [
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 1
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.body",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "north note"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.noteVector",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 1
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "recordCountHint": null,
+        "ttlSeconds": null,
+        "onConflict": null,
+        "writeConsistency": null,
+        "waitForPersistence": true
+      },
+      {
+        "$type": "Insert",
+        "name": "writeBeta",
+        "collection": "notes",
+        "namespace": null,
+        "tenant": "notes.beta",
+        "partition": null,
+        "extensions": {},
+        "source": {
+          "$type": "InlineRecords",
+          "records": [
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 2
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.body",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "beta note"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.noteVector",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 1
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 3
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.body",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "beta memo"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.noteVector",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.6
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.8
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "recordCountHint": null,
+        "ttlSeconds": null,
+        "onConflict": null,
+        "writeConsistency": null,
+        "waitForPersistence": true
+      },
+      {
+        "$type": "Upsert",
+        "name": "writeTeam",
+        "collection": "notes",
+        "namespace": "team-a",
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "source": {
+          "$type": "InlineRecords",
+          "records": [
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 4
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.body",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "team note"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "notes.noteVector",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.8
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0.6
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "recordCountHint": null,
+        "batchSize": null,
+        "ttlSeconds": null,
+        "writeConsistency": null,
+        "waitForPersistence": true
+      },
+      {
+        "$type": "Insert",
+        "name": "writeGamma",
+        "collection": "orders",
+        "namespace": null,
+        "tenant": null,
+        "partition": null,
+        "extensions": {},
+        "source": {
+          "$type": "InlineRecords",
+          "records": [
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "orders.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 1
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "orders.item",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "pen"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "orders.orderVector",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 1
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "recordCountHint": null,
+        "ttlSeconds": null,
+        "onConflict": null,
+        "writeConsistency": null,
+        "waitForPersistence": true
+      },
+      {
+        "$type": "Insert",
+        "name": "writeDelta",
+        "collection": "orders",
+        "namespace": null,
+        "tenant": null,
+        "partition": "orders.delta",
+        "extensions": {},
+        "source": {
+          "$type": "InlineRecords",
+          "records": [
+            {
+              "$type": "RecordLiteral",
+              "entries": [
+                {
+                  "$type": "RecordEntry",
+                  "field": "orders.id",
+                  "value": {
+                    "$type": "NumberLit",
+                    "value": 2
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "orders.item",
+                  "value": {
+                    "$type": "StringLit",
+                    "value": "ink"
+                  }
+                },
+                {
+                  "$type": "RecordEntry",
+                  "field": "orders.orderVector",
+                  "value": {
+                    "$type": "ListLit",
+                    "items": [
+                      {
+                        "$type": "NumberLit",
+                        "value": 0
+                      },
+                      {
+                        "$type": "NumberLit",
+                        "value": 1
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "recordCountHint": null,
+        "ttlSeconds": null,
+        "onConflict": null,
+        "writeConsistency": null,
+        "waitForPersistence": true
+      },
+      {
+        "$type": "Load",
+        "name": "loadBooks",
+        "collection": "books",
+        "partitions": [],
+        "extensions": {}
+      },
+      {
+        "$type": "Flush",
+        "name": "persist",
+        "collection": "books",
+        "extensions": {}
+      },
+      {
+        "$type": "Compact",
+        "name": "compactBooks",
+        "collection": "books",
+        "targetSegments": 2,
+        "async": false,
+        "extensions": {}
+      },
+      {
+        "$type": "AwaitIndex",
+        "name": "priceReady",
+        "index": "books.priceIndex",
+        "state": "ready",
+        "timeoutSeconds": 30
+      },
+      {
+        "$type": "AwaitIndex",
+        "name": "vectorsReady",
+        "index": "books.embedding.embeddingIndex",
+        "state": null,
+        "timeoutSeconds": 60
+      },
+      {
+        "$type": "RebuildIndex",
+        "name": "reindexPrice",
+        "index": "books.priceIndex",
+        "concurrently": false,
+        "extensions": {}
+      },
+      {
+        "$type": "Describe",
+        "name": "info",
+        "collection": "books",
+        "includeStats": true,
+        "includeIndexProgress": true
+      },
+      {
+        "$type": "VectorSearch",
+        "name": "similar",
+        "collection": "books",
+        "topK": 3,
+        "input": {
+          "$type": "QueryInput",
+          "kind": "vector",
+          "value": {
+            "$type": "ParamRef",
+            "param": "queryVector",
+            "$norm": {
+              "slot": {
+                "kind": "param",
+                "name": "queryVector",
+                "type": "vector",
+                "hasDefault": true
+              }
+            }
+          },
+          "lookupCollection": null
+        },
+        "vectorField": "books.embedding",
+        "metric": null,
+        "queryModel": null,
+        "exact": false,
+        "explain": false,
+        "elementScope": null,
+        "offset": null,
+        "cursor": null,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "scoreForm": null,
+        "bounds": null,
+        "mmr": null,
+        "boost": null,
+        "reranker": null,
+        "groupBy": null,
+        "groupSize": null,
+        "withVectors": false,
+        "withTotal": false,
+        "excluded": [],
+        "highlighted": [],
+        "sortClauses": [],
+        "aggregations": [],
+        "params": null,
+        "prefetches": [],
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title", "books.price"]
+        },
+        "filter": {
+          "$type": "FilterBlock",
+          "condition": {
+            "$type": "Predicate",
+            "target": {
+              "$type": "FieldPath",
+              "field": "books.genre",
+              "subFields": [],
+              "rawPath": null
+            },
+            "op": "eq",
+            "value": {
+              "$type": "StringLit",
+              "value": "databases"
+            },
+            "unaryOp": null,
+            "textOp": null,
+            "text": null,
+            "lower": null,
+            "upper": null,
+            "lengthOp": null,
+            "length": null
+          }
+        },
+        "extensions": {},
+        "$norm": {
+          "score": {
+            "form": "similarity",
+            "higherIsBetter": true,
+            "range": [-1, 1]
+          },
+          "field": "books.embedding",
+          "metric": "cosine"
+        }
+      },
+      {
+        "$type": "VectorSearch",
+        "name": "grouped",
+        "collection": "books",
+        "topK": 2,
+        "input": {
+          "$type": "QueryInput",
+          "kind": "vector",
+          "value": {
+            "$type": "ParamRef",
+            "param": "queryVector",
+            "$norm": {
+              "slot": {
+                "kind": "param",
+                "name": "queryVector",
+                "type": "vector",
+                "hasDefault": true
+              }
+            }
+          },
+          "lookupCollection": null
+        },
+        "vectorField": "books.embedding",
+        "metric": null,
+        "queryModel": null,
+        "exact": false,
+        "explain": false,
+        "elementScope": null,
+        "offset": null,
+        "cursor": null,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "scoreForm": null,
+        "bounds": null,
+        "mmr": null,
+        "boost": null,
+        "reranker": null,
+        "groupBy": {
+          "$type": "FieldPath",
+          "field": "books.genre",
+          "subFields": [],
+          "rawPath": null
+        },
+        "groupSize": 1,
+        "withVectors": false,
+        "withTotal": false,
+        "excluded": [],
+        "highlighted": [],
+        "sortClauses": [],
+        "aggregations": [],
+        "params": null,
+        "prefetches": [],
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title"]
+        },
+        "filter": null,
+        "extensions": {},
+        "$norm": {
+          "score": {
+            "form": "similarity",
+            "higherIsBetter": true,
+            "range": [-1, 1]
+          },
+          "field": "books.embedding",
+          "metric": "cosine"
+        }
+      },
+      {
+        "$type": "KeywordSearch",
+        "name": "keywords",
+        "collection": "books",
+        "topK": 3,
+        "input": {
+          "$type": "QueryInput",
+          "kind": "text",
+          "value": {
+            "$type": "StringLit",
+            "value": "databases"
+          },
+          "lookupCollection": null
+        },
+        "textQueryType": null,
+        "searchFields": [
+          {
+            "$type": "SearchFieldRef",
+            "field": "books.title",
+            "boost": null
+          }
+        ],
+        "matchOperator": null,
+        "minShouldMatch": null,
+        "fuzziness": null,
+        "slop": null,
+        "explain": false,
+        "offset": null,
+        "cursor": null,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "scoreForm": null,
+        "bounds": null,
+        "mmr": null,
+        "boost": null,
+        "reranker": null,
+        "groupBy": null,
+        "groupSize": null,
+        "withVectors": false,
+        "withTotal": false,
+        "excluded": [],
+        "highlighted": [],
+        "sortClauses": [],
+        "aggregations": [],
+        "params": null,
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title"]
+        },
+        "filter": null,
+        "extensions": {},
+        "$norm": {
+          "score": {
+            "form": "similarity",
+            "higherIsBetter": true,
+            "range": [0, null]
+          }
+        }
+      },
+      {
+        "$type": "HybridSearch",
+        "name": "hybrid",
+        "collection": "books",
+        "topK": 3,
+        "input": null,
+        "fusion": "rrf",
+        "fusionConstant": null,
+        "alpha": null,
+        "explain": false,
+        "offset": null,
+        "cursor": null,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "scoreForm": null,
+        "bounds": null,
+        "mmr": null,
+        "boost": null,
+        "reranker": null,
+        "groupBy": null,
+        "groupSize": null,
+        "withVectors": false,
+        "withTotal": false,
+        "excluded": [],
+        "highlighted": [],
+        "sortClauses": [],
+        "aggregations": [],
+        "params": null,
+        "legs": [
+          {
+            "$type": "VectorLeg",
+            "input": {
+              "$type": "QueryInput",
+              "kind": "vector",
+              "value": {
+                "$type": "ParamRef",
+                "param": "queryVector",
+                "$norm": {
+                  "slot": {
+                    "kind": "param",
+                    "name": "queryVector",
+                    "type": "vector",
+                    "hasDefault": true
+                  }
+                }
+              },
+              "lookupCollection": null
+            },
+            "weight": null,
+            "legLimit": null,
+            "filter": null,
+            "extensions": {},
+            "vectorField": "books.embedding",
+            "metric": null,
+            "bounds": null,
+            "params": null,
+            "exact": false,
+            "$norm": {
+              "field": "books.embedding",
+              "metric": "cosine",
+              "input": "own"
+            }
+          },
+          {
+            "$type": "KeywordLeg",
+            "input": {
+              "$type": "QueryInput",
+              "kind": "text",
+              "value": {
+                "$type": "StringLit",
+                "value": "vector"
+              },
+              "lookupCollection": null
+            },
+            "weight": null,
+            "legLimit": null,
+            "filter": null,
+            "extensions": {},
+            "textQueryType": null,
+            "searchFields": [
+              {
+                "$type": "SearchFieldRef",
+                "field": "books.title",
+                "boost": null
+              }
+            ],
+            "matchOperator": null,
+            "minShouldMatch": null,
+            "$norm": {
+              "input": "own"
+            }
+          }
+        ],
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title"]
+        },
+        "filter": null,
+        "extensions": {},
+        "$norm": {
+          "score": {
+            "form": "similarity",
+            "higherIsBetter": true,
+            "range": null
+          }
+        }
+      },
+      {
+        "$type": "GetById",
+        "name": "byId",
+        "collection": "books",
+        "ids": [
+          {
+            "$type": "NumberLit",
+            "value": 1
+          },
+          {
+            "$type": "NumberLit",
+            "value": 4
+          }
+        ],
+        "withVectors": false,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title", "books.price", "books.tags", "books.meta"]
+        },
+        "extensions": {}
+      },
+      {
+        "$type": "Scroll",
+        "name": "browse",
+        "collection": "books",
+        "scrollLimit": 10,
+        "offset": null,
+        "cursor": null,
+        "sliceIndex": null,
+        "sliceTotal": null,
+        "sortClauses": [],
+        "withVectors": false,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title", "books.price"]
+        },
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Sample",
+        "name": "firstTwo",
+        "collection": "books",
+        "sampleSize": 2,
+        "method": "first",
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title"]
+        },
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Sample",
+        "name": "anyTwo",
+        "collection": "books",
+        "sampleSize": 2,
+        "method": null,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["books.title"]
+        },
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "DistanceMatrix",
+        "name": "pairs",
+        "collection": "books",
+        "vectorField": "books.embedding",
+        "sampleSize": 3,
+        "matrixLimit": 1,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Count",
+        "name": "cheap",
+        "collection": "books",
+        "exact": false,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "filter": {
+          "$type": "FilterBlock",
+          "condition": {
+            "$type": "Predicate",
+            "target": {
+              "$type": "FieldPath",
+              "field": "books.price",
+              "subFields": [],
+              "rawPath": null
+            },
+            "op": "lt",
+            "value": {
+              "$type": "NumberLit",
+              "value": 40
+            },
+            "unaryOp": null,
+            "textOp": null,
+            "text": null,
+            "lower": null,
+            "upper": null,
+            "lengthOp": null,
+            "length": null
+          }
+        },
+        "extensions": {}
+      },
+      {
+        "$type": "Count",
+        "name": "countNorth",
+        "collection": "notes",
+        "exact": false,
+        "namespace": null,
+        "tenant": "notes.north",
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Count",
+        "name": "countTeam",
+        "collection": "notes",
+        "exact": false,
+        "namespace": "team-a",
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "VectorSearch",
+        "name": "northNotes",
+        "collection": "notes",
+        "topK": 5,
+        "input": {
+          "$type": "QueryInput",
+          "kind": "vector",
+          "value": {
+            "$type": "ListLit",
+            "items": [
+              {
+                "$type": "NumberLit",
+                "value": 1
+              },
+              {
+                "$type": "NumberLit",
+                "value": 0
+              }
+            ]
+          },
+          "lookupCollection": null
+        },
+        "vectorField": null,
+        "metric": null,
+        "queryModel": null,
+        "exact": false,
+        "explain": false,
+        "elementScope": null,
+        "offset": null,
+        "cursor": null,
+        "namespace": null,
+        "tenant": "notes.north",
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "scoreForm": null,
+        "bounds": null,
+        "mmr": null,
+        "boost": null,
+        "reranker": null,
+        "groupBy": null,
+        "groupSize": null,
+        "withVectors": false,
+        "withTotal": false,
+        "excluded": [],
+        "highlighted": [],
+        "sortClauses": [],
+        "aggregations": [],
+        "params": null,
+        "prefetches": [],
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["notes.body"]
+        },
+        "filter": null,
+        "extensions": {},
+        "$norm": {
+          "score": {
+            "form": "similarity",
+            "higherIsBetter": true,
+            "range": [-1, 1]
+          },
+          "field": "notes.noteVector",
+          "metric": "cosine"
+        }
+      },
+      {
+        "$type": "GetById",
+        "name": "betaNotes",
+        "collection": "notes",
+        "ids": [
+          {
+            "$type": "NumberLit",
+            "value": 1
+          },
+          {
+            "$type": "NumberLit",
+            "value": 2
+          },
+          {
+            "$type": "NumberLit",
+            "value": 3
+          }
+        ],
+        "withVectors": false,
+        "namespace": null,
+        "tenant": "notes.beta",
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["notes.body"]
+        },
+        "extensions": {}
+      },
+      {
+        "$type": "Count",
+        "name": "gammaOrders",
+        "collection": "orders",
+        "exact": false,
+        "namespace": null,
+        "tenant": null,
+        "partitions": ["orders.gamma"],
+        "consistency": null,
+        "asOf": null,
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Scroll",
+        "name": "deltaOrders",
+        "collection": "orders",
+        "scrollLimit": null,
+        "offset": null,
+        "cursor": null,
+        "sliceIndex": null,
+        "sliceTotal": null,
+        "sortClauses": [],
+        "withVectors": false,
+        "namespace": null,
+        "tenant": null,
+        "partitions": ["orders.delta"],
+        "consistency": null,
+        "asOf": null,
+        "output": {
+          "$type": "OutputSpec",
+          "allFields": false,
+          "fields": ["orders.item"]
+        },
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "ListObjects",
+        "name": "collectionNames",
+        "kind": "collections",
+        "scope": null,
+        "prefix": null,
+        "listLimit": null
+      },
+      {
+        "$type": "ListObjects",
+        "name": "aliasNames",
+        "kind": "aliases",
+        "scope": "books",
+        "prefix": null,
+        "listLimit": null
+      },
+      {
+        "$type": "ListObjects",
+        "name": "indexNames",
+        "kind": "indexes",
+        "scope": "books",
+        "prefix": null,
+        "listLimit": null
+      },
+      {
+        "$type": "ListObjects",
+        "name": "partitionNames",
+        "kind": "partitions",
+        "scope": "orders",
+        "prefix": null,
+        "listLimit": null
+      },
+      {
+        "$type": "ListObjects",
+        "name": "tenantNames",
+        "kind": "tenants",
+        "scope": "notes",
+        "prefix": null,
+        "listLimit": null
+      },
+      {
+        "$type": "ListObjects",
+        "name": "namespaceNames",
+        "kind": "namespaces",
+        "scope": "notes",
+        "prefix": null,
+        "listLimit": null
+      },
+      {
+        "$type": "Snapshot",
+        "name": "nightly",
+        "collection": "books",
+        "snapshotName": "nightly",
+        "scope": null,
+        "incremental": false,
+        "tenant": null,
+        "location": null,
+        "description": "before cleanup",
+        "extensions": {},
+        "$norm": {
+          "snapshotName": "nightly"
+        }
+      },
+      {
+        "$type": "ListObjects",
+        "name": "snapshotNames",
+        "kind": "snapshots",
+        "scope": "books",
+        "prefix": null,
+        "listLimit": null
+      },
+      {
+        "$type": "Clone",
+        "name": "copyBooks",
+        "sourceDatabase": null,
+        "sourceCollection": "books",
+        "targetName": "booksCopy",
+        "mode": null,
+        "asOf": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Create",
+        "name": "createArchive",
+        "target": null,
+        "definition": {
+          "$type": "VectorCollection",
+          "name": "archive",
+          "description": null,
+          "cluster": null,
+          "dynamic": false,
+          "autoId": false,
+          "idType": null,
+          "ttlSeconds": null,
+          "ttlField": null,
+          "consistency": null,
+          "embeddingModel": null,
+          "generativeModel": null,
+          "tags": [],
+          "deletionProtection": false,
+          "external": null,
+          "primaryKey": "archive.id",
+          "defaultPartition": null,
+          "extensions": {},
+          "analyzers": [],
+          "fields": [
+            {
+              "$type": "PayloadField",
+              "name": "id",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "int",
+              "maxLength": null,
+              "elementType": null,
+              "nested": false,
+              "defaultValue": null,
+              "partitionKey": false,
+              "documentBody": false,
+              "fullText": false,
+              "analyzer": null,
+              "subFields": []
+            },
+            {
+              "$type": "VectorField",
+              "name": "embedding",
+              "description": null,
+              "nullable": false,
+              "limits": [],
+              "extensions": {},
+              "type": "float_vector",
+              "dimension": 4,
+              "metric": "cosine",
+              "normalized": false,
+              "multiVector": false,
+              "comparator": null,
+              "modifier": null,
+              "model": null,
+              "sourceFields": [],
+              "onDisk": false,
+              "index": null,
+              "$norm": {
+                "name": "embedding",
+                "index": null
+              }
+            }
+          ],
+          "indexes": [],
+          "partitions": [],
+          "functions": [],
+          "namespaces": [],
+          "tenants": [],
+          "aliases": [],
+          "limits": [],
+          "generativeModels": [],
+          "storage": null,
+          "storedSourceFields": [],
+          "crossReferences": []
+        },
+        "ifNotExists": false,
+        "nested": []
+      },
+      {
+        "$type": "Restore",
+        "name": "restoreArchive",
+        "collection": "archive",
+        "snapshotName": "nightly",
+        "scope": null,
+        "location": null,
+        "async": false,
+        "extensions": {}
+      },
+      {
+        "$type": "Count",
+        "name": "archived",
+        "collection": "archive",
+        "exact": false,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "SwapAlias",
+        "name": "moveShelf",
+        "alias": "books.shelf",
+        "oldCollection": "books",
+        "newCollection": "notes"
+      },
+      {
+        "$type": "Drop",
+        "name": "dropStacks",
+        "target": "stacks",
+        "ifExists": false
+      },
+      {
+        "$type": "DropSnapshot",
+        "name": "dropNightly",
+        "snapshotName": "nightly",
+        "location": null
+      },
+      {
+        "$type": "Truncate",
+        "name": "emptyBooks",
+        "collection": "books",
+        "namespace": null
+      },
+      {
+        "$type": "Count",
+        "name": "remaining",
+        "collection": "books",
+        "exact": false,
+        "namespace": null,
+        "tenant": null,
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Truncate",
+        "name": "clearTeam",
+        "collection": "notes",
+        "namespace": "team-a"
+      },
+      {
+        "$type": "Drop",
+        "name": "dropNorth",
+        "target": "notes.north",
+        "ifExists": false
+      },
+      {
+        "$type": "Count",
+        "name": "northLeft",
+        "collection": "notes",
+        "exact": false,
+        "namespace": null,
+        "tenant": "notes.north",
+        "partitions": [],
+        "consistency": null,
+        "asOf": null,
+        "filter": null,
+        "extensions": {}
+      },
+      {
+        "$type": "Drop",
+        "name": "dropDelta",
+        "target": "orders.delta",
+        "ifExists": false
+      },
+      {
+        "$type": "Alter",
+        "name": "renameNotes",
+        "target": "notes",
+        "newName": "memos",
+        "operations": []
+      }
+    ],
+    "$norm": {
+      "restricted": true
+    }
+  },
+  "spans": {
+    "/": {
+      "offset": 0,
+      "length": 6408,
+      "line": 1,
+      "column": 1,
+      "endLine": 196
+    },
+    "/parameters/0": {
+      "offset": 168,
+      "length": 49,
+      "line": 5,
+      "column": 1,
+      "endLine": 5
+    },
+    "/parameters/0/defaultValue": {
+      "offset": 197,
+      "length": 20,
+      "line": 5,
+      "column": 30,
+      "endLine": 5
+    },
+    "/parameters/0/defaultValue/items/0": {
+      "offset": 198,
+      "length": 3,
+      "line": 5,
+      "column": 31,
+      "endLine": 5
+    },
+    "/parameters/0/defaultValue/items/1": {
+      "offset": 203,
+      "length": 3,
+      "line": 5,
+      "column": 36,
+      "endLine": 5
+    },
+    "/parameters/0/defaultValue/items/2": {
+      "offset": 208,
+      "length": 3,
+      "line": 5,
+      "column": 41,
+      "endLine": 5
+    },
+    "/parameters/0/defaultValue/items/3": {
+      "offset": 213,
+      "length": 3,
+      "line": 5,
+      "column": 46,
+      "endLine": 5
+    },
+    "/methods/0": {
+      "offset": 219,
+      "length": 80,
+      "line": 7,
+      "column": 1,
+      "endLine": 7
+    },
+    "/methods/0/definition": {
+      "offset": 240,
+      "length": 59,
+      "line": 7,
+      "column": 22,
+      "endLine": 7
+    },
+    "/methods/1": {
+      "offset": 301,
+      "length": 842,
+      "line": 9,
+      "column": 1,
+      "endLine": 26
+    },
+    "/methods/1/definition": {
+      "offset": 321,
+      "length": 822,
+      "line": 9,
+      "column": 21,
+      "endLine": 26
+    },
+    "/methods/1/definition/analyzers/0": {
+      "offset": 376,
+      "length": 81,
+      "line": 11,
+      "column": 5,
+      "endLine": 11
+    },
+    "/methods/1/definition/analyzers/0/filters/0": {
+      "offset": 428,
+      "length": 27,
+      "line": 11,
+      "column": 57,
+      "endLine": 11
+    },
+    "/methods/1/definition/fields/0": {
+      "offset": 462,
+      "length": 17,
+      "line": 12,
+      "column": 5,
+      "endLine": 12
+    },
+    "/methods/1/definition/fields/1": {
+      "offset": 484,
+      "length": 66,
+      "line": 13,
+      "column": 5,
+      "endLine": 13
+    },
+    "/methods/1/definition/fields/2": {
+      "offset": 555,
+      "length": 38,
+      "line": 14,
+      "column": 5,
+      "endLine": 14
+    },
+    "/methods/1/definition/fields/3": {
+      "offset": 598,
+      "length": 22,
+      "line": 15,
+      "column": 5,
+      "endLine": 15
+    },
+    "/methods/1/definition/fields/4": {
+      "offset": 625,
+      "length": 77,
+      "line": 16,
+      "column": 5,
+      "endLine": 16
+    },
+    "/methods/1/definition/fields/4/limits/0": {
+      "offset": 668,
+      "length": 34,
+      "line": 16,
+      "column": 48,
+      "endLine": 16
+    },
+    "/methods/1/definition/fields/5": {
+      "offset": 707,
+      "length": 23,
+      "line": 17,
+      "column": 5,
+      "endLine": 17
+    },
+    "/methods/1/definition/fields/6": {
+      "offset": 735,
+      "length": 23,
+      "line": 18,
+      "column": 5,
+      "endLine": 18
+    },
+    "/methods/1/definition/fields/7": {
+      "offset": 763,
+      "length": 151,
+      "line": 19,
+      "column": 5,
+      "endLine": 21
+    },
+    "/methods/1/definition/fields/7/index": {
+      "offset": 834,
+      "length": 74,
+      "line": 20,
+      "column": 9,
+      "endLine": 20
+    },
+    "/methods/1/definition/fields/8": {
+      "offset": 919,
+      "length": 60,
+      "line": 22,
+      "column": 5,
+      "endLine": 22
+    },
+    "/methods/1/definition/indexes/0": {
+      "offset": 984,
+      "length": 46,
+      "line": 23,
+      "column": 5,
+      "endLine": 23
+    },
+    "/methods/1/definition/indexes/0/target": {
+      "offset": 1012,
+      "length": 5,
+      "line": 23,
+      "column": 33,
+      "endLine": 23
+    },
+    "/methods/1/definition/indexes/1": {
+      "offset": 1035,
+      "length": 44,
+      "line": 24,
+      "column": 5,
+      "endLine": 24
+    },
+    "/methods/1/definition/indexes/1/target": {
+      "offset": 1063,
+      "length": 5,
+      "line": 24,
+      "column": 33,
+      "endLine": 24
+    },
+    "/methods/1/definition/aliases/0": {
+      "offset": 1084,
+      "length": 21,
+      "line": 25,
+      "column": 5,
+      "endLine": 25
+    },
+    "/methods/2": {
+      "offset": 1145,
+      "length": 237,
+      "line": 28,
+      "column": 1,
+      "endLine": 36
+    },
+    "/methods/2/definition": {
+      "offset": 1165,
+      "length": 217,
+      "line": 28,
+      "column": 21,
+      "endLine": 36
+    },
+    "/methods/2/definition/fields/0": {
+      "offset": 1203,
+      "length": 17,
+      "line": 30,
+      "column": 5,
+      "endLine": 30
+    },
+    "/methods/2/definition/fields/1": {
+      "offset": 1225,
+      "length": 23,
+      "line": 31,
+      "column": 5,
+      "endLine": 31
+    },
+    "/methods/2/definition/fields/2": {
+      "offset": 1253,
+      "length": 61,
+      "line": 32,
+      "column": 5,
+      "endLine": 32
+    },
+    "/methods/2/definition/namespaces/0": {
+      "offset": 1319,
+      "length": 28,
+      "line": 33,
+      "column": 5,
+      "endLine": 33
+    },
+    "/methods/2/definition/tenants/0": {
+      "offset": 1352,
+      "length": 12,
+      "line": 34,
+      "column": 5,
+      "endLine": 34
+    },
+    "/methods/2/definition/tenants/1": {
+      "offset": 1369,
+      "length": 11,
+      "line": 35,
+      "column": 5,
+      "endLine": 35
+    },
+    "/methods/3": {
+      "offset": 1384,
+      "length": 239,
+      "line": 38,
+      "column": 1,
+      "endLine": 46
+    },
+    "/methods/3/definition": {
+      "offset": 1405,
+      "length": 218,
+      "line": 38,
+      "column": 22,
+      "endLine": 46
+    },
+    "/methods/3/definition/fields/0": {
+      "offset": 1472,
+      "length": 17,
+      "line": 41,
+      "column": 5,
+      "endLine": 41
+    },
+    "/methods/3/definition/fields/1": {
+      "offset": 1494,
+      "length": 23,
+      "line": 42,
+      "column": 5,
+      "endLine": 42
+    },
+    "/methods/3/definition/fields/2": {
+      "offset": 1522,
+      "length": 59,
+      "line": 43,
+      "column": 5,
+      "endLine": 43
+    },
+    "/methods/3/definition/partitions/0": {
+      "offset": 1586,
+      "length": 15,
+      "line": 44,
+      "column": 5,
+      "endLine": 44
+    },
+    "/methods/3/definition/partitions/1": {
+      "offset": 1606,
+      "length": 15,
+      "line": 45,
+      "column": 5,
+      "endLine": 45
+    },
+    "/methods/4": {
+      "offset": 1625,
+      "length": 662,
+      "line": 48,
+      "column": 1,
+      "endLine": 53
+    },
+    "/methods/4/source": {
+      "offset": 1649,
+      "length": 633,
+      "line": 48,
+      "column": 25,
+      "endLine": 53
+    },
+    "/methods/4/source/records/0": {
+      "offset": 1662,
+      "length": 188,
+      "line": 49,
+      "column": 5,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/0": {
+      "offset": 1664,
+      "length": 5,
+      "line": 49,
+      "column": 7,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/0/value": {
+      "offset": 1668,
+      "length": 1,
+      "line": 49,
+      "column": 11,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/1": {
+      "offset": 1671,
+      "length": 31,
+      "line": 49,
+      "column": 14,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/1/value": {
+      "offset": 1678,
+      "length": 24,
+      "line": 49,
+      "column": 21,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/2": {
+      "offset": 1704,
+      "length": 18,
+      "line": 49,
+      "column": 47,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/2/value": {
+      "offset": 1711,
+      "length": 11,
+      "line": 49,
+      "column": 54,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/3": {
+      "offset": 1724,
+      "length": 11,
+      "line": 49,
+      "column": 67,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/3/value": {
+      "offset": 1731,
+      "length": 4,
+      "line": 49,
+      "column": 74,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/4": {
+      "offset": 1737,
+      "length": 28,
+      "line": 49,
+      "column": 80,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/4/value": {
+      "offset": 1743,
+      "length": 22,
+      "line": 49,
+      "column": 86,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/4/value/items/0": {
+      "offset": 1744,
+      "length": 8,
+      "line": 49,
+      "column": 87,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/4/value/items/1": {
+      "offset": 1754,
+      "length": 10,
+      "line": 49,
+      "column": 97,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/5": {
+      "offset": 1767,
+      "length": 13,
+      "line": 49,
+      "column": 110,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/5/value": {
+      "offset": 1773,
+      "length": 7,
+      "line": 49,
+      "column": 116,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/6": {
+      "offset": 1782,
+      "length": 13,
+      "line": 49,
+      "column": 125,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/6/value": {
+      "offset": 1788,
+      "length": 7,
+      "line": 49,
+      "column": 131,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/7": {
+      "offset": 1797,
+      "length": 31,
+      "line": 49,
+      "column": 140,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/7/value": {
+      "offset": 1808,
+      "length": 20,
+      "line": 49,
+      "column": 151,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/7/value/items/0": {
+      "offset": 1809,
+      "length": 3,
+      "line": 49,
+      "column": 152,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/7/value/items/1": {
+      "offset": 1814,
+      "length": 3,
+      "line": 49,
+      "column": 157,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/7/value/items/2": {
+      "offset": 1819,
+      "length": 3,
+      "line": 49,
+      "column": 162,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/7/value/items/3": {
+      "offset": 1824,
+      "length": 3,
+      "line": 49,
+      "column": 167,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/8": {
+      "offset": 1830,
+      "length": 18,
+      "line": 49,
+      "column": 173,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/8/value": {
+      "offset": 1838,
+      "length": 10,
+      "line": 49,
+      "column": 181,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/8/value/items/0": {
+      "offset": 1839,
+      "length": 3,
+      "line": 49,
+      "column": 182,
+      "endLine": 49
+    },
+    "/methods/4/source/records/0/entries/8/value/items/1": {
+      "offset": 1844,
+      "length": 3,
+      "line": 49,
+      "column": 187,
+      "endLine": 49
+    },
+    "/methods/4/source/records/1": {
+      "offset": 1856,
+      "length": 153,
+      "line": 50,
+      "column": 5,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/0": {
+      "offset": 1858,
+      "length": 5,
+      "line": 50,
+      "column": 7,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/0/value": {
+      "offset": 1862,
+      "length": 1,
+      "line": 50,
+      "column": 11,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/1": {
+      "offset": 1865,
+      "length": 45,
+      "line": 50,
+      "column": 14,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/1/value": {
+      "offset": 1872,
+      "length": 38,
+      "line": 50,
+      "column": 21,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/2": {
+      "offset": 1912,
+      "length": 18,
+      "line": 50,
+      "column": 61,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/2/value": {
+      "offset": 1919,
+      "length": 11,
+      "line": 50,
+      "column": 68,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/3": {
+      "offset": 1932,
+      "length": 11,
+      "line": 50,
+      "column": 81,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/3/value": {
+      "offset": 1939,
+      "length": 4,
+      "line": 50,
+      "column": 88,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/4": {
+      "offset": 1945,
+      "length": 13,
+      "line": 50,
+      "column": 94,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/4/value": {
+      "offset": 1951,
+      "length": 7,
+      "line": 50,
+      "column": 100,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/4/value/items/0": {
+      "offset": 1952,
+      "length": 5,
+      "line": 50,
+      "column": 101,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/5": {
+      "offset": 1960,
+      "length": 14,
+      "line": 50,
+      "column": 109,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/5/value": {
+      "offset": 1966,
+      "length": 8,
+      "line": 50,
+      "column": 115,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/6": {
+      "offset": 1976,
+      "length": 31,
+      "line": 50,
+      "column": 125,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/6/value": {
+      "offset": 1987,
+      "length": 20,
+      "line": 50,
+      "column": 136,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/6/value/items/0": {
+      "offset": 1988,
+      "length": 3,
+      "line": 50,
+      "column": 137,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/6/value/items/1": {
+      "offset": 1993,
+      "length": 3,
+      "line": 50,
+      "column": 142,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/6/value/items/2": {
+      "offset": 1998,
+      "length": 3,
+      "line": 50,
+      "column": 147,
+      "endLine": 50
+    },
+    "/methods/4/source/records/1/entries/6/value/items/3": {
+      "offset": 2003,
+      "length": 3,
+      "line": 50,
+      "column": 152,
+      "endLine": 50
+    },
+    "/methods/4/source/records/2": {
+      "offset": 2015,
+      "length": 119,
+      "line": 51,
+      "column": 5,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/0": {
+      "offset": 2017,
+      "length": 5,
+      "line": 51,
+      "column": 7,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/0/value": {
+      "offset": 2021,
+      "length": 1,
+      "line": 51,
+      "column": 11,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/1": {
+      "offset": 2024,
+      "length": 25,
+      "line": 51,
+      "column": 14,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/1/value": {
+      "offset": 2031,
+      "length": 18,
+      "line": 51,
+      "column": 21,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/2": {
+      "offset": 2051,
+      "length": 16,
+      "line": 51,
+      "column": 41,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/2/value": {
+      "offset": 2058,
+      "length": 9,
+      "line": 51,
+      "column": 48,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/3": {
+      "offset": 2069,
+      "length": 12,
+      "line": 51,
+      "column": 59,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/3/value": {
+      "offset": 2076,
+      "length": 5,
+      "line": 51,
+      "column": 66,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/4": {
+      "offset": 2083,
+      "length": 16,
+      "line": 51,
+      "column": 73,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/4/value": {
+      "offset": 2089,
+      "length": 10,
+      "line": 51,
+      "column": 79,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/4/value/items/0": {
+      "offset": 2090,
+      "length": 8,
+      "line": 51,
+      "column": 80,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/5": {
+      "offset": 2101,
+      "length": 31,
+      "line": 51,
+      "column": 91,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/5/value": {
+      "offset": 2112,
+      "length": 20,
+      "line": 51,
+      "column": 102,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/5/value/items/0": {
+      "offset": 2113,
+      "length": 3,
+      "line": 51,
+      "column": 103,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/5/value/items/1": {
+      "offset": 2118,
+      "length": 3,
+      "line": 51,
+      "column": 108,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/5/value/items/2": {
+      "offset": 2123,
+      "length": 3,
+      "line": 51,
+      "column": 113,
+      "endLine": 51
+    },
+    "/methods/4/source/records/2/entries/5/value/items/3": {
+      "offset": 2128,
+      "length": 3,
+      "line": 51,
+      "column": 118,
+      "endLine": 51
+    },
+    "/methods/4/source/records/3": {
+      "offset": 2140,
+      "length": 140,
+      "line": 52,
+      "column": 5,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/0": {
+      "offset": 2142,
+      "length": 5,
+      "line": 52,
+      "column": 7,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/0/value": {
+      "offset": 2146,
+      "length": 1,
+      "line": 52,
+      "column": 11,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/1": {
+      "offset": 2149,
+      "length": 34,
+      "line": 52,
+      "column": 14,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/1/value": {
+      "offset": 2156,
+      "length": 27,
+      "line": 52,
+      "column": 21,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/2": {
+      "offset": 2185,
+      "length": 18,
+      "line": 52,
+      "column": 50,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/2/value": {
+      "offset": 2192,
+      "length": 11,
+      "line": 52,
+      "column": 57,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/3": {
+      "offset": 2205,
+      "length": 11,
+      "line": 52,
+      "column": 70,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/3/value": {
+      "offset": 2212,
+      "length": 4,
+      "line": 52,
+      "column": 77,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/4": {
+      "offset": 2218,
+      "length": 27,
+      "line": 52,
+      "column": 83,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/4/value": {
+      "offset": 2224,
+      "length": 21,
+      "line": 52,
+      "column": 89,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/4/value/items/0": {
+      "offset": 2225,
+      "length": 7,
+      "line": 52,
+      "column": 90,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/4/value/items/1": {
+      "offset": 2234,
+      "length": 10,
+      "line": 52,
+      "column": 99,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/5": {
+      "offset": 2247,
+      "length": 31,
+      "line": 52,
+      "column": 112,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/5/value": {
+      "offset": 2258,
+      "length": 20,
+      "line": 52,
+      "column": 123,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/5/value/items/0": {
+      "offset": 2259,
+      "length": 3,
+      "line": 52,
+      "column": 124,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/5/value/items/1": {
+      "offset": 2264,
+      "length": 3,
+      "line": 52,
+      "column": 129,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/5/value/items/2": {
+      "offset": 2269,
+      "length": 3,
+      "line": 52,
+      "column": 134,
+      "endLine": 52
+    },
+    "/methods/4/source/records/3/entries/5/value/items/3": {
+      "offset": 2274,
+      "length": 3,
+      "line": 52,
+      "column": 139,
+      "endLine": 52
+    },
+    "/methods/5": {
+      "offset": 2289,
+      "length": 76,
+      "line": 55,
+      "column": 1,
+      "endLine": 55
+    },
+    "/methods/6": {
+      "offset": 2367,
+      "length": 308,
+      "line": 57,
+      "column": 1,
+      "endLine": 64
+    },
+    "/methods/6/operations/0": {
+      "offset": 2398,
+      "length": 42,
+      "line": 58,
+      "column": 5,
+      "endLine": 58
+    },
+    "/methods/6/operations/0/newField": {
+      "offset": 2408,
+      "length": 32,
+      "line": 58,
+      "column": 15,
+      "endLine": 58
+    },
+    "/methods/6/operations/0/newField/defaultValue": {
+      "offset": 2437,
+      "length": 3,
+      "line": 58,
+      "column": 44,
+      "endLine": 58
+    },
+    "/methods/6/operations/1": {
+      "offset": 2445,
+      "length": 77,
+      "line": 59,
+      "column": 5,
+      "endLine": 59
+    },
+    "/methods/6/operations/1/newField": {
+      "offset": 2455,
+      "length": 67,
+      "line": 59,
+      "column": 15,
+      "endLine": 59
+    },
+    "/methods/6/operations/2": {
+      "offset": 2527,
+      "length": 48,
+      "line": 60,
+      "column": 5,
+      "endLine": 60
+    },
+    "/methods/6/operations/2/value": {
+      "offset": 2545,
+      "length": 30,
+      "line": 60,
+      "column": 23,
+      "endLine": 60
+    },
+    "/methods/6/operations/3": {
+      "offset": 2580,
+      "length": 33,
+      "line": 61,
+      "column": 5,
+      "endLine": 61
+    },
+    "/methods/6/operations/3/value": {
+      "offset": 2591,
+      "length": 22,
+      "line": 61,
+      "column": 16,
+      "endLine": 61
+    },
+    "/methods/6/operations/3/value/items/0": {
+      "offset": 2592,
+      "length": 9,
+      "line": 61,
+      "column": 17,
+      "endLine": 61
+    },
+    "/methods/6/operations/3/value/items/1": {
+      "offset": 2603,
+      "length": 9,
+      "line": 61,
+      "column": 28,
+      "endLine": 61
+    },
+    "/methods/6/operations/4": {
+      "offset": 2618,
+      "length": 18,
+      "line": 62,
+      "column": 5,
+      "endLine": 62
+    },
+    "/methods/6/operations/4/value": {
+      "offset": 2632,
+      "length": 4,
+      "line": 62,
+      "column": 19,
+      "endLine": 62
+    },
+    "/methods/6/operations/5": {
+      "offset": 2641,
+      "length": 32,
+      "line": 63,
+      "column": 5,
+      "endLine": 63
+    },
+    "/methods/6/operations/5/newAlias": {
+      "offset": 2651,
+      "length": 22,
+      "line": 63,
+      "column": 15,
+      "endLine": 63
+    },
+    "/methods/7": {
+      "offset": 2677,
+      "length": 55,
+      "line": 66,
+      "column": 1,
+      "endLine": 66
+    },
+    "/methods/7/operations/0": {
+      "offset": 2703,
+      "length": 27,
+      "line": 66,
+      "column": 27,
+      "endLine": 66
+    },
+    "/methods/8": {
+      "offset": 2734,
+      "length": 61,
+      "line": 68,
+      "column": 1,
+      "endLine": 68
+    },
+    "/methods/8/operations/0": {
+      "offset": 2760,
+      "length": 17,
+      "line": 68,
+      "column": 27,
+      "endLine": 68
+    },
+    "/methods/8/operations/1": {
+      "offset": 2778,
+      "length": 15,
+      "line": 68,
+      "column": 45,
+      "endLine": 68
+    },
+    "/methods/9": {
+      "offset": 2797,
+      "length": 103,
+      "line": 70,
+      "column": 1,
+      "endLine": 72
+    },
+    "/methods/9/nested/0": {
+      "offset": 2848,
+      "length": 50,
+      "line": 71,
+      "column": 5,
+      "endLine": 71
+    },
+    "/methods/9/nested/0/definition": {
+      "offset": 2855,
+      "length": 43,
+      "line": 71,
+      "column": 12,
+      "endLine": 71
+    },
+    "/methods/9/nested/0/definition/target": {
+      "offset": 2881,
+      "length": 4,
+      "line": 71,
+      "column": 38,
+      "endLine": 71
+    },
+    "/methods/10": {
+      "offset": 2902,
+      "length": 166,
+      "line": 74,
+      "column": 1,
+      "endLine": 76
+    },
+    "/methods/10/source": {
+      "offset": 2929,
+      "length": 134,
+      "line": 74,
+      "column": 28,
+      "endLine": 76
+    },
+    "/methods/10/source/records/0": {
+      "offset": 2942,
+      "length": 119,
+      "line": 75,
+      "column": 5,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/0": {
+      "offset": 2944,
+      "length": 5,
+      "line": 75,
+      "column": 7,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/0/value": {
+      "offset": 2948,
+      "length": 1,
+      "line": 75,
+      "column": 11,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/1": {
+      "offset": 2951,
+      "length": 25,
+      "line": 75,
+      "column": 14,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/1/value": {
+      "offset": 2958,
+      "length": 18,
+      "line": 75,
+      "column": 21,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/2": {
+      "offset": 2978,
+      "length": 16,
+      "line": 75,
+      "column": 41,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/2/value": {
+      "offset": 2985,
+      "length": 9,
+      "line": 75,
+      "column": 48,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/3": {
+      "offset": 2996,
+      "length": 12,
+      "line": 75,
+      "column": 59,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/3/value": {
+      "offset": 3003,
+      "length": 5,
+      "line": 75,
+      "column": 66,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/4": {
+      "offset": 3010,
+      "length": 16,
+      "line": 75,
+      "column": 73,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/4/value": {
+      "offset": 3016,
+      "length": 10,
+      "line": 75,
+      "column": 79,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/4/value/items/0": {
+      "offset": 3017,
+      "length": 8,
+      "line": 75,
+      "column": 80,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/5": {
+      "offset": 3028,
+      "length": 31,
+      "line": 75,
+      "column": 91,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/5/value": {
+      "offset": 3039,
+      "length": 20,
+      "line": 75,
+      "column": 102,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/5/value/items/0": {
+      "offset": 3040,
+      "length": 3,
+      "line": 75,
+      "column": 103,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/5/value/items/1": {
+      "offset": 3045,
+      "length": 3,
+      "line": 75,
+      "column": 108,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/5/value/items/2": {
+      "offset": 3050,
+      "length": 3,
+      "line": 75,
+      "column": 113,
+      "endLine": 75
+    },
+    "/methods/10/source/records/0/entries/5/value/items/3": {
+      "offset": 3055,
+      "length": 3,
+      "line": 75,
+      "column": 118,
+      "endLine": 75
+    },
+    "/methods/11": {
+      "offset": 3070,
+      "length": 54,
+      "line": 78,
+      "column": 1,
+      "endLine": 78
+    },
+    "/methods/11/values": {
+      "offset": 3096,
+      "length": 15,
+      "line": 78,
+      "column": 27,
+      "endLine": 78
+    },
+    "/methods/11/values/entries/0": {
+      "offset": 3098,
+      "length": 11,
+      "line": 78,
+      "column": 29,
+      "endLine": 78
+    },
+    "/methods/11/values/entries/0/value": {
+      "offset": 3105,
+      "length": 4,
+      "line": 78,
+      "column": 36,
+      "endLine": 78
+    },
+    "/methods/11/ids/0": {
+      "offset": 3117,
+      "length": 1,
+      "line": 78,
+      "column": 48,
+      "endLine": 78
+    },
+    "/methods/12": {
+      "offset": 3126,
+      "length": 80,
+      "line": 80,
+      "column": 1,
+      "endLine": 80
+    },
+    "/methods/12/values": {
+      "offset": 3152,
+      "length": 21,
+      "line": 80,
+      "column": 27,
+      "endLine": 80
+    },
+    "/methods/12/values/entries/0": {
+      "offset": 3154,
+      "length": 17,
+      "line": 80,
+      "column": 29,
+      "endLine": 80
+    },
+    "/methods/12/values/entries/0/value": {
+      "offset": 3160,
+      "length": 11,
+      "line": 80,
+      "column": 35,
+      "endLine": 80
+    },
+    "/methods/12/values/entries/0/value/items/0": {
+      "offset": 3161,
+      "length": 9,
+      "line": 80,
+      "column": 36,
+      "endLine": 80
+    },
+    "/methods/12/ids/0": {
+      "offset": 3179,
+      "length": 1,
+      "line": 80,
+      "column": 54,
+      "endLine": 80
+    },
+    "/methods/13": {
+      "offset": 3208,
+      "length": 76,
+      "line": 82,
+      "column": 1,
+      "endLine": 82
+    },
+    "/methods/13/values": {
+      "offset": 3232,
+      "length": 19,
+      "line": 82,
+      "column": 25,
+      "endLine": 82
+    },
+    "/methods/13/values/entries/0": {
+      "offset": 3234,
+      "length": 15,
+      "line": 82,
+      "column": 27,
+      "endLine": 82
+    },
+    "/methods/13/values/entries/0/value": {
+      "offset": 3240,
+      "length": 9,
+      "line": 82,
+      "column": 33,
+      "endLine": 82
+    },
+    "/methods/13/values/entries/0/value/items/0": {
+      "offset": 3241,
+      "length": 7,
+      "line": 82,
+      "column": 34,
+      "endLine": 82
+    },
+    "/methods/13/ids/0": {
+      "offset": 3257,
+      "length": 1,
+      "line": 82,
+      "column": 50,
+      "endLine": 82
+    },
+    "/methods/14": {
+      "offset": 3286,
+      "length": 68,
+      "line": 84,
+      "column": 1,
+      "endLine": 84
+    },
+    "/methods/14/filter": {
+      "offset": 3330,
+      "length": 24,
+      "line": 84,
+      "column": 45,
+      "endLine": 84
+    },
+    "/methods/14/filter/condition": {
+      "offset": 3336,
+      "length": 18,
+      "line": 84,
+      "column": 51,
+      "endLine": 84
+    },
+    "/methods/14/filter/condition/target": {
+      "offset": 3336,
+      "length": 5,
+      "line": 84,
+      "column": 51,
+      "endLine": 84
+    },
+    "/methods/14/filter/condition/value": {
+      "offset": 3345,
+      "length": 9,
+      "line": 84,
+      "column": 60,
+      "endLine": 84
+    },
+    "/methods/15": {
+      "offset": 3356,
+      "length": 112,
+      "line": 86,
+      "column": 1,
+      "endLine": 86
+    },
+    "/methods/15/source": {
+      "offset": 3386,
+      "length": 64,
+      "line": 86,
+      "column": 31,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0": {
+      "offset": 3395,
+      "length": 53,
+      "line": 86,
+      "column": 40,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/0": {
+      "offset": 3397,
+      "length": 5,
+      "line": 86,
+      "column": 42,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/0/value": {
+      "offset": 3401,
+      "length": 1,
+      "line": 86,
+      "column": 46,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/1": {
+      "offset": 3404,
+      "length": 18,
+      "line": 86,
+      "column": 49,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/1/value": {
+      "offset": 3410,
+      "length": 12,
+      "line": 86,
+      "column": 55,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/2": {
+      "offset": 3424,
+      "length": 22,
+      "line": 86,
+      "column": 69,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/2/value": {
+      "offset": 3436,
+      "length": 10,
+      "line": 86,
+      "column": 81,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/2/value/items/0": {
+      "offset": 3437,
+      "length": 3,
+      "line": 86,
+      "column": 82,
+      "endLine": 86
+    },
+    "/methods/15/source/records/0/entries/2/value/items/1": {
+      "offset": 3442,
+      "length": 3,
+      "line": 86,
+      "column": 87,
+      "endLine": 86
+    },
+    "/methods/16": {
+      "offset": 3470,
+      "length": 171,
+      "line": 88,
+      "column": 1,
+      "endLine": 91
+    },
+    "/methods/16/source": {
+      "offset": 3499,
+      "length": 125,
+      "line": 88,
+      "column": 30,
+      "endLine": 91
+    },
+    "/methods/16/source/records/0": {
+      "offset": 3512,
+      "length": 52,
+      "line": 89,
+      "column": 5,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/0": {
+      "offset": 3514,
+      "length": 5,
+      "line": 89,
+      "column": 7,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/0/value": {
+      "offset": 3518,
+      "length": 1,
+      "line": 89,
+      "column": 11,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/1": {
+      "offset": 3521,
+      "length": 17,
+      "line": 89,
+      "column": 14,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/1/value": {
+      "offset": 3527,
+      "length": 11,
+      "line": 89,
+      "column": 20,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/2": {
+      "offset": 3540,
+      "length": 22,
+      "line": 89,
+      "column": 33,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/2/value": {
+      "offset": 3552,
+      "length": 10,
+      "line": 89,
+      "column": 45,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/2/value/items/0": {
+      "offset": 3553,
+      "length": 3,
+      "line": 89,
+      "column": 46,
+      "endLine": 89
+    },
+    "/methods/16/source/records/0/entries/2/value/items/1": {
+      "offset": 3558,
+      "length": 3,
+      "line": 89,
+      "column": 51,
+      "endLine": 89
+    },
+    "/methods/16/source/records/1": {
+      "offset": 3570,
+      "length": 52,
+      "line": 90,
+      "column": 5,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/0": {
+      "offset": 3572,
+      "length": 5,
+      "line": 90,
+      "column": 7,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/0/value": {
+      "offset": 3576,
+      "length": 1,
+      "line": 90,
+      "column": 11,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/1": {
+      "offset": 3579,
+      "length": 17,
+      "line": 90,
+      "column": 14,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/1/value": {
+      "offset": 3585,
+      "length": 11,
+      "line": 90,
+      "column": 20,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/2": {
+      "offset": 3598,
+      "length": 22,
+      "line": 90,
+      "column": 33,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/2/value": {
+      "offset": 3610,
+      "length": 10,
+      "line": 90,
+      "column": 45,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/2/value/items/0": {
+      "offset": 3611,
+      "length": 3,
+      "line": 90,
+      "column": 46,
+      "endLine": 90
+    },
+    "/methods/16/source/records/1/entries/2/value/items/1": {
+      "offset": 3616,
+      "length": 3,
+      "line": 90,
+      "column": 51,
+      "endLine": 90
+    },
+    "/methods/17": {
+      "offset": 3643,
+      "length": 116,
+      "line": 93,
+      "column": 1,
+      "endLine": 93
+    },
+    "/methods/17/source": {
+      "offset": 3672,
+      "length": 63,
+      "line": 93,
+      "column": 30,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0": {
+      "offset": 3681,
+      "length": 52,
+      "line": 93,
+      "column": 39,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/0": {
+      "offset": 3683,
+      "length": 5,
+      "line": 93,
+      "column": 41,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/0/value": {
+      "offset": 3687,
+      "length": 1,
+      "line": 93,
+      "column": 45,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/1": {
+      "offset": 3690,
+      "length": 17,
+      "line": 93,
+      "column": 48,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/1/value": {
+      "offset": 3696,
+      "length": 11,
+      "line": 93,
+      "column": 54,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/2": {
+      "offset": 3709,
+      "length": 22,
+      "line": 93,
+      "column": 67,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/2/value": {
+      "offset": 3721,
+      "length": 10,
+      "line": 93,
+      "column": 79,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/2/value/items/0": {
+      "offset": 3722,
+      "length": 3,
+      "line": 93,
+      "column": 80,
+      "endLine": 93
+    },
+    "/methods/17/source/records/0/entries/2/value/items/1": {
+      "offset": 3727,
+      "length": 3,
+      "line": 93,
+      "column": 85,
+      "endLine": 93
+    },
+    "/methods/18": {
+      "offset": 3761,
+      "length": 94,
+      "line": 95,
+      "column": 1,
+      "endLine": 95
+    },
+    "/methods/18/source": {
+      "offset": 3792,
+      "length": 58,
+      "line": 95,
+      "column": 32,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0": {
+      "offset": 3801,
+      "length": 47,
+      "line": 95,
+      "column": 41,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/0": {
+      "offset": 3803,
+      "length": 5,
+      "line": 95,
+      "column": 43,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/0/value": {
+      "offset": 3807,
+      "length": 1,
+      "line": 95,
+      "column": 47,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/1": {
+      "offset": 3810,
+      "length": 11,
+      "line": 95,
+      "column": 50,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/1/value": {
+      "offset": 3816,
+      "length": 5,
+      "line": 95,
+      "column": 56,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/2": {
+      "offset": 3823,
+      "length": 23,
+      "line": 95,
+      "column": 63,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/2/value": {
+      "offset": 3836,
+      "length": 10,
+      "line": 95,
+      "column": 76,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/2/value/items/0": {
+      "offset": 3837,
+      "length": 3,
+      "line": 95,
+      "column": 77,
+      "endLine": 95
+    },
+    "/methods/18/source/records/0/entries/2/value/items/1": {
+      "offset": 3842,
+      "length": 3,
+      "line": 95,
+      "column": 82,
+      "endLine": 95
+    },
+    "/methods/19": {
+      "offset": 3857,
+      "length": 110,
+      "line": 97,
+      "column": 1,
+      "endLine": 97
+    },
+    "/methods/19/source": {
+      "offset": 3888,
+      "length": 58,
+      "line": 97,
+      "column": 32,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0": {
+      "offset": 3897,
+      "length": 47,
+      "line": 97,
+      "column": 41,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/0": {
+      "offset": 3899,
+      "length": 5,
+      "line": 97,
+      "column": 43,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/0/value": {
+      "offset": 3903,
+      "length": 1,
+      "line": 97,
+      "column": 47,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/1": {
+      "offset": 3906,
+      "length": 11,
+      "line": 97,
+      "column": 50,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/1/value": {
+      "offset": 3912,
+      "length": 5,
+      "line": 97,
+      "column": 56,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/2": {
+      "offset": 3919,
+      "length": 23,
+      "line": 97,
+      "column": 63,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/2/value": {
+      "offset": 3932,
+      "length": 10,
+      "line": 97,
+      "column": 76,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/2/value/items/0": {
+      "offset": 3933,
+      "length": 3,
+      "line": 97,
+      "column": 77,
+      "endLine": 97
+    },
+    "/methods/19/source/records/0/entries/2/value/items/1": {
+      "offset": 3938,
+      "length": 3,
+      "line": 97,
+      "column": 82,
+      "endLine": 97
+    },
+    "/methods/20": {
+      "offset": 3969,
+      "length": 21,
+      "line": 99,
+      "column": 1,
+      "endLine": 99
+    },
+    "/methods/21": {
+      "offset": 3992,
+      "length": 20,
+      "line": 101,
+      "column": 1,
+      "endLine": 101
+    },
+    "/methods/22": {
+      "offset": 4014,
+      "length": 45,
+      "line": 103,
+      "column": 1,
+      "endLine": 103
+    },
+    "/methods/23": {
+      "offset": 4061,
+      "length": 57,
+      "line": 105,
+      "column": 1,
+      "endLine": 105
+    },
+    "/methods/24": {
+      "offset": 4120,
+      "length": 51,
+      "line": 107,
+      "column": 1,
+      "endLine": 107
+    },
+    "/methods/25": {
+      "offset": 4173,
+      "length": 38,
+      "line": 109,
+      "column": 1,
+      "endLine": 109
+    },
+    "/methods/26": {
+      "offset": 4213,
+      "length": 41,
+      "line": 111,
+      "column": 1,
+      "endLine": 111
+    },
+    "/methods/27": {
+      "offset": 4256,
+      "length": 136,
+      "line": 113,
+      "column": 1,
+      "endLine": 115
+    },
+    "/methods/27/input": {
+      "offset": 4294,
+      "length": 25,
+      "line": 113,
+      "column": 39,
+      "endLine": 113
+    },
+    "/methods/27/input/value": {
+      "offset": 4307,
+      "length": 12,
+      "line": 113,
+      "column": 52,
+      "endLine": 113
+    },
+    "/methods/27/output": {
+      "offset": 4340,
+      "length": 21,
+      "line": 114,
+      "column": 5,
+      "endLine": 114
+    },
+    "/methods/27/filter": {
+      "offset": 4366,
+      "length": 26,
+      "line": 115,
+      "column": 5,
+      "endLine": 115
+    },
+    "/methods/27/filter/condition": {
+      "offset": 4372,
+      "length": 20,
+      "line": 115,
+      "column": 11,
+      "endLine": 115
+    },
+    "/methods/27/filter/condition/target": {
+      "offset": 4372,
+      "length": 5,
+      "line": 115,
+      "column": 11,
+      "endLine": 115
+    },
+    "/methods/27/filter/condition/value": {
+      "offset": 4381,
+      "length": 11,
+      "line": 115,
+      "column": 20,
+      "endLine": 115
+    },
+    "/methods/28": {
+      "offset": 4394,
+      "length": 116,
+      "line": 117,
+      "column": 1,
+      "endLine": 117
+    },
+    "/methods/28/input": {
+      "offset": 4432,
+      "length": 25,
+      "line": 117,
+      "column": 39,
+      "endLine": 117
+    },
+    "/methods/28/input/value": {
+      "offset": 4445,
+      "length": 12,
+      "line": 117,
+      "column": 52,
+      "endLine": 117
+    },
+    "/methods/28/groupBy": {
+      "offset": 4483,
+      "length": 5,
+      "line": 117,
+      "column": 90,
+      "endLine": 117
+    },
+    "/methods/28/output": {
+      "offset": 4496,
+      "length": 14,
+      "line": 117,
+      "column": 103,
+      "endLine": 117
+    },
+    "/methods/29": {
+      "offset": 4512,
+      "length": 84,
+      "line": 119,
+      "column": 1,
+      "endLine": 119
+    },
+    "/methods/29/input": {
+      "offset": 4544,
+      "length": 22,
+      "line": 119,
+      "column": 33,
+      "endLine": 119
+    },
+    "/methods/29/input/value": {
+      "offset": 4555,
+      "length": 11,
+      "line": 119,
+      "column": 44,
+      "endLine": 119
+    },
+    "/methods/29/searchFields/0": {
+      "offset": 4575,
+      "length": 5,
+      "line": 119,
+      "column": 64,
+      "endLine": 119
+    },
+    "/methods/29/output": {
+      "offset": 4582,
+      "length": 14,
+      "line": 119,
+      "column": 71,
+      "endLine": 119
+    },
+    "/methods/30": {
+      "offset": 4598,
+      "length": 174,
+      "line": 121,
+      "column": 1,
+      "endLine": 124
+    },
+    "/methods/30/legs/0": {
+      "offset": 4652,
+      "length": 52,
+      "line": 122,
+      "column": 5,
+      "endLine": 122
+    },
+    "/methods/30/legs/0/input": {
+      "offset": 4661,
+      "length": 25,
+      "line": 122,
+      "column": 14,
+      "endLine": 122
+    },
+    "/methods/30/legs/0/input/value": {
+      "offset": 4674,
+      "length": 12,
+      "line": 122,
+      "column": 27,
+      "endLine": 122
+    },
+    "/methods/30/legs/1": {
+      "offset": 4709,
+      "length": 46,
+      "line": 123,
+      "column": 5,
+      "endLine": 123
+    },
+    "/methods/30/legs/1/input": {
+      "offset": 4719,
+      "length": 19,
+      "line": 123,
+      "column": 15,
+      "endLine": 123
+    },
+    "/methods/30/legs/1/input/value": {
+      "offset": 4730,
+      "length": 8,
+      "line": 123,
+      "column": 26,
+      "endLine": 123
+    },
+    "/methods/30/legs/1/searchFields/0": {
+      "offset": 4747,
+      "length": 5,
+      "line": 123,
+      "column": 43,
+      "endLine": 123
+    },
+    "/methods/30/output": {
+      "offset": 4758,
+      "length": 14,
+      "line": 124,
+      "column": 3,
+      "endLine": 124
+    },
+    "/methods/31": {
+      "offset": 4774,
+      "length": 65,
+      "line": 126,
+      "column": 1,
+      "endLine": 126
+    },
+    "/methods/31/ids/0": {
+      "offset": 4800,
+      "length": 1,
+      "line": 126,
+      "column": 27,
+      "endLine": 126
+    },
+    "/methods/31/ids/1": {
+      "offset": 4803,
+      "length": 1,
+      "line": 126,
+      "column": 30,
+      "endLine": 126
+    },
+    "/methods/31/output": {
+      "offset": 4806,
+      "length": 33,
+      "line": 126,
+      "column": 33,
+      "endLine": 126
+    },
+    "/methods/32": {
+      "offset": 4841,
+      "length": 54,
+      "line": 128,
+      "column": 1,
+      "endLine": 128
+    },
+    "/methods/32/output": {
+      "offset": 4874,
+      "length": 21,
+      "line": 128,
+      "column": 34,
+      "endLine": 128
+    },
+    "/methods/33": {
+      "offset": 4897,
+      "length": 60,
+      "line": 130,
+      "column": 1,
+      "endLine": 130
+    },
+    "/methods/33/output": {
+      "offset": 4943,
+      "length": 14,
+      "line": 130,
+      "column": 47,
+      "endLine": 130
+    },
+    "/methods/34": {
+      "offset": 4959,
+      "length": 45,
+      "line": 132,
+      "column": 1,
+      "endLine": 132
+    },
+    "/methods/34/output": {
+      "offset": 4990,
+      "length": 14,
+      "line": 132,
+      "column": 32,
+      "endLine": 132
+    },
+    "/methods/35": {
+      "offset": 5006,
+      "length": 64,
+      "line": 134,
+      "column": 1,
+      "endLine": 134
+    },
+    "/methods/36": {
+      "offset": 5072,
+      "length": 39,
+      "line": 136,
+      "column": 1,
+      "endLine": 136
+    },
+    "/methods/36/filter": {
+      "offset": 5094,
+      "length": 17,
+      "line": 136,
+      "column": 23,
+      "endLine": 136
+    },
+    "/methods/36/filter/condition": {
+      "offset": 5100,
+      "length": 11,
+      "line": 136,
+      "column": 29,
+      "endLine": 136
+    },
+    "/methods/36/filter/condition/target": {
+      "offset": 5100,
+      "length": 5,
+      "line": 136,
+      "column": 29,
+      "endLine": 136
+    },
+    "/methods/36/filter/condition/value": {
+      "offset": 5109,
+      "length": 2,
+      "line": 136,
+      "column": 38,
+      "endLine": 136
+    },
+    "/methods/37": {
+      "offset": 5113,
+      "length": 39,
+      "line": 138,
+      "column": 1,
+      "endLine": 138
+    },
+    "/methods/38": {
+      "offset": 5154,
+      "length": 44,
+      "line": 140,
+      "column": 1,
+      "endLine": 140
+    },
+    "/methods/39": {
+      "offset": 5200,
+      "length": 91,
+      "line": 142,
+      "column": 1,
+      "endLine": 142
+    },
+    "/methods/39/input": {
+      "offset": 5241,
+      "length": 23,
+      "line": 142,
+      "column": 42,
+      "endLine": 142
+    },
+    "/methods/39/input/value": {
+      "offset": 5254,
+      "length": 10,
+      "line": 142,
+      "column": 55,
+      "endLine": 142
+    },
+    "/methods/39/input/value/items/0": {
+      "offset": 5255,
+      "length": 3,
+      "line": 142,
+      "column": 56,
+      "endLine": 142
+    },
+    "/methods/39/input/value/items/1": {
+      "offset": 5260,
+      "length": 3,
+      "line": 142,
+      "column": 61,
+      "endLine": 142
+    },
+    "/methods/39/output": {
+      "offset": 5278,
+      "length": 13,
+      "line": 142,
+      "column": 79,
+      "endLine": 142
+    },
+    "/methods/40": {
+      "offset": 5293,
+      "length": 65,
+      "line": 144,
+      "column": 1,
+      "endLine": 144
+    },
+    "/methods/40/ids/0": {
+      "offset": 5324,
+      "length": 1,
+      "line": 144,
+      "column": 32,
+      "endLine": 144
+    },
+    "/methods/40/ids/1": {
+      "offset": 5327,
+      "length": 1,
+      "line": 144,
+      "column": 35,
+      "endLine": 144
+    },
+    "/methods/40/ids/2": {
+      "offset": 5330,
+      "length": 1,
+      "line": 144,
+      "column": 38,
+      "endLine": 144
+    },
+    "/methods/40/output": {
+      "offset": 5345,
+      "length": 13,
+      "line": 144,
+      "column": 53,
+      "endLine": 144
+    },
+    "/methods/41": {
+      "offset": 5360,
+      "length": 47,
+      "line": 146,
+      "column": 1,
+      "endLine": 146
+    },
+    "/methods/42": {
+      "offset": 5409,
+      "length": 62,
+      "line": 148,
+      "column": 1,
+      "endLine": 148
+    },
+    "/methods/42/output": {
+      "offset": 5458,
+      "length": 13,
+      "line": 148,
+      "column": 50,
+      "endLine": 148
+    },
+    "/methods/43": {
+      "offset": 5473,
+      "length": 33,
+      "line": 150,
+      "column": 1,
+      "endLine": 150
+    },
+    "/methods/44": {
+      "offset": 5508,
+      "length": 33,
+      "line": 152,
+      "column": 1,
+      "endLine": 152
+    },
+    "/methods/45": {
+      "offset": 5543,
+      "length": 33,
+      "line": 154,
+      "column": 1,
+      "endLine": 154
+    },
+    "/methods/46": {
+      "offset": 5578,
+      "length": 41,
+      "line": 156,
+      "column": 1,
+      "endLine": 156
+    },
+    "/methods/47": {
+      "offset": 5621,
+      "length": 34,
+      "line": 158,
+      "column": 1,
+      "endLine": 158
+    },
+    "/methods/48": {
+      "offset": 5657,
+      "length": 40,
+      "line": 160,
+      "column": 1,
+      "endLine": 160
+    },
+    "/methods/49": {
+      "offset": 5699,
+      "length": 65,
+      "line": 162,
+      "column": 1,
+      "endLine": 162
+    },
+    "/methods/50": {
+      "offset": 5766,
+      "length": 38,
+      "line": 164,
+      "column": 1,
+      "endLine": 164
+    },
+    "/methods/51": {
+      "offset": 5806,
+      "length": 37,
+      "line": 166,
+      "column": 1,
+      "endLine": 166
+    },
+    "/methods/52": {
+      "offset": 5845,
+      "length": 146,
+      "line": 168,
+      "column": 1,
+      "endLine": 172
+    },
+    "/methods/52/definition": {
+      "offset": 5867,
+      "length": 124,
+      "line": 168,
+      "column": 23,
+      "endLine": 172
+    },
+    "/methods/52/definition/fields/0": {
+      "offset": 5907,
+      "length": 17,
+      "line": 170,
+      "column": 5,
+      "endLine": 170
+    },
+    "/methods/52/definition/fields/1": {
+      "offset": 5929,
+      "length": 60,
+      "line": 171,
+      "column": 5,
+      "endLine": 171
+    },
+    "/methods/53": {
+      "offset": 5993,
+      "length": 46,
+      "line": 174,
+      "column": 1,
+      "endLine": 174
+    },
+    "/methods/54": {
+      "offset": 6041,
+      "length": 26,
+      "line": 176,
+      "column": 1,
+      "endLine": 176
+    },
+    "/methods/55": {
+      "offset": 6069,
+      "length": 47,
+      "line": 178,
+      "column": 1,
+      "endLine": 178
+    },
+    "/methods/56": {
+      "offset": 6118,
+      "length": 23,
+      "line": 180,
+      "column": 1,
+      "endLine": 180
+    },
+    "/methods/57": {
+      "offset": 6143,
+      "length": 36,
+      "line": 182,
+      "column": 1,
+      "endLine": 182
+    },
+    "/methods/58": {
+      "offset": 6181,
+      "length": 26,
+      "line": 184,
+      "column": 1,
+      "endLine": 184
+    },
+    "/methods/59": {
+      "offset": 6209,
+      "length": 25,
+      "line": 186,
+      "column": 1,
+      "endLine": 186
+    },
+    "/methods/60": {
+      "offset": 6236,
+      "length": 44,
+      "line": 188,
+      "column": 1,
+      "endLine": 188
+    },
+    "/methods/61": {
+      "offset": 6282,
+      "length": 21,
+      "line": 190,
+      "column": 1,
+      "endLine": 190
+    },
+    "/methods/62": {
+      "offset": 6305,
+      "length": 38,
+      "line": 192,
+      "column": 1,
+      "endLine": 192
+    },
+    "/methods/63": {
+      "offset": 6345,
+      "length": 21,
+      "line": 194,
+      "column": 1,
+      "endLine": 194
+    },
+    "/methods/64": {
+      "offset": 6368,
+      "length": 40,
+      "line": 196,
+      "column": 1,
+      "endLine": 196
+    }
+  },
+  "literals": {}
+}

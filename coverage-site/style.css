@@ -1,0 +1,47 @@
+body { font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; margin: 0 auto; max-width: 64rem; padding: 0 1rem 2rem; }
+body.wide { max-width: none; }
+header nav a { margin-right: 1rem; }
+.site { margin: 1rem 0 0; color: #555; }
+h1 { margin: 0.2rem 0 1rem; font-size: 1.6rem; }
+h2 { margin-top: 2rem; font-size: 1.2rem; }
+a { color: #1f4e79; }
+code { font: 0.9em Consolas, "DejaVu Sans Mono", monospace; }
+.hash { font-size: 0.75em; word-break: break-all; }
+.note, .legend, footer { color: #444; font-size: 0.9rem; }
+footer { margin-top: 3rem; border-top: 1px solid #ccc; padding-top: 0.5rem; }
+.toc a { margin-right: 0.8rem; white-space: nowrap; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 1rem; }
+dt { font-weight: 600; }
+dd { margin: 0; }
+table { border-collapse: collapse; margin: 0.5rem 0 1rem; }
+th, td { border: 1px solid #ccc; padding: 0.2rem 0.4rem; text-align: left; vertical-align: top; }
+thead th { background: #eef1f4; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.area th { background: #dfe6ed; font-size: 0.95rem; }
+table.rows td, table.rows th { font-size: 0.85rem; }
+td.ref { overflow-wrap: anywhere; min-width: 10rem; }
+table.matrix { font-size: 0.8rem; }
+table.matrix td { text-align: center; padding: 0 0.15rem; min-width: 1.4rem; }
+table.matrix td a { color: inherit; text-decoration: none; display: block; }
+table.matrix th.vendor { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; padding: 0.4rem 0.1rem; }
+table.matrix tr.counts th, table.matrix tr.counts td { font-size: 0.75rem; font-weight: normal; }
+table.matrix tbody th { font-weight: normal; white-space: nowrap; }
+td.native { background: #d6ecd2; }
+td.concealed { background: #dbe7f5; }
+td.unsupported { background: #f6d8d5; }
+td.not-applicable { background: #ececec; color: #666; }
+pre.source { background: #f7f7f7; border: 1px solid #ddd; padding: 0.6rem; overflow-x: auto; font-size: 0.85rem; }
+.ln { color: #888; user-select: none; }
+@page { size: A4; margin: 12mm; }
+@page wide { size: A4 landscape; margin: 8mm; }
+@media print {
+  body { font-size: 10pt; max-width: none; padding: 0; }
+  body.wide { page: wide; }
+  header nav, img { display: none; }
+  a { color: inherit; text-decoration: none; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  table.matrix { font-size: 6.5pt; }
+  table.rows td, table.rows th { font-size: 7pt; }
+  td.native, td.concealed, td.unsupported, td.not-applicable { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

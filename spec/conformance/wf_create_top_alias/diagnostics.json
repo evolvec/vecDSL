@@ -1,0 +1,12 @@
+{
+  "vecdsl-ir": "1.0",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "wf.create.notTopLevel",
+      "message": "a top-level create may define or reference only Analyzer, AuthConfig, BackupSchedule, Cluster, Connection, Database, EmbeddingModel, FileResource, GenerativeModel, Reranker, VectorCollection, VectorDatabase; define the Alias inside its owner or in a nested 'with { }' create",
+      "line": 14,
+      "column": 20
+    }
+  ]
+}

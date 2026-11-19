@@ -1,0 +1,37 @@
+# {{product}} {{server.version}} for the generated programs: one node, port {{server.port}} on 127.0.0.1 only, HTTP without TLS.
+# Image {{server.image}} ({{server.image.digest}}); license {{license}} (the free tier, which needs no renewal).
+# Security is on: user {{user}} with the password from the environment variable VECDSL_ELASTICSEARCH_PASSWORD, which compose
+# refuses to start without. Data persists in the named volume {{storage.volume}} (docker compose down -v removes it). Snapshots
+# go to {{snapshot.path}} (path.repo) inside the container, which the server creates and owns; they last until the container
+# is removed. There is no second named volume: Docker would create it owned by root, and the server could not write to it.
+# Docker Desktop with WSL2: single-node discovery skips the bootstrap checks, so vm.max_map_count below 262144 only logs a
+# warning; if the container still exits, run: wsl -d docker-desktop sysctl -w vm.max_map_count=262144
+# The disk watermarks are off so that a nearly full Docker Desktop disk does not make the indices read-only.
+# Start with: docker compose up -d   Health: the cluster health API inside the container (yellow or green).
+services:
+  elasticsearch:
+    image: {{server.image}}
+    ports:
+      - "127.0.0.1:{{server.port}}:9200"
+    environment:
+      discovery.type: single-node
+      ELASTIC_PASSWORD: ${VECDSL_ELASTICSEARCH_PASSWORD:?set VECDSL_ELASTICSEARCH_PASSWORD}
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+      xpack.license.self_generated.type: {{license}}
+      path.repo: {{snapshot.path}}
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+      ES_JAVA_OPTS: -Xms{{heap}} -Xmx{{heap}}
+    volumes:
+      - {{storage.volume}}:{{storage.path}}
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -m 5 -u {{user}}:$$ELASTIC_PASSWORD 'http://127.0.0.1:9200/_cluster/health?timeout=4s' | grep -Eq '\"status\":\"(green|yellow)\"'"]
+      interval: 5s
+      timeout: 10s
+      retries: 36
+      start_period: 30s
+
+volumes:
+  {{storage.volume}}:

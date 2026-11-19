@@ -1,0 +1,28 @@
+# {{product}} {{server.version}} (mongot {{mongot.version}}) for the generated programs: one mongod and one mongot in a
+# single-node replica set, port {{server.port}} on 127.0.0.1 only, without TLS.
+# Image {{server.image}} (index digest {{server.image.digest}}), which needs no Atlas account.
+# Authentication is on: the root user and its password come from the environment variables VECDSL_MONGODB_USER and
+# VECDSL_MONGODB_PASSWORD, which compose refuses to start without. Data, configuration and the search indexes persist in the
+# named volumes below (docker compose down -v removes them).
+# Health: the image's own health check, which reports healthy once mongod, mongot and the init scripts are ready; wait with
+#   docker inspect --format '{{.State.Health.Status}}' <container>
+# Start with: docker compose up -d
+services:
+  mongodb:
+    image: {{server.image}}
+    hostname: mongodb
+    ports:
+      - "127.0.0.1:{{server.port}}:27017"
+    environment:
+      MONGODB_INITDB_ROOT_USERNAME: ${VECDSL_MONGODB_USER:?set VECDSL_MONGODB_USER}
+      MONGODB_INITDB_ROOT_PASSWORD: ${VECDSL_MONGODB_PASSWORD:?set VECDSL_MONGODB_PASSWORD}
+    volumes:
+      - {{storage.volume.data}}:/data/db
+      - {{storage.volume.config}}:/data/configdb
+      - {{storage.volume.mongot}}:/data/mongot
+    mem_limit: 3g
+
+volumes:
+  {{storage.volume.data}}:
+  {{storage.volume.config}}:
+  {{storage.volume.mongot}}:

@@ -1,0 +1,59 @@
+enumeration,literal count,literals
+EHostLanguage,6,python typescript java go rust dotnet
+EParamType,10,vector sparse_vector multi_vector text int float bool string_list records json
+EMetric,6,cosine euclidean dot manhattan hamming jaccard
+EMultiVectorComparator,1,max_sim
+EScoreForm,2,similarity native
+EScalarDType,22,int bigint int8 float double bool varchar text date datetime timestamptz uuid bytes json array map struct geo_point geometry image audio video
+EVectorDType,8,float_vector float16_vector bfloat16_vector float64_vector int8_vector uint8_vector binary_vector sparse_float_vector
+EIndexFamily,6,auto flat hnsw ivf vamana sparse_inverted
+EAccelerator,2,cpu gpu
+EQuantizationKind,4,none scalar binary product
+EPayloadIndexKind,9,keyword full_text integer float datetime bool uuid geo json
+EPayloadIndexStructure,4,auto inverted bitmap btree
+EFilterStrategy,4,auto pre_filter post_filter iterative
+ESparseModifier,2,none idf
+ETextQueryType,9,match phrase phrase_prefix query_string term fuzzy prefix wildcard regexp
+EMatchOperator,2,and or
+EQueryInputMode,6,vector sparse_vector multi_vector text id image
+ESampleMethod,2,random first
+EConflictPolicy,4,error ignore update replace
+EIdType,4,auto int uuid string
+EPartitionStrategy,5,hash range list key tenant
+ECollectionProperty,6,ttl description consistency deletion-protection dynamic tags
+EComparisonOp,13,eq neq gt gte lt lte in not_in like prefix contains contains_any contains_all
+EUnaryOp,5,is_null is_not_null exists not_exists is_empty
+ETextOp,8,match match_all_terms match_any_term phrase fuzzy wildcard regex contains_text
+EListKind,8,collections indexes aliases tenants partitions namespaces snapshots databases
+EClusterLimit,1,max_collections
+ECollectionLimit,4,max_partitions max_fields max_shards max_vector_dim
+EFieldLimit,3,vector_dim array_len max_size
+EFusionType,3,rrf weighted relative_score
+EConsistencyLevel,4,strong bounded session eventual
+EWriteConsistency,3,one quorum all
+ETokenizer,7,standard whitespace keyword ngram edge_ngram icu language
+EAnalyzerFilterType,8,lowercase stop stemmer length ascii_folding synonym decompounder phonetic
+EFileResourceType,4,dictionary synonyms stopwords model
+EFunctionType,5,bm25 text_embedding sparse_encoding rerank custom
+ESnapshotScope,4,collection full tenant shard
+ECloneMode,2,shallow snapshot
+EImportFormat,7,json parquet csv numpy lance iceberg vortex
+EExternalFormat,4,parquet lance iceberg vortex
+EModelFormat,5,onnx xgboost lightgbm tensorflow custom
+EStorageType,4,memory disk object_storage embedded
+EAggregationType,14,count sum avg min max distinct_count facet terms histogram date_histogram range stats cardinality percentiles
+EChunkStrategy,6,none fixed_size sentence paragraph semantic ast_aware
+EDeploymentMode,5,client_server embedded serverless byoc edge
+ESortDirection,2,asc desc
+EUpdateMode,2,merge replace
+EIsolationLevel,5,read_uncommitted read_committed repeatable_read serializable snapshot
+EMigrationStrategy,4,in_place dual_write shadow blue_green
+EGeneratorHintType,6,import async error_handling retry_policy pool_size timeout_default
+EAuthType,6,none api_key username_password token mtls sso
+EBoostKind,3,field_value decay condition
+EDecayShape,3,gauss exp linear
+EBoostCombine,5,sum multiply max avg replace
+EIndexBuildState,4,pending building ready failed
+EElementCollapse,4,max sum avg top_k
+EGeoUnit,3,meters km miles
+EGeoRelation,4,intersects within contains disjoint

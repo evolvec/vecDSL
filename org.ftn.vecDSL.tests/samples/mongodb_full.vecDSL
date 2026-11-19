@@ -1,0 +1,495 @@
+script mongodbCoverage
+targets [ mongodb ]
+version "1.0"
+description "Every native and concealed MongoDB construct of vecDSL 7.1, in an order that runs on a fresh server and leaves it as found"
+param queryVector : vector = [0.9, 0.1, 0.0, 0.1]
+param queryText : text = "vector databases"
+param northPlace : text = "45.25,19.85"
+param betaPlace : text = "44.79,20.45"
+param memoPlace : text = "45.03,19.73"
+param teamPlace : text = "46.10,19.66"
+
+connectLocal: create connection local uri "mongodb://127.0.0.1:27017/?directConnection=true" password env("VECDSL_MONGODB_PASSWORD") timeout 30000
+
+cleanBooks: drop books if-exists
+
+cleanCopy: drop booksCopy if-exists
+
+cleanLogs: drop logs if-exists
+
+cleanSignals: drop signals if-exists
+
+cleanArchive: drop archive if-exists
+
+cleanCatalog: drop catalog
+
+cleanView: drop shelfView if-exists
+
+cleanWarm: drop warm
+
+cleanReaders: drop readers if-exists
+
+createShop: create database shop {
+    connection shopConnection uri "mongodb://127.0.0.1:27017/?directConnection=true"
+    logical-db catalog {
+        collection notes {
+            primary id
+            field id type int
+            field body type varchar full-text
+            field place type geo_point
+            vector-field noteVector type float_vector dim 2 metric euclidean
+            namespace teamA key "team-a"
+            tenant north
+            tenant beta
+        }
+    }
+} if-not-exists
+
+createBooks: create collection books {
+    primary id
+    analyzer english tokenizer standard language "en"
+    field id type int
+    field title type varchar max-length 256 full-text analyzer english
+    field genre type varchar max-length 64
+    field price type float
+    field tags type array element-type varchar field-limit tagLimit array_len = 8
+    field meta type varchar
+    field note type varchar
+    field details type struct {
+        field pageCount type int
+        field lang type varchar
+    }
+    vector-field embedding type float_vector dim 4 metric cosine {
+        vector-index embeddingIndex family hnsw max-degree 16 build-candidates 200 search-candidates 80
+    }
+    payload-index genreIndex on genre kind keyword
+    payload-index priceIndex on price kind float
+    payload-index tagIndex on tags kind keyword
+    payload-index pagesIndex on details.pageCount kind integer
+    collection-limit fieldCap max_fields = 20
+} description "Books about databases"
+
+createReaders: create auth admins type username_password {
+    role readers "vecdsl_reader" privileges ["read", "write"] collection books
+} if-not-exists
+
+seed: insert into books values [
+    { id: 1, title: "Vector database design", genre: "databases", price: 35.0, tags: ["vector", "database"], meta: "first", note: "draft", embedding: [0.9, 0.1, 0.0, 0.1] },
+    { id: 2, title: "Approximate nearest neighbour search", genre: "databases", price: 52.0, tags: ["ann"], meta: "second", embedding: [0.8, 0.2, 0.1, 0.0] },
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 249.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] },
+    { id: 4, title: "Graph databases explained", genre: "databases", price: 30.0, tags: ["graph", "database"], embedding: [0.5, 0.5, 0.2, 0.1] }
+] wait
+
+reseed: insert into books values [
+    { id: 1, title: "Vector database design", genre: "databases", price: 99.0, embedding: [0.9, 0.1, 0.0, 0.1] }
+] on-conflict ignore wait
+
+localImport: bulk-import into books from "file://../books.jsonl" format json batch 1
+
+evolveBooks: alter books {
+    add-field field pageTotal type int default 100
+    set description = "Books about vector databases"
+    set consistency = "strong"
+}
+
+renameMeta: alter books { rename-field meta to remark }
+
+pruneBooks: alter books { drop-field note }
+
+addView: alter books { add-alias alias shelfView for books }
+
+addTitleIndex: create books if-not-exists with {
+    create payload-index titleText on title kind full_text
+}
+
+restock: upsert into books values [
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 239.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] }
+] wait
+
+reprice: update books set { price: 32.0 } ids [4] wait
+
+tagMore: update books set { tags: ["classic"] } ids [4] array-append [tags] wait
+
+untag: update books set { tags: ["graph"] } ids [4] array-remove [tags] wait
+
+replaceTwo: update books set { title: "ANN search", genre: "databases", price: 50.0 } mode replace ids [2] wait
+
+clearTags: update books ids [5] remove-fields [tags] wait
+
+trimKitchen: delete from books limit 1 wait where genre eq "kitchen" and price gt 100
+
+addSeven: insert into books values [
+    { id: 7, title: "Search engines and vectors", genre: "databases", price: 41.0, tags: ["search"], embedding: [0.6, 0.4, 0.1, 0.0] }
+] wait
+
+staleVersion: update books set { price: 40.0 } ids [7] if-version 0 wait
+
+bundle: transaction isolation snapshot {
+    update books set { price: 33.0 } ids [4]
+    delete from books ids [6]
+}
+
+writeNorth: insert into notes values [ { id: 1, body: "north note", place: $northPlace, noteVector: [1.0, 0.0] } ] tenant north wait
+
+writeBeta: insert into notes values [
+    { id: 2, body: "beta note", place: $betaPlace, noteVector: [0.0, 1.0] },
+    { id: 3, body: "beta memo", place: $memoPlace, noteVector: [0.6, 0.8] }
+] tenant beta wait
+
+importBeta: bulk-import into notes from "file://../notes.jsonl" format json tenant beta
+
+writeTeam: upsert into notes values [ { id: 4, body: "team note", place: $teamPlace, noteVector: [0.8, 0.6] } ] namespace "team-a" wait
+
+importTeam: bulk-import into notes from "file://../team.jsonl" format json namespace "team-a"
+
+expiring: insert into notes values [ { id: 6, body: "short note", place: $northPlace, noteVector: [0.7, 0.7] } ] ttl 3600 tenant north wait
+
+refreshTeam: upsert into notes values [ { id: 4, body: "team note", place: $teamPlace, noteVector: [0.8, 0.6] } ] ttl 7200 namespace "team-a" wait
+
+renameNorth: update notes set { body: "north note, revised" } ids [1] tenant north wait
+
+renameTeam: update notes set { body: "team note, revised" } ids [4] namespace "team-a" wait
+
+addSouth: create notes if-not-exists with {
+    create tenant south
+}
+
+createLogs: create collection logs {
+    primary id
+    field id type int
+    field body type varchar full-text
+    vector-field v type float_vector dim 2 metric euclidean {
+        vector-index logIndex family flat
+    }
+    partition hot
+    partition cold
+} if-not-exists
+
+writeHot: insert into logs values [
+    { id: 1, body: "hot one", v: [1.0, 0.0] },
+    { id: 2, body: "hot two", v: [0.8, 0.6] }
+] partition hot wait
+
+writeCold: insert into logs values [ { id: 3, body: "cold one", v: [0.0, 1.0] } ] partition cold wait
+
+importCold: bulk-import into logs from "file://../logs.jsonl" format json partition cold
+
+writeUnfiled: upsert into logs values [ { id: 4, body: "unfiled", v: [0.6, 0.8] } ] wait
+
+restartHot: update logs set { body: "hot two, restarted" } ids [2] partition hot wait
+
+addWarm: create logs if-not-exists with {
+    create partition warm
+}
+
+hotNearest: vector-search in logs top 5 query vector [1.0, 0.0] using v partitions [hot] params { candidates 20 } output [body]
+
+hotWords: search in logs top 5 query text "hot" fields [body] partitions [hot] output [body]
+
+hotHybrid: hybrid-search in logs top 3 fusion rrf partitions [hot] {
+    vector { query vector [1.0, 0.0] using v }
+    keyword { query text "hot" fields [body] }
+} output [body]
+
+hotLike: recommend in logs top 1 positive [1] using v partitions [hot] output [body]
+
+hotById: get from logs ids [1, 3] partitions [hot] output [body]
+
+hotScroll: scroll in logs limit 10 partitions [hot] output [body]
+
+hotSample: sample in logs size 1 method first partitions [hot] output [body]
+
+hotPairs: distance-matrix in logs using v sample 2 partitions [hot]
+
+coldCount: count in logs partitions [cold]
+
+dropColdOne: delete from logs ids [5] partition cold wait
+
+logParts: list partitions in logs
+
+createSignals: create collection signals {
+    primary id
+    field id type int
+    vector-field dense type float_vector dim 4 metric euclidean
+    vector-field unit type float_vector dim 2 metric dot normalized
+    vector-field coarse type float_vector dim 4 metric cosine {
+        vector-index coarseIndex family hnsw {
+            quantization type scalar bits 8
+        }
+    }
+    vector-field flags type float_vector dim 8 metric euclidean {
+        vector-index flagsIndex family hnsw {
+            quantization type binary
+        }
+    }
+    storage diskStore type disk
+} if-not-exists
+
+writeSignals: insert into signals values [
+    { id: 1, dense: [1.0, 0.0, 0.0, 0.0], unit: [1.0, 0.0], coarse: [0.9, 0.1, 0.0, 0.1], flags: [1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0] },
+    { id: 2, dense: [0.0, 1.0, 0.0, 0.0], unit: [0.0, 1.0], coarse: [0.0, 0.1, 0.9, 0.3], flags: [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0] },
+    { id: 3, dense: [0.5, 0.5, 0.0, 0.0], unit: [0.6, 0.8], coarse: [0.5, 0.5, 0.2, 0.1], flags: [1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0] }
+] wait
+
+denseNearest: vector-search in signals top 2 query vector [1.0, 0.0, 0.0, 0.0] using dense output [id]
+
+unitNearest: vector-search in signals top 2 query vector [1.0, 0.0] using unit output [id]
+
+coarseNearest: vector-search in signals top 2 query vector $queryVector using coarse output [id]
+
+flagsNearest: vector-search in signals top 2 query vector [1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0] using flags output [id]
+
+createArchive: create cluster archiveCluster {
+    collection archive {
+        primary id
+        field id type int
+        vector-field v type float_vector dim 2 metric cosine
+    }
+    replication factor 1
+} if-not-exists
+
+archiveCount: count in archive
+
+persist: flush books
+
+compactBooks: compact books
+
+vectorsReady: await-index embeddingIndex timeout 60
+
+textReady: await-index titleText until ready
+
+priceReady: await-index priceIndex until ready
+
+info: describe books stats index-progress
+
+similar: vector-search in books top 3 query vector $queryVector using embedding
+    output [title, price]
+    where genre eq "databases"
+
+pagedSimilar: vector-search in books top 2 query vector $queryVector using embedding offset 1
+    score similarity bounds min 0.5 with-vectors output [title]
+
+nearFirst: vector-search in books top 2 query id 1 using embedding output [title]
+
+nativeScores: vector-search in books top 2 query vector $queryVector using embedding score native output [title]
+
+exactScan: vector-search in books top 2 query vector $queryVector using embedding exact output [title]
+
+cosineScan: vector-search in books top 2 query vector $queryVector using embedding metric cosine output [title]
+
+postFiltered: vector-search in books top 3 query vector $queryVector using embedding params { candidates 50 timeout 5000 filter-strategy post_filter } output [title] where price lt 40
+
+grouped: vector-search in books top 2 query vector $queryVector using embedding group-by genre size 2 output [title]
+
+counted: vector-search in books top 2 query vector $queryVector using embedding with-total aggregate { agg avg on price as meanPrice } output [title]
+
+sortedNearest: vector-search in books top 3 query vector $queryVector using embedding sort { sort-by price asc } output [title, price]
+
+keywords: search in books top 3 query text $queryText fields [title] output [title, price]
+
+phrased: search in books top 3 query text "databases explained" text-query phrase fields [title] slop 1 output [title]
+
+anyTerm: search in books top 5 query text "espresso graph" fields [title] operator or output [title]
+
+typos: search in books top 3 query text "databse" fields [title] fuzziness "1" output [title]
+
+prefixed: search in books top 3 query text "vec" text-query prefix fields [title] output [title]
+
+expressions: search in books top 3 query text "title:graph OR title:espresso" text-query query_string fields [title] output [title]
+
+highlighted: search in books top 3 query text "databases" fields [title boost 2.0] offset 0 score native
+    group-by genre size 2 with-vectors with-total highlight [title] sort { sort-by relevance desc }
+    aggregate { agg max on price as topPrice } output [title]
+
+hybridRrf: hybrid-search in books top 3 fusion rrf fusion-k 60 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text $queryText fields [title] }
+} output [title]
+
+hybridWeighted: hybrid-search in books top 3 fusion weighted alpha 0.7 offset 1 with-vectors {
+    vector { query vector $queryVector using embedding }
+    keyword { query text $queryText fields [title] }
+} output [title]
+
+hybridRelative: hybrid-search in books top 3 fusion relative_score {
+    vector { query vector $queryVector using embedding weight 0.6 }
+    keyword { query text $queryText fields [title] weight 0.4 }
+} output [title]
+
+suggest: recommend in books top 2 positive [1] negative [5] using embedding offset 0 score similarity with-vectors params { candidates 40 } output [title]
+
+suggestGrouped: recommend in books top 2 positive [1] negative [5] using embedding group-by genre size 2 output [title]
+
+suggestShaped: recommend in books top 2 positive [1] negative [5] using embedding with-total sort { sort-by price asc }
+    aggregate { agg max on price as topPrice } output [title, price]
+
+boostedNearest: vector-search in books top 2 query vector $queryVector using embedding
+    boost { boost-fn kind field_value field price weight 0.01 combine sum apply sum } output [title, price]
+
+diverseNearest: vector-search in books top 2 query vector $queryVector using embedding mmr lambda 0.5 candidates 6 output [title]
+
+boostedWords: search in books top 2 query text "databases" fields [title]
+    boost { boost-fn kind field_value field price weight 0.01 combine sum apply sum } output [title, price]
+
+suggestBoosted: recommend in books top 2 positive [1] negative [5] using embedding
+    boost { boost-fn kind field_value field price weight 0.01 combine sum apply sum } output [title, price]
+
+suggestDiverse: recommend in books top 2 positive [1] negative [5] using embedding mmr lambda 0.5 candidates 6 output [title]
+
+hybridShaped: hybrid-search in books top 2 fusion rrf with-total sort { sort-by price asc }
+    aggregate { agg max on price as topPrice } {
+    vector { query vector $queryVector using embedding }
+    vector { query vector [0.1, 0.9, 0.1, 0.0] using embedding }
+} output [title, price]
+
+hybridGrouped: hybrid-search in books top 2 fusion relative_score group-by genre size 2 {
+    vector { query vector $queryVector using embedding }
+    vector { query vector [0.1, 0.9, 0.1, 0.0] using embedding }
+} output [title]
+
+hybridDiverse: hybrid-search in books top 2 fusion weighted mmr lambda 0.5 candidates 6 {
+    vector { query vector $queryVector using embedding }
+    vector { query vector [0.1, 0.9, 0.1, 0.0] using embedding }
+} output [title]
+
+hybridBoosted: hybrid-search in books top 2 fusion weighted
+    boost { boost-fn kind field_value field price weight 0.01 combine sum apply sum } {
+    vector { query vector $queryVector using embedding }
+    vector { query vector [0.1, 0.9, 0.1, 0.0] using embedding }
+} output [title, price]
+
+byId: get from books ids [1, 4] with-vectors output [title, price, tags, meta]
+
+repriceMany: update books values [ { id: 5, price: 44.0 }, { id: 9, price: 1.0 } ] ids [5, 9] wait
+
+repriced: get from books ids [5, 9] output [price]
+
+browse: scroll in books limit 3 offset 1 sort { sort-by price desc } output [title, price]
+
+nextPage: scroll in books limit 2 cursor "3" with-vectors output [title]
+
+halves: scroll in books limit 10 slice 0 of 2 output [title]
+
+firstTwo: sample in books size 2 method first output [title]
+
+anyTwo: sample in books size 2 output [title]
+
+pairs: distance-matrix in books using embedding sample 3 limit 1
+
+cheap: count in books where price lt 40
+
+titledGraph: scroll in books limit 5 output [title] where title like "Graph%"
+
+notKitchen: count in books where not (genre eq "kitchen" or tags contains "ann")
+
+longBooks: count in books where details.pageCount gt 100
+
+unremarked: count in books where meta is_null
+
+manyTags: count in books where tags length gt 1
+
+northCount: count in notes tenant north
+
+teamCount: count in notes namespace "team-a"
+
+nearby: count in notes where geo place radius (45.25, 19.85) 50 km
+
+northNotes: vector-search in notes top 5 query vector [1.0, 0.0] tenant north output [body]
+
+teamNotes: vector-search in notes top 5 query vector [1.0, 0.0] namespace "team-a" output [body]
+
+northWords: search in notes top 5 query text "note" fields [body] tenant north output [body]
+
+teamWords: search in notes top 5 query text "note" fields [body] namespace "team-a" output [body]
+
+northHybrid: hybrid-search in notes top 3 fusion rrf tenant north {
+    vector { query vector [1.0, 0.0] using noteVector }
+    keyword { query text "note" fields [body] }
+} output [body]
+
+teamHybrid: hybrid-search in notes top 3 fusion rrf namespace "team-a" {
+    vector { query vector [1.0, 0.0] using noteVector }
+    keyword { query text "note" fields [body] }
+} output [body]
+
+betaLike: recommend in notes top 1 positive [2] using noteVector tenant beta output [body]
+
+teamLike: recommend in notes top 1 positive [4] using noteVector namespace "team-a" output [body]
+
+northById: get from notes ids [1, 2] tenant north output [body]
+
+teamById: get from notes ids [4] namespace "team-a" output [body]
+
+betaNotes: scroll in notes limit 10 tenant beta output [body]
+
+teamNotesPage: scroll in notes limit 10 namespace "team-a" output [body]
+
+betaSample: sample in notes size 1 method first tenant beta output [body]
+
+teamSample: sample in notes size 1 method first namespace "team-a" output [body]
+
+betaPairs: distance-matrix in notes using noteVector sample 3 tenant beta
+
+teamPairs: distance-matrix in notes using noteVector sample 2 namespace "team-a"
+
+dropBetaMemo: delete from notes ids [3] tenant beta wait
+
+dropTeamNote: delete from notes ids [5] namespace "team-a" wait
+
+collectionNames: list collections
+
+catalogCollections: list collections in catalog
+
+databaseNames: list databases prefix "catalog"
+
+tenantNames: list tenants in notes
+
+namespaceNames: list namespaces in notes
+
+viewNames: list aliases in books
+
+bookIndexes: list indexes in books prefix "embedding"
+
+copyBooks: clone books to "booksCopy"
+
+swapView: swap-alias shelfView from books to booksCopy
+
+dropNorth: drop north
+
+northLeft: count in notes tenant north
+
+clearTeam: truncate notes namespace "team-a"
+
+emptyNotes: truncate notes
+
+dropCold: drop cold
+
+renameBooks: alter books rename to shelf
+
+shelfCount: count in books
+
+dropView: drop shelfView
+
+dropReaders: drop readers
+
+dropShelf: drop books
+
+declareCopy: create collection booksCopy {
+    primary id
+    field id type int
+    vector-field embedding type float_vector dim 4 metric cosine
+} if-not-exists
+
+dropCopy: drop booksCopy
+
+dropWarm: drop warm
+
+dropLogs: drop logs
+
+dropSignals: drop signals
+
+dropArchive: drop archive
+
+dropCatalog: drop catalog
+
+finalNames: list collections

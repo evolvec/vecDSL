@@ -1,0 +1,12 @@
+{
+  "vecdsl-ir": "1.0",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "wf.update.noSelector",
+      "message": "an update needs a selector: 'ids' or 'where'",
+      "line": 14,
+      "column": 17
+    }
+  ]
+}

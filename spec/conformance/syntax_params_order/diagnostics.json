@@ -1,0 +1,12 @@
+{
+  "vecdsl-ir": "1.0",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "org.eclipse.xtext.diagnostics.Diagnostic.Syntax",
+      "message": "mismatched input 'candidates' expecting '}'",
+      "line": 14,
+      "column": 100
+    }
+  ]
+}

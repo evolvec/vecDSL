@@ -1,0 +1,12 @@
+query kind,rule,Paging,ReadScope,ScoreSpec,mmr,boost,rerank,group-by,with-vectors,with-total,exclude,highlight,sort,aggregate,params,prefetch,output,filter,extensions
+vector-search,VectorSearch,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,required,admitted,admitted
+search,KeywordSearch,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,excluded,required,admitted,admitted
+hybrid-search,HybridSearch,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,excluded,required,admitted,admitted
+recommend,RecommendSearch,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,excluded,required,admitted,admitted
+get,GetById,excluded,admitted,excluded,excluded,excluded,excluded,excluded,admitted,excluded,excluded,excluded,excluded,excluded,excluded,excluded,required,excluded,admitted
+generate,GenerativeSearch,excluded,admitted,excluded,admitted,admitted,admitted,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,required,admitted,admitted
+distance-matrix,DistanceMatrix,excluded,admitted,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,admitted,admitted
+count,Count,excluded,admitted,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,admitted,admitted
+scroll,Scroll,admitted,admitted,excluded,excluded,excluded,excluded,excluded,admitted,excluded,excluded,excluded,admitted,excluded,excluded,excluded,required,admitted,admitted
+sample,Sample,excluded,admitted,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,required,admitted,admitted
+batch-query,BatchQuery,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded,excluded

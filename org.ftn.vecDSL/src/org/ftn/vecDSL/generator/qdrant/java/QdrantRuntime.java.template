@@ -1,0 +1,2232 @@
+package {{java.package}};
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.google.gson.ToNumberPolicy;
+import com.google.protobuf.Timestamp;
+
+import io.qdrant.client.QdrantClient;
+import io.qdrant.client.QdrantGrpcClient;
+import io.qdrant.client.grpc.Collections.AliasOperations;
+import io.qdrant.client.grpc.Collections.BinaryQuantization;
+import io.qdrant.client.grpc.Collections.BinaryQuantizationEncoding;
+import io.qdrant.client.grpc.Collections.BoolIndexParams;
+import io.qdrant.client.grpc.Collections.CreateAlias;
+import io.qdrant.client.grpc.Collections.CreateCollection;
+import io.qdrant.client.grpc.Collections.Datatype;
+import io.qdrant.client.grpc.Collections.DatetimeIndexParams;
+import io.qdrant.client.grpc.Collections.DeleteAlias;
+import io.qdrant.client.grpc.Collections.Distance;
+import io.qdrant.client.grpc.Collections.FloatIndexParams;
+import io.qdrant.client.grpc.Collections.GeoIndexParams;
+import io.qdrant.client.grpc.Collections.HnswConfigDiff;
+import io.qdrant.client.grpc.Collections.IntegerIndexParams;
+import io.qdrant.client.grpc.Collections.KeywordIndexParams;
+import io.qdrant.client.grpc.Collections.KeywordPrefixParams;
+import io.qdrant.client.grpc.Collections.Memory;
+import io.qdrant.client.grpc.Collections.Modifier;
+import io.qdrant.client.grpc.Collections.MultiVectorComparator;
+import io.qdrant.client.grpc.Collections.MultiVectorConfig;
+import io.qdrant.client.grpc.Collections.OptimizersConfigDiff;
+import io.qdrant.client.grpc.Collections.PayloadIndexParams;
+import io.qdrant.client.grpc.Collections.PayloadSchemaType;
+import io.qdrant.client.grpc.Collections.PayloadStorageParams;
+import io.qdrant.client.grpc.Collections.QuantizationConfig;
+import io.qdrant.client.grpc.Collections.QuantizationType;
+import io.qdrant.client.grpc.Collections.ShardKey;
+import io.qdrant.client.grpc.Collections.ShardingMethod;
+import io.qdrant.client.grpc.Collections.ScalarQuantization;
+import io.qdrant.client.grpc.Collections.SnowballParams;
+import io.qdrant.client.grpc.Collections.SparseVectorConfig;
+import io.qdrant.client.grpc.Collections.SparseVectorParams;
+import io.qdrant.client.grpc.Collections.StemmingAlgorithm;
+import io.qdrant.client.grpc.Collections.StopwordsSet;
+import io.qdrant.client.grpc.Collections.StrictModeConfig;
+import io.qdrant.client.grpc.Collections.TextIndexParams;
+import io.qdrant.client.grpc.Collections.TextScoringParams;
+import io.qdrant.client.grpc.Collections.TextScoringType;
+import io.qdrant.client.grpc.Collections.TokenizerType;
+import io.qdrant.client.grpc.Collections.UuidIndexParams;
+import io.qdrant.client.grpc.Collections.VectorParams;
+import io.qdrant.client.grpc.Collections.VectorParamsMap;
+import io.qdrant.client.grpc.Collections.VectorsConfig;
+import io.qdrant.client.grpc.Common.Condition;
+import io.qdrant.client.grpc.Common.DatetimeRange;
+import io.qdrant.client.grpc.Common.FieldCondition;
+import io.qdrant.client.grpc.Common.Filter;
+import io.qdrant.client.grpc.Common.GeoBoundingBox;
+import io.qdrant.client.grpc.Common.GeoLineString;
+import io.qdrant.client.grpc.Common.GeoPoint;
+import io.qdrant.client.grpc.Common.GeoPolygon;
+import io.qdrant.client.grpc.Common.GeoRadius;
+import io.qdrant.client.grpc.Common.HasIdCondition;
+import io.qdrant.client.grpc.Common.IsEmptyCondition;
+import io.qdrant.client.grpc.Common.Match;
+import io.qdrant.client.grpc.Common.NestedCondition;
+import io.qdrant.client.grpc.Common.PointId;
+import io.qdrant.client.grpc.Common.Range;
+import io.qdrant.client.grpc.Common.RepeatedIntegers;
+import io.qdrant.client.grpc.Common.RepeatedStrings;
+import io.qdrant.client.grpc.Common.SliceCondition;
+import io.qdrant.client.grpc.Common.ValuesCount;
+import io.qdrant.client.grpc.JsonWithInt.ListValue;
+import io.qdrant.client.grpc.JsonWithInt.Struct;
+import io.qdrant.client.grpc.JsonWithInt.Value;
+import io.qdrant.client.grpc.Points.BatchResult;
+import io.qdrant.client.grpc.Points.Bm25Params;
+import io.qdrant.client.grpc.Points.ContextInput;
+import io.qdrant.client.grpc.Points.ContextInputPair;
+import io.qdrant.client.grpc.Points.DeletePayloadPoints;
+import io.qdrant.client.grpc.Points.DeletePoints;
+import io.qdrant.client.grpc.Points.DenseVector;
+import io.qdrant.client.grpc.Points.Direction;
+import io.qdrant.client.grpc.Points.DiscoverInput;
+import io.qdrant.client.grpc.Points.GetPoints;
+import io.qdrant.client.grpc.Points.LookupLocation;
+import io.qdrant.client.grpc.Points.Mmr;
+import io.qdrant.client.grpc.Points.MultiDenseVector;
+import io.qdrant.client.grpc.Points.NamedVectors;
+import io.qdrant.client.grpc.Points.NearestInputWithMmr;
+import io.qdrant.client.grpc.Points.OrderBy;
+import io.qdrant.client.grpc.Points.PayloadIncludeSelector;
+import io.qdrant.client.grpc.Points.PointGroup;
+import io.qdrant.client.grpc.Points.PointStruct;
+import io.qdrant.client.grpc.Points.PointVectors;
+import io.qdrant.client.grpc.Points.PointsIdsList;
+import io.qdrant.client.grpc.Points.PointsSelector;
+import io.qdrant.client.grpc.Points.PrefetchQuery;
+import io.qdrant.client.grpc.Points.QuantizationSearchParams;
+import io.qdrant.client.grpc.Points.Query;
+import io.qdrant.client.grpc.Points.QueryPointGroups;
+import io.qdrant.client.grpc.Points.QueryPoints;
+import io.qdrant.client.grpc.Points.ReadConsistency;
+import io.qdrant.client.grpc.Points.ReadConsistencyType;
+import io.qdrant.client.grpc.Points.RecommendInput;
+import io.qdrant.client.grpc.Points.RecommendStrategy;
+import io.qdrant.client.grpc.Points.RetrievedPoint;
+import io.qdrant.client.grpc.Points.Rrf;
+import io.qdrant.client.grpc.Points.ScoredPoint;
+import io.qdrant.client.grpc.Points.ScrollPoints;
+import io.qdrant.client.grpc.Points.ScrollResponse;
+import io.qdrant.client.grpc.Points.SearchParams;
+import io.qdrant.client.grpc.Points.SetPayloadPoints;
+import io.qdrant.client.grpc.Points.ShardKeySelector;
+import io.qdrant.client.grpc.Points.SparseVector;
+import io.qdrant.client.grpc.Points.TextQuery;
+import io.qdrant.client.grpc.Points.UpdateMode;
+import io.qdrant.client.grpc.Points.UpdatePointVectors;
+import io.qdrant.client.grpc.Points.UpsertPoints;
+import io.qdrant.client.grpc.Points.Vector;
+import io.qdrant.client.grpc.Points.VectorInput;
+import io.qdrant.client.grpc.Points.VectorOutput;
+import io.qdrant.client.grpc.Points.Vectors;
+import io.qdrant.client.grpc.Points.VectorsSelector;
+import io.qdrant.client.grpc.Points.WithPayloadSelector;
+import io.qdrant.client.grpc.Points.WithVectorsSelector;
+import io.qdrant.client.grpc.Points.WriteOrdering;
+import io.qdrant.client.grpc.Points.WriteOrderingType;
+
+/**
+ * Runtime support for vecDSL programs generated for Qdrant with {{sdk.java.group}}:{{sdk.java.artifact}} {{sdk.java.version}}
+ * over gRPC. The generated programs pass collection layouts, records and filters in the JSON vocabulary of the
+ * Qdrant REST API, which this runtime converts to the SDK's gRPC messages. Generated by vecDSL 7. Do not edit.
+ */
+public final class QdrantRuntime {
+
+	private static final int PAGE = 256;
+	private static final int BATCH = 100;
+	private static final int DIGITS = 6;
+	private static final Set<String> DISTANCES = Set.of("euclidean", "manhattan");
+	private static final UUID DNS_NAMESPACE = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
+	private static final Gson GSON = new GsonBuilder().create();
+	private static final Gson PRETTY = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+	private static final Gson NUMBERS = new GsonBuilder().setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE).serializeNulls().create();
+	private static final HttpClient HTTP = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+	private static final double WAIT = 120;
+	private static final long POLL = 500;
+	private static final String SNAPSHOTS = "{{snapshots.path}}";
+	private static final String SNAPSHOT_NAMES = "vecdsl_snapshots";
+	private static final Set<String> VECTOR_NAME_KEYS = Set.of("size", "distance", "multivector_config", "datatype", "modifier");
+
+	private QdrantRuntime() {
+	}
+
+	public static final class UnsupportedFeature extends UnsupportedOperationException {
+
+		private static final long serialVersionUID = 1L;
+
+		UnsupportedFeature(String message) {
+			super(message);
+		}
+	}
+
+	public static RuntimeException unsupported(String vendor, String feature) {
+		return new UnsupportedFeature(feature + " is not supported for target " + vendor);
+	}
+
+	// ---------------------------------------------------------------- values
+
+	public static Map<String, Object> args(Object... pairs) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		for (int i = 0; i < pairs.length; i += 2) {
+			result.put((String) pairs[i], pairs[i + 1]);
+		}
+		return result;
+	}
+
+	public static List<Object> list(Object... items) {
+		return new ArrayList<>(Arrays.asList(items));
+	}
+
+	public static String env(String name) {
+		String value = System.getenv(name);
+		if (value == null) {
+			throw new IllegalStateException("environment variable " + name + " is not set");
+		}
+		return value;
+	}
+
+	public static String envOr(String name, String fallback) {
+		String value = System.getenv(name);
+		return value == null ? fallback : value;
+	}
+
+	public static String text(Object value) {
+		return value == null ? null : value.toString();
+	}
+
+	public static long integer(Object value) {
+		return ((Number) value).longValue();
+	}
+
+	public static double decimal(Object value) {
+		return ((Number) value).doubleValue();
+	}
+
+	public static boolean flag(Object value) {
+		return (Boolean) value;
+	}
+
+	public static List<Float> floats(Object value) {
+		return ((Collection<?>) value).stream().map(item -> ((Number) item).floatValue()).toList();
+	}
+
+	public static List<String> texts(Object value) {
+		return ((Collection<?>) value).stream().map(String::valueOf).toList();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<Map<String, Object>> records(Object value) {
+		return (List<Map<String, Object>>) value;
+	}
+
+	public static String toJson(Object value) {
+		return PRETTY.toJson(value);
+	}
+
+	public static Map<String, Object> parameters(Map<String, Object> given, Map<String, Object> defaults, List<String> names) {
+		Set<String> unknown = new HashSet<>(given.keySet());
+		unknown.removeAll(names);
+		if (!unknown.isEmpty()) {
+			throw new IllegalArgumentException("unknown program parameters: " + unknown);
+		}
+		Map<String, Object> values = new LinkedHashMap<>(defaults);
+		values.putAll(given);
+		List<String> missing = names.stream().filter(name -> !values.containsKey(name)).toList();
+		if (!missing.isEmpty()) {
+			throw new IllegalArgumentException("missing program parameters: " + missing);
+		}
+		return values;
+	}
+
+	public static Map<String, Object> parseArguments(String[] arguments) {
+		Map<String, Object> parameters = new LinkedHashMap<>();
+		for (String argument : arguments) {
+			int separator = argument.indexOf('=');
+			if (separator < 0) {
+				throw new IllegalArgumentException("expected name=value, got " + argument);
+			}
+			String raw = argument.substring(separator + 1);
+			Object value;
+			try {
+				value = GSON.fromJson(JsonParser.parseString(raw), Object.class);
+			} catch (JsonParseException e) {
+				value = raw;
+			}
+			parameters.put(argument.substring(0, separator), value);
+		}
+		return parameters;
+	}
+
+	/** Result values in one form for every host language: floats rounded, integral numbers as integers. */
+	@SuppressWarnings("unchecked")
+	static Object value(Object item) {
+		if (item instanceof Float || item instanceof Double) {
+			double number = ((Number) item).doubleValue();
+			if (!Double.isFinite(number)) {
+				return number;
+			}
+			double rounded = new BigDecimal(number).setScale(DIGITS, RoundingMode.HALF_EVEN).doubleValue();
+			return rounded == Math.rint(rounded) && Math.abs(rounded) < 1e15 ? (Object) (long) rounded : (Object) rounded;
+		}
+		if (item instanceof Number number) {
+			return number.longValue();
+		}
+		if (item instanceof Collection<?> items) {
+			return items.stream().map(QdrantRuntime::value).toList();
+		}
+		if (item instanceof Map<?, ?> map) {
+			Map<String, Object> result = new LinkedHashMap<>();
+			((Map<String, Object>) map).forEach((key, entry) -> result.put(key, value(entry)));
+			return result;
+		}
+		return item;
+	}
+
+	/** Point id of a primary key: UUIDv5 in the DNS namespace of the key's text, as the Weaviate generator derives it. */
+	public static String pointId(Object key) {
+		String text;
+		if (key instanceof Integer || key instanceof Long || key instanceof Short || key instanceof Byte || key instanceof BigInteger) {
+			text = key.toString();
+		} else if ((key instanceof Double || key instanceof Float) && Double.isFinite(((Number) key).doubleValue())
+				&& ((Number) key).doubleValue() == Math.rint(((Number) key).doubleValue())) {
+			text = new BigDecimal(((Number) key).doubleValue()).toBigInteger().toString();
+		} else if (key instanceof String string) {
+			text = string;
+		} else {
+			throw new IllegalArgumentException("cannot use " + key + " as a Qdrant primary key");
+		}
+		try {
+			MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+			byte[] namespace = new byte[16];
+			for (int i = 0; i < 8; i++) {
+				namespace[i] = (byte) (DNS_NAMESPACE.getMostSignificantBits() >>> (56 - 8 * i));
+				namespace[8 + i] = (byte) (DNS_NAMESPACE.getLeastSignificantBits() >>> (56 - 8 * i));
+			}
+			sha1.update(namespace);
+			byte[] hash = sha1.digest(text.getBytes(StandardCharsets.UTF_8));
+			hash[6] = (byte) ((hash[6] & 0x0f) | 0x50);
+			hash[8] = (byte) ((hash[8] & 0x3f) | 0x80);
+			long most = 0;
+			long least = 0;
+			for (int i = 0; i < 8; i++) {
+				most = (most << 8) | (hash[i] & 0xff);
+				least = (least << 8) | (hash[8 + i] & 0xff);
+			}
+			return new UUID(most, least).toString();
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> map(Object value) {
+		return (Map<String, Object>) value;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<Object> items(Object value) {
+		return value == null ? List.of() : new ArrayList<>((Collection<Object>) value);
+	}
+
+	private static List<String> strings(Object value) {
+		return items(value).stream().map(String::valueOf).toList();
+	}
+
+	private static double number(Object value) {
+		return ((Number) value).doubleValue();
+	}
+
+	private static Double optionalNumber(Map<String, Object> args, String key) {
+		return args.get(key) == null ? null : number(args.get(key));
+	}
+
+	private static int whole(Map<String, Object> args, String key, int fallback) {
+		return args.get(key) == null ? fallback : ((Number) args.get(key)).intValue();
+	}
+
+	private static <T> List<List<T>> chunks(List<T> items, int size) {
+		List<List<T>> result = new ArrayList<>();
+		for (int start = 0; start < items.size(); start += size) {
+			result.add(items.subList(start, Math.min(items.size(), start + size)));
+		}
+		return result;
+	}
+
+	private static <T> T await(Future<T> future) {
+		try {
+			return future.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IllegalStateException(e);
+		} catch (ExecutionException e) {
+			throw e.getCause() instanceof RuntimeException cause ? cause : new IllegalStateException(e.getCause());
+		}
+	}
+
+	// ---------------------------------------------------------------- client
+
+	/** The SDK client over gRPC, and the REST endpoint and key for the calls the gRPC API lacks. */
+	public static final class Client implements AutoCloseable {
+
+		final QdrantClient qdrant;
+		final String rest;
+		final String key;
+
+		Client(QdrantClient qdrant, String rest, String key) {
+			this.qdrant = qdrant;
+			this.rest = rest;
+			this.key = key;
+		}
+
+		@Override
+		public void close() {
+			qdrant.close();
+		}
+	}
+
+	/** gRPC client on the host of the REST URI and the given gRPC port; https selects TLS. */
+	public static Client connect(Map<String, Object> args) {
+		URI uri = URI.create(text(args.get("uri")));
+		boolean tls = "https".equalsIgnoreCase(uri.getScheme());
+		QdrantGrpcClient.Builder builder = QdrantGrpcClient.newBuilder(uri.getHost(), whole(args, "grpc_port", 6334), tls);
+		String key = text(args.get("api_key"));
+		if (key != null && !key.isBlank()) {
+			builder.withApiKey(key);
+		}
+		if (args.get("timeout") != null) {
+			builder.withTimeout(Duration.ofMillis(Math.round(number(args.get("timeout")) * 1000)));
+		}
+		String rest = text(args.get("uri"));
+		return new Client(new QdrantClient(builder.build()), rest.endsWith("/") ? rest.substring(0, rest.length() - 1) : rest, key);
+	}
+
+	// ---------------------------------------------------------------- JSON to gRPC
+
+	private static PointId id(String uuid) {
+		return PointId.newBuilder().setUuid(uuid).build();
+	}
+
+	private static List<PointId> ids(Collection<String> uuids) {
+		return uuids.stream().map(QdrantRuntime::id).toList();
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Value toValue(Object item, boolean integral) {
+		if (item == null) {
+			return Value.newBuilder().setNullValueValue(0).build();
+		}
+		if (item instanceof Boolean flag) {
+			return Value.newBuilder().setBoolValue(flag).build();
+		}
+		if (item instanceof String string) {
+			return Value.newBuilder().setStringValue(string).build();
+		}
+		if (item instanceof Integer || item instanceof Long || item instanceof Short || item instanceof Byte) {
+			return Value.newBuilder().setIntegerValue(((Number) item).longValue()).build();
+		}
+		if (item instanceof Number number) {
+			double decimal = number.doubleValue();
+			if (integral && decimal == Math.rint(decimal) && Math.abs(decimal) < 9e15) {
+				return Value.newBuilder().setIntegerValue((long) decimal).build();
+			}
+			return Value.newBuilder().setDoubleValue(decimal).build();
+		}
+		if (item instanceof Map<?, ?> fields) {
+			Struct.Builder struct = Struct.newBuilder();
+			((Map<String, Object>) fields).forEach((key, entry) -> struct.putFields(key, toValue(entry, false)));
+			return Value.newBuilder().setStructValue(struct).build();
+		}
+		if (item instanceof Collection<?> entries) {
+			ListValue.Builder values = ListValue.newBuilder();
+			entries.forEach(entry -> values.addValues(toValue(entry, integral)));
+			return Value.newBuilder().setListValue(values).build();
+		}
+		throw new IllegalArgumentException("cannot store " + item + " in a Qdrant payload");
+	}
+
+	private static Object fromValue(Value value) {
+		return switch (value.getKindCase()) {
+		case NULL_VALUE, KIND_NOT_SET -> null;
+		case BOOL_VALUE -> value.getBoolValue();
+		case STRING_VALUE -> value.getStringValue();
+		case INTEGER_VALUE -> value.getIntegerValue();
+		case DOUBLE_VALUE -> value.getDoubleValue();
+		case STRUCT_VALUE -> {
+			Map<String, Object> result = new LinkedHashMap<>();
+			value.getStructValue().getFieldsMap().forEach((key, entry) -> result.put(key, fromValue(entry)));
+			yield result;
+		}
+		case LIST_VALUE -> value.getListValue().getValuesList().stream().map(QdrantRuntime::fromValue).toList();
+		};
+	}
+
+	private static Timestamp timestamp(Object value) {
+		String text = value.toString();
+		Instant instant;
+		try {
+			instant = OffsetDateTime.parse(text).toInstant();
+		} catch (DateTimeParseException e) {
+			try {
+				instant = Instant.parse(text);
+			} catch (DateTimeParseException again) {
+				instant = LocalDate.parse(text).atStartOfDay().toInstant(ZoneOffset.UTC);
+			}
+		}
+		return Timestamp.newBuilder().setSeconds(instant.getEpochSecond()).setNanos(instant.getNano()).build();
+	}
+
+	private static GeoPoint geoPoint(Object json) {
+		Map<String, Object> point = map(json);
+		return GeoPoint.newBuilder().setLon(number(point.get("lon"))).setLat(number(point.get("lat"))).build();
+	}
+
+	/** A filter in the REST form: must, should and must_not lists of conditions. */
+	static Filter filter(Object json) {
+		Map<String, Object> clauses = map(json);
+		Filter.Builder builder = Filter.newBuilder();
+		items(clauses.get("must")).forEach(item -> builder.addMust(condition(map(item))));
+		items(clauses.get("should")).forEach(item -> builder.addShould(condition(map(item))));
+		items(clauses.get("must_not")).forEach(item -> builder.addMustNot(condition(map(item))));
+		return builder.build();
+	}
+
+	private static Condition condition(Map<String, Object> json) {
+		if (json.containsKey("key")) {
+			return Condition.newBuilder().setField(fieldCondition(json)).build();
+		}
+		if (json.containsKey("is_empty")) {
+			return Condition.newBuilder().setIsEmpty(IsEmptyCondition.newBuilder().setKey(text(map(json.get("is_empty")).get("key")))).build();
+		}
+		if (json.containsKey("has_id")) {
+			return Condition.newBuilder().setHasId(HasIdCondition.newBuilder().addAllHasId(ids(strings(json.get("has_id"))))).build();
+		}
+		if (json.containsKey("nested")) {
+			Map<String, Object> nested = map(json.get("nested"));
+			return Condition.newBuilder().setNested(NestedCondition.newBuilder().setKey(text(nested.get("key"))).setFilter(filter(nested.get("filter"))))
+					.build();
+		}
+		if (json.containsKey("slice")) {
+			Map<String, Object> slice = map(json.get("slice"));
+			return Condition.newBuilder()
+					.setSlice(SliceCondition.newBuilder().setTotal(whole(slice, "total", 1)).setIndex(whole(slice, "index", 0))).build();
+		}
+		return Condition.newBuilder().setFilter(filter(json)).build();
+	}
+
+	private static FieldCondition fieldCondition(Map<String, Object> json) {
+		FieldCondition.Builder builder = FieldCondition.newBuilder().setKey(text(json.get("key")));
+		if (json.containsKey("match")) {
+			builder.setMatch(match(map(json.get("match"))));
+		}
+		if (json.containsKey("range")) {
+			Map<String, Object> bounds = map(json.get("range"));
+			if (bounds.values().stream().anyMatch(String.class::isInstance)) {
+				DatetimeRange.Builder range = DatetimeRange.newBuilder();
+				if (bounds.containsKey("gt")) range.setGt(timestamp(bounds.get("gt")));
+				if (bounds.containsKey("gte")) range.setGte(timestamp(bounds.get("gte")));
+				if (bounds.containsKey("lt")) range.setLt(timestamp(bounds.get("lt")));
+				if (bounds.containsKey("lte")) range.setLte(timestamp(bounds.get("lte")));
+				builder.setDatetimeRange(range);
+			} else {
+				Range.Builder range = Range.newBuilder();
+				if (bounds.containsKey("gt")) range.setGt(number(bounds.get("gt")));
+				if (bounds.containsKey("gte")) range.setGte(number(bounds.get("gte")));
+				if (bounds.containsKey("lt")) range.setLt(number(bounds.get("lt")));
+				if (bounds.containsKey("lte")) range.setLte(number(bounds.get("lte")));
+				builder.setRange(range);
+			}
+		}
+		if (json.containsKey("values_count")) {
+			Map<String, Object> bounds = map(json.get("values_count"));
+			ValuesCount.Builder count = ValuesCount.newBuilder();
+			if (bounds.containsKey("gt")) count.setGt(((Number) bounds.get("gt")).longValue());
+			if (bounds.containsKey("gte")) count.setGte(((Number) bounds.get("gte")).longValue());
+			if (bounds.containsKey("lt")) count.setLt(((Number) bounds.get("lt")).longValue());
+			if (bounds.containsKey("lte")) count.setLte(((Number) bounds.get("lte")).longValue());
+			builder.setValuesCount(count);
+		}
+		if (json.containsKey("geo_radius")) {
+			Map<String, Object> radius = map(json.get("geo_radius"));
+			builder.setGeoRadius(GeoRadius.newBuilder().setCenter(geoPoint(radius.get("center"))).setRadius((float) number(radius.get("radius"))));
+		}
+		if (json.containsKey("geo_bounding_box")) {
+			Map<String, Object> box = map(json.get("geo_bounding_box"));
+			builder.setGeoBoundingBox(GeoBoundingBox.newBuilder().setTopLeft(geoPoint(box.get("top_left"))).setBottomRight(geoPoint(box.get("bottom_right"))));
+		}
+		if (json.containsKey("geo_polygon")) {
+			GeoLineString.Builder ring = GeoLineString.newBuilder();
+			items(map(map(json.get("geo_polygon")).get("exterior")).get("points")).forEach(point -> ring.addPoints(geoPoint(point)));
+			builder.setGeoPolygon(GeoPolygon.newBuilder().setExterior(ring));
+		}
+		return builder.build();
+	}
+
+	private static long whole(Object value) {
+		double number = number(value);
+		if (number != Math.rint(number)) {
+			throw new IllegalArgumentException("Qdrant matches integers, strings and booleans exactly, not " + value);
+		}
+		return (long) number;
+	}
+
+	private static Match match(Map<String, Object> json) {
+		Match.Builder builder = Match.newBuilder();
+		if (json.containsKey("value")) {
+			Object value = json.get("value");
+			if (value instanceof String string) {
+				builder.setKeyword(string);
+			} else if (value instanceof Boolean flag) {
+				builder.setBoolean(flag);
+			} else {
+				builder.setInteger(whole(value));
+			}
+		} else if (json.containsKey("any")) {
+			List<Object> values = items(json.get("any"));
+			if (values.stream().allMatch(String.class::isInstance)) {
+				builder.setKeywords(RepeatedStrings.newBuilder().addAllStrings(strings(values)));
+			} else {
+				builder.setIntegers(RepeatedIntegers.newBuilder().addAllIntegers(values.stream().map(QdrantRuntime::whole).toList()));
+			}
+		} else if (json.containsKey("text")) {
+			builder.setText(text(json.get("text")));
+		} else if (json.containsKey("text_any")) {
+			builder.setTextAny(text(json.get("text_any")));
+		} else if (json.containsKey("phrase")) {
+			builder.setPhrase(text(json.get("phrase")));
+		} else if (json.containsKey("prefix")) {
+			builder.setPrefix(text(json.get("prefix")));
+		} else if (json.containsKey("substring")) {
+			builder.setSubstring(text(json.get("substring")));
+		}
+		return builder.build();
+	}
+
+	private static Memory memory(Object value) {
+		return switch (text(value)) {
+		case "cold" -> Memory.Cold;
+		case "cached" -> Memory.Cached;
+		default -> Memory.Pinned;
+		};
+	}
+
+	private static VectorParams vectorParams(Map<String, Object> json) {
+		VectorParams.Builder builder = VectorParams.newBuilder().setSize(((Number) json.get("size")).longValue())
+				.setDistance(Distance.valueOf(text(json.get("distance"))));
+		if (json.containsKey("hnsw_config")) {
+			Map<String, Object> hnsw = map(json.get("hnsw_config"));
+			HnswConfigDiff.Builder config = HnswConfigDiff.newBuilder();
+			if (hnsw.containsKey("m")) config.setM(((Number) hnsw.get("m")).longValue());
+			if (hnsw.containsKey("ef_construct")) config.setEfConstruct(((Number) hnsw.get("ef_construct")).longValue());
+			if (hnsw.containsKey("memory")) config.setMemory(memory(hnsw.get("memory")));
+			builder.setHnswConfig(config);
+		}
+		if (json.containsKey("datatype")) {
+			builder.setDatatype("float16".equals(json.get("datatype")) ? Datatype.Float16 : Datatype.Uint8);
+		}
+		if (json.containsKey("multivector_config")) {
+			builder.setMultivectorConfig(MultiVectorConfig.newBuilder().setComparator(MultiVectorComparator.MaxSim));
+		}
+		if (json.containsKey("memory")) {
+			builder.setMemory(memory(json.get("memory")));
+		}
+		if (json.containsKey("quantization_config")) {
+			Map<String, Object> quantization = map(json.get("quantization_config"));
+			QuantizationConfig.Builder config = QuantizationConfig.newBuilder();
+			if (quantization.containsKey("scalar")) {
+				config.setScalar(ScalarQuantization.newBuilder().setType(QuantizationType.Int8));
+			} else {
+				BinaryQuantization.Builder binary = BinaryQuantization.newBuilder();
+				Object encoding = map(quantization.get("binary")).get("encoding");
+				if ("one_and_half_bits".equals(encoding)) binary.setEncoding(BinaryQuantizationEncoding.OneAndHalfBits);
+				if ("two_bits".equals(encoding)) binary.setEncoding(BinaryQuantizationEncoding.TwoBits);
+				config.setBinary(binary);
+			}
+			builder.setQuantizationConfig(config);
+		}
+		return builder.build();
+	}
+
+	private static SparseVectorParams sparseParams(Map<String, Object> json) {
+		SparseVectorParams.Builder builder = SparseVectorParams.newBuilder();
+		if ("idf".equals(json.get("modifier"))) {
+			builder.setModifier(Modifier.Idf);
+		}
+		return builder.build();
+	}
+
+	private static TextIndexParams textIndex(Map<String, Object> json) {
+		TextIndexParams.Builder builder = TextIndexParams.newBuilder().setTokenizer(switch (text(json.getOrDefault("tokenizer", "word"))) {
+		case "whitespace" -> TokenizerType.Whitespace;
+		case "prefix" -> TokenizerType.Prefix;
+		case "multilingual" -> TokenizerType.Multilingual;
+		default -> TokenizerType.Word;
+		});
+		if (json.containsKey("lowercase")) builder.setLowercase(flag(json.get("lowercase")));
+		if (json.containsKey("ascii_folding")) builder.setAsciiFolding(flag(json.get("ascii_folding")));
+		if (json.containsKey("phrase_matching")) builder.setPhraseMatching(flag(json.get("phrase_matching")));
+		if (json.containsKey("min_token_len")) builder.setMinTokenLen(((Number) json.get("min_token_len")).longValue());
+		if (json.containsKey("max_token_len")) builder.setMaxTokenLen(((Number) json.get("max_token_len")).longValue());
+		if (json.containsKey("stopwords")) builder.setStopwords(StopwordsSet.newBuilder().addLanguages(text(json.get("stopwords"))));
+		if (json.containsKey("stemmer")) {
+			builder.setStemmer(StemmingAlgorithm.newBuilder().setSnowball(SnowballParams.newBuilder().setLanguage(text(map(json.get("stemmer")).get("language")))));
+		}
+		if (json.containsKey("memory")) builder.setMemory(memory(json.get("memory")));
+		if (json.containsKey("scoring")) builder.setScoring(TextScoringParams.newBuilder().setType(TextScoringType.Bm25));
+		return builder.build();
+	}
+
+	/** The gRPC field type and index parameters of a REST payload index schema. */
+	private static PayloadIndexParams indexParams(Map<String, Object> json) {
+		PayloadIndexParams.Builder builder = PayloadIndexParams.newBuilder();
+		Memory memory = json.containsKey("memory") ? memory(json.get("memory")) : null;
+		switch (text(json.get("type"))) {
+		case "keyword" -> {
+			KeywordIndexParams.Builder params = KeywordIndexParams.newBuilder();
+			if (Boolean.TRUE.equals(json.get("prefix"))) params.setPrefix(KeywordPrefixParams.getDefaultInstance());
+			if (Boolean.TRUE.equals(json.get("is_tenant"))) params.setIsTenant(true);
+			if (memory != null) params.setMemory(memory);
+			builder.setKeywordIndexParams(params);
+		}
+		case "integer" -> {
+			IntegerIndexParams.Builder params = IntegerIndexParams.newBuilder();
+			if (memory != null) params.setMemory(memory);
+			builder.setIntegerIndexParams(params);
+		}
+		case "float" -> {
+			FloatIndexParams.Builder params = FloatIndexParams.newBuilder();
+			if (memory != null) params.setMemory(memory);
+			builder.setFloatIndexParams(params);
+		}
+		case "bool" -> {
+			BoolIndexParams.Builder params = BoolIndexParams.newBuilder();
+			if (memory != null) params.setMemory(memory);
+			builder.setBoolIndexParams(params);
+		}
+		case "datetime" -> {
+			DatetimeIndexParams.Builder params = DatetimeIndexParams.newBuilder();
+			if (memory != null) params.setMemory(memory);
+			builder.setDatetimeIndexParams(params);
+		}
+		case "uuid" -> {
+			UuidIndexParams.Builder params = UuidIndexParams.newBuilder();
+			if (memory != null) params.setMemory(memory);
+			builder.setUuidIndexParams(params);
+		}
+		case "geo" -> {
+			GeoIndexParams.Builder params = GeoIndexParams.newBuilder();
+			if (memory != null) params.setMemory(memory);
+			builder.setGeoIndexParams(params);
+		}
+		default -> builder.setTextIndexParams(textIndex(json));
+		}
+		return builder.build();
+	}
+
+	private static PayloadSchemaType schemaType(Map<String, Object> json) {
+		return switch (text(json.get("type"))) {
+		case "keyword" -> PayloadSchemaType.Keyword;
+		case "integer" -> PayloadSchemaType.Integer;
+		case "float" -> PayloadSchemaType.Float;
+		case "bool" -> PayloadSchemaType.Bool;
+		case "datetime" -> PayloadSchemaType.Datetime;
+		case "uuid" -> PayloadSchemaType.Uuid;
+		case "geo" -> PayloadSchemaType.Geo;
+		default -> PayloadSchemaType.Text;
+		};
+	}
+
+	private static OptimizersConfigDiff optimizers(Map<String, Object> json) {
+		OptimizersConfigDiff.Builder builder = OptimizersConfigDiff.newBuilder();
+		if (json.containsKey("indexing_threshold")) builder.setIndexingThreshold(((Number) json.get("indexing_threshold")).longValue());
+		if (json.containsKey("memmap_threshold")) builder.setMemmapThreshold(((Number) json.get("memmap_threshold")).longValue());
+		if (json.containsKey("default_segment_number")) builder.setDefaultSegmentNumber(((Number) json.get("default_segment_number")).longValue());
+		if (json.containsKey("max_segment_size")) builder.setMaxSegmentSize(((Number) json.get("max_segment_size")).longValue());
+		if (json.containsKey("flush_interval_sec")) builder.setFlushIntervalSec(((Number) json.get("flush_interval_sec")).longValue());
+		return builder.build();
+	}
+
+	private static SearchParams searchParams(Object json) {
+		Map<String, Object> params = map(json);
+		SearchParams.Builder builder = SearchParams.newBuilder();
+		if (params.containsKey("hnsw_ef")) builder.setHnswEf(((Number) params.get("hnsw_ef")).longValue());
+		if (params.containsKey("exact")) builder.setExact(flag(params.get("exact")));
+		if (params.containsKey("quantization")) {
+			Map<String, Object> quantization = map(params.get("quantization"));
+			QuantizationSearchParams.Builder rescoring = QuantizationSearchParams.newBuilder();
+			if (quantization.containsKey("rescore")) rescoring.setRescore(flag(quantization.get("rescore")));
+			if (quantization.containsKey("oversampling")) rescoring.setOversampling(number(quantization.get("oversampling")));
+			builder.setQuantization(rescoring);
+		}
+		return builder.build();
+	}
+
+	private static List<Float> floatList(Object values) {
+		return items(values).stream().map(item -> ((Number) item).floatValue()).toList();
+	}
+
+	/** A query vector: dense list, list of lists (multivector) or {"indices", "values"} (sparse). */
+	private static VectorInput vectorInput(Object json) {
+		if (json instanceof Map<?, ?>) {
+			Map<String, Object> sparse = map(json);
+			return VectorInput.newBuilder().setSparse(SparseVector.newBuilder().addAllValues(floatList(sparse.get("values")))
+					.addAllIndices(items(sparse.get("indices")).stream().map(item -> ((Number) item).intValue()).toList())).build();
+		}
+		List<Object> values = items(json);
+		if (!values.isEmpty() && values.get(0) instanceof Collection<?>) {
+			MultiDenseVector.Builder multi = MultiDenseVector.newBuilder();
+			values.forEach(row -> multi.addVectors(DenseVector.newBuilder().addAllData(floatList(row))));
+			return VectorInput.newBuilder().setMultiDense(multi).build();
+		}
+		return VectorInput.newBuilder().setDense(DenseVector.newBuilder().addAllData(floatList(values))).build();
+	}
+
+	private static Vector storedVector(Object json) {
+		if (json instanceof Map<?, ?>) {
+			Map<String, Object> sparse = map(json);
+			return Vector.newBuilder().setSparse(SparseVector.newBuilder().addAllValues(floatList(sparse.get("values")))
+					.addAllIndices(items(sparse.get("indices")).stream().map(item -> ((Number) item).intValue()).toList())).build();
+		}
+		List<Object> values = items(json);
+		if (!values.isEmpty() && values.get(0) instanceof Collection<?>) {
+			MultiDenseVector.Builder multi = MultiDenseVector.newBuilder();
+			values.forEach(row -> multi.addVectors(DenseVector.newBuilder().addAllData(floatList(row))));
+			return Vector.newBuilder().setMultiDense(multi).build();
+		}
+		return Vector.newBuilder().setDense(DenseVector.newBuilder().addAllData(floatList(values))).build();
+	}
+
+	private static TextQuery textQuery(Object query, Object bm25) {
+		TextQuery.Builder builder = TextQuery.newBuilder().setQuery(text(query));
+		if (bm25 != null) {
+			Map<String, Object> params = map(bm25);
+			Bm25Params.Builder scoring = Bm25Params.newBuilder();
+			if (params.containsKey("k")) scoring.setK((float) number(params.get("k")));
+			if (params.containsKey("b")) scoring.setB((float) number(params.get("b")));
+			builder.setBm25(scoring);
+		}
+		return builder.build();
+	}
+
+	/** A prefetch in the REST form: query (vector or text), using, limit, filter, params, score_threshold and nested prefetches. */
+	private static PrefetchQuery prefetch(Map<String, Object> json) {
+		PrefetchQuery.Builder builder = PrefetchQuery.newBuilder();
+		Object query = json.get("query");
+		if (query instanceof Map<?, ?> && map(query).containsKey("text")) {
+			Object text = map(query).get("text");
+			builder.setQuery(text instanceof Map<?, ?> ? Query.newBuilder().setText(textQuery(map(text).get("query"), map(map(text).get("scoring")).get("bm25")))
+					: Query.newBuilder().setText(textQuery(text, null)));
+		} else if (query != null) {
+			builder.setQuery(Query.newBuilder().setNearest(vectorInput(query)));
+		}
+		if (json.get("using") != null) builder.setUsing(text(json.get("using")));
+		if (json.get("limit") != null) builder.setLimit(((Number) json.get("limit")).longValue());
+		if (json.get("filter") != null) builder.setFilter(filter(json.get("filter")));
+		if (json.get("params") != null) builder.setParams(searchParams(json.get("params")));
+		if (json.get("score_threshold") != null) builder.setScoreThreshold((float) number(json.get("score_threshold")));
+		items(json.get("prefetch")).forEach(nested -> builder.addPrefetch(prefetch(map(nested))));
+		return builder.build();
+	}
+
+	private static ReadConsistency consistency(Map<String, Object> layout) {
+		Object level = layout.get("read_consistency");
+		if (level == null) {
+			return null;
+		}
+		return ReadConsistency.newBuilder().setType(switch (text(level)) {
+		case "majority" -> ReadConsistencyType.Majority;
+		case "quorum" -> ReadConsistencyType.Quorum;
+		default -> ReadConsistencyType.All;
+		}).build();
+	}
+
+	private static WriteOrdering ordering(Map<String, Object> layout, Object ordering) {
+		Object level = ordering != null ? ordering : layout.get("ordering");
+		if (level == null) {
+			return null;
+		}
+		return WriteOrdering.newBuilder().setType(switch (text(level)) {
+		case "medium" -> WriteOrderingType.Medium;
+		case "strong" -> WriteOrderingType.Strong;
+		default -> WriteOrderingType.Weak;
+		}).build();
+	}
+
+	// ---------------------------------------------------------------- collections
+
+	public static boolean hasCollection(Client client, Map<String, Object> args) {
+		return await(client.qdrant.collectionExistsAsync(text(args.get("name"))));
+	}
+
+	public static void dropCollection(Client client, Map<String, Object> args) {
+		await(client.qdrant.deleteCollectionAsync(text(args.get("name"))));
+	}
+
+	public static void createCollection(Client client, Map<String, Object> args) {
+		String name = text(args.get("name"));
+		VectorParamsMap.Builder dense = VectorParamsMap.newBuilder();
+		if (args.get("vectors") != null) {
+			map(args.get("vectors")).forEach((field, params) -> dense.putMap(field, vectorParams(map(params))));
+		}
+		CreateCollection.Builder request = CreateCollection.newBuilder().setCollectionName(name)
+				.setVectorsConfig(VectorsConfig.newBuilder().setParamsMap(dense));
+		if (args.get("sparse_vectors") != null) {
+			SparseVectorConfig.Builder sparse = SparseVectorConfig.newBuilder();
+			map(args.get("sparse_vectors")).forEach((field, params) -> sparse.putMap(field, sparseParams(map(params))));
+			request.setSparseVectorsConfig(sparse);
+		}
+		if (args.get("optimizers") != null) {
+			request.setOptimizersConfig(optimizers(map(args.get("optimizers"))));
+		}
+		if (args.get("strict_mode") != null) {
+			request.setStrictModeConfig(StrictModeConfig.newBuilder().setEnabled(flag(args.get("strict_mode"))));
+		}
+		if (args.get("metadata") != null) {
+			map(args.get("metadata")).forEach((key, entry) -> request.putMetadata(key, toValue(entry, false)));
+		}
+		if (args.get("replication_factor") != null) request.setReplicationFactor(whole(args, "replication_factor", 1));
+		if (args.get("shard_number") != null) request.setShardNumber(whole(args, "shard_number", 1));
+		if ("custom".equals(args.get("sharding_method"))) request.setShardingMethod(ShardingMethod.Custom);
+		if (args.get("payload") != null) request.setPayload(PayloadStorageParams.newBuilder().setMemory(memory(map(args.get("payload")).get("memory"))));
+		await(client.qdrant.createCollectionAsync(request.build()));
+		for (String shardKey : strings(args.get("shard_keys"))) {
+			createShardKey(client, args("name", name, "shard_key", shardKey));
+		}
+		for (Object index : items(args.get("indexes"))) {
+			Map<String, Object> entry = map(index);
+			createPayloadIndex(client, args("name", name, "field", entry.get("field"), "schema", entry.get("schema")));
+		}
+		for (String alias : strings(args.get("aliases"))) {
+			createAlias(client, args("alias", alias, "collection", name));
+		}
+	}
+
+	public static void createPayloadIndex(Client client, Map<String, Object> args) {
+		Map<String, Object> schema = map(args.get("schema"));
+		await(client.qdrant.createPayloadIndexAsync(text(args.get("name")), text(args.get("field")), schemaType(schema), indexParams(schema),
+				true, null, null));
+	}
+
+	public static void createAlias(Client client, Map<String, Object> args) {
+		await(client.qdrant.createAliasAsync(text(args.get("alias")), text(args.get("collection"))));
+	}
+
+	/** Points an alias at another collection in one request: delete and create are applied together. */
+	public static void swapAlias(Client client, Map<String, Object> args) {
+		String alias = text(args.get("alias"));
+		await(client.qdrant.updateAliasesAsync(List.of(
+				AliasOperations.newBuilder().setDeleteAlias(DeleteAlias.newBuilder().setAliasName(alias)).build(),
+				AliasOperations.newBuilder().setCreateAlias(CreateAlias.newBuilder().setAliasName(alias).setCollectionName(text(args.get("collection"))))
+						.build())));
+	}
+
+	// ---------------------------------------------------------------- writes
+
+	private static void check(Map<String, Object> layout, Map<String, Object> record) {
+		if (layout.get("limits") == null) {
+			return;
+		}
+		for (Map.Entry<String, Object> entry : map(layout.get("limits")).entrySet()) {
+			Object item = record.get(entry.getKey());
+			if (item == null) {
+				continue;
+			}
+			Map<String, Object> limit = map(entry.getValue());
+			if (limit.containsKey("max_items") && item instanceof Collection<?> values && values.size() > number(limit.get("max_items"))) {
+				throw new IllegalArgumentException(entry.getKey() + " has " + values.size() + " items; at most "
+						+ ((Number) limit.get("max_items")).longValue() + " are allowed");
+			}
+			if (limit.containsKey("max_length")) {
+				for (Object text : item instanceof Collection<?> values ? values : List.of(item)) {
+					if (text instanceof String string && string.length() > number(limit.get("max_length"))) {
+						throw new IllegalArgumentException(entry.getKey() + " is longer than " + ((Number) limit.get("max_length")).longValue() + " characters");
+					}
+				}
+			}
+		}
+	}
+
+	/** Payload values and named vectors of a record; absent and null are the same. */
+	private static Map.Entry<Map<String, Value>, Map<String, Vector>> split(Map<String, Object> layout, Map<String, Object> record) {
+		check(layout, record);
+		Set<String> vectors = new HashSet<>(strings(layout.get("vectors")));
+		Set<String> integers = new HashSet<>(strings(layout.get("integers")));
+		Map<String, Value> payload = new LinkedHashMap<>();
+		Map<String, Vector> named = new LinkedHashMap<>();
+		record.forEach((name, item) -> {
+			if (item == null) {
+				return;
+			}
+			if (vectors.contains(name)) {
+				named.put(name, storedVector(item));
+			} else {
+				payload.put(name, toValue(item, integers.contains(name)));
+			}
+		});
+		return Map.entry(payload, named);
+	}
+
+	private static Map<String, Object> merged(Map<String, Object> layout, Map<String, Object> row) {
+		Map<String, Object> record = new LinkedHashMap<>();
+		if (layout.get("defaults") != null) {
+			record.putAll(map(layout.get("defaults")));
+		}
+		record.putAll(row);
+		return record;
+	}
+
+	/** Shard key selector of a statement's partitions (custom sharding); null reads every shard. */
+	private static ShardKeySelector shards(Object shardKey) {
+		if (shardKey == null) {
+			return null;
+		}
+		ShardKeySelector.Builder selector = ShardKeySelector.newBuilder();
+		for (Object key : shardKey instanceof Collection<?> keys ? keys : List.of(shardKey)) {
+			selector.addShardKeys(ShardKey.newBuilder().setKeyword(text(key)));
+		}
+		return selector.build();
+	}
+
+	/** A point of a record; slice holds the tenant and namespace payload values of the write. */
+	private static PointStruct point(Map<String, Object> layout, Map<String, Object> row, Object slice) {
+		Map<String, Object> record = merged(layout, row);
+		if (slice != null) record.putAll(map(slice));
+		Object key = record.get(text(layout.get("key")));
+		if (key == null) {
+			throw new IllegalArgumentException("record without primary key " + layout.get("key") + ": " + row);
+		}
+		var parts = split(layout, record);
+		return PointStruct.newBuilder().setId(id(pointId(key))).putAllPayload(parts.getKey())
+				.setVectors(Vectors.newBuilder().setVectors(NamedVectors.newBuilder().putAllVectors(parts.getValue()))).build();
+	}
+
+	private static Set<String> existing(Client client, Map<String, Object> layout, List<String> uuids) {
+		return existing(client, layout, uuids, null);
+	}
+
+	private static Set<String> existing(Client client, Map<String, Object> layout, List<String> uuids, Object shardKey) {
+		Set<String> found = new HashSet<>();
+		for (List<String> chunk : chunks(uuids, PAGE)) {
+			GetPoints.Builder request = GetPoints.newBuilder().setCollectionName(text(layout.get("name"))).addAllIds(ids(chunk))
+					.setWithPayload(WithPayloadSelector.newBuilder().setEnable(false)).setWithVectors(WithVectorsSelector.newBuilder().setEnable(false));
+			ReadConsistency level = consistency(layout);
+			if (level != null) request.setReadConsistency(level);
+			if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+			await(client.qdrant.retrieveAsync(request.build(), null)).forEach(point -> found.add(point.getId().getUuid()));
+		}
+		return found;
+	}
+
+	private static ScrollPoints.Builder scrollRequest(Map<String, Object> layout, Object where, WithPayloadSelector payload, WithVectorsSelector vectors) {
+		ScrollPoints.Builder request = ScrollPoints.newBuilder().setCollectionName(text(layout.get("name"))).setWithPayload(payload).setWithVectors(vectors);
+		if (where != null) request.setFilter(filter(where));
+		ReadConsistency level = consistency(layout);
+		if (level != null) request.setReadConsistency(level);
+		return request;
+	}
+
+	/** Every point that matches a filter, through paginated scrolls; a repeated page offset ends the scroll. */
+	private static List<RetrievedPoint> pages(Client client, Map<String, Object> layout, Object where, WithPayloadSelector payload,
+			WithVectorsSelector vectors) {
+		return pages(client, layout, where, payload, vectors, null);
+	}
+
+	private static List<RetrievedPoint> pages(Client client, Map<String, Object> layout, Object where, WithPayloadSelector payload,
+			WithVectorsSelector vectors, Object shardKey) {
+		List<RetrievedPoint> found = new ArrayList<>();
+		Set<PointId> seen = new HashSet<>();
+		PointId offset = null;
+		while (true) {
+			ScrollPoints.Builder request = scrollRequest(layout, where, payload, vectors).setLimit(PAGE);
+			if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+			if (offset != null) request.setOffset(offset);
+			ScrollResponse page = await(client.qdrant.scrollAsync(request.build()));
+			found.addAll(page.getResultList());
+			if (!page.hasNextPageOffset() || !seen.add(page.getNextPageOffset())) {
+				return found;
+			}
+			offset = page.getNextPageOffset();
+		}
+	}
+
+	/** Ids of every point that matches a filter. */
+	private static List<String> matching(Client client, Map<String, Object> layout, Object where, Object shardKey) {
+		return pages(client, layout, where, WithPayloadSelector.newBuilder().setEnable(false).build(),
+				WithVectorsSelector.newBuilder().setEnable(false).build(), shardKey).stream().map(point -> point.getId().getUuid()).toList();
+	}
+
+	private static List<String> targets(Client client, Map<String, Object> layout, Object keys, Object where, Object shardKey) {
+		List<Object> given = items(keys);
+		if (!given.isEmpty()) {
+			List<String> wanted = new ArrayList<>(new LinkedHashSet<>(given.stream().map(QdrantRuntime::pointId).toList()));
+			if (where != null) {
+				Set<String> selected = new HashSet<>(matching(client, layout, args("must", list(args("has_id", wanted), where)), shardKey));
+				return wanted.stream().filter(selected::contains).toList();
+			}
+			Set<String> found = existing(client, layout, wanted, shardKey);
+			return wanted.stream().filter(found::contains).toList();
+		}
+		if (where != null) {
+			return matching(client, layout, where, shardKey);
+		}
+		throw new IllegalArgumentException("the statement selects no records");
+	}
+
+	private static void upsert(Client client, Map<String, Object> layout, List<PointStruct> points, int batchSize, boolean wait, WriteOrdering ordering,
+			UpdateMode mode, Object shardKey) {
+		for (List<PointStruct> chunk : chunks(points, batchSize)) {
+			UpsertPoints.Builder request = UpsertPoints.newBuilder().setCollectionName(text(layout.get("name"))).addAllPoints(chunk).setWait(wait);
+			if (ordering != null) request.setOrdering(ordering);
+			if (mode != null) request.setUpdateMode(mode);
+			if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+			await(client.qdrant.upsertAsync(request.build()));
+		}
+	}
+
+	private static boolean waits(Map<String, Object> args) {
+		return Boolean.TRUE.equals(args.get("wait"));
+	}
+
+	public static Map<String, Object> insertRows(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		List<PointStruct> points = records(args.get("rows")).stream().map(row -> point(layout, row, args.get("slice"))).toList();
+		Set<String> found = existing(client, layout, points.stream().map(point -> point.getId().getUuid()).toList());
+		if (!found.isEmpty() && "error".equals(args.getOrDefault("on_conflict", "error"))) {
+			throw new IllegalStateException(found.size() + " records already exist in " + layout.get("name"));
+		}
+		List<PointStruct> fresh = points.stream().filter(point -> !found.contains(point.getId().getUuid())).toList();
+		upsert(client, layout, fresh, whole(args, "batch_size", BATCH), waits(args), ordering(layout, args.get("ordering")), UpdateMode.InsertOnly,
+				args.get("shard_key"));
+		return args("insert_count", (long) fresh.size(), "skipped", (long) (points.size() - fresh.size()));
+	}
+
+	public static Map<String, Object> upsertRows(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		List<PointStruct> points = records(args.get("rows")).stream().map(row -> point(layout, row, args.get("slice"))).toList();
+		upsert(client, layout, points, whole(args, "batch_size", BATCH), waits(args), ordering(layout, args.get("ordering")), null, args.get("shard_key"));
+		return args("upsert_count", (long) points.size());
+	}
+
+	private static PointsSelector selector(List<String> uuids) {
+		return PointsSelector.newBuilder().setPoints(PointsIdsList.newBuilder().addAllIds(ids(uuids))).build();
+	}
+
+	private static void setPayload(Client client, String name, Map<String, Value> payload, List<String> uuids, boolean wait, WriteOrdering ordering,
+			Object shardKey) {
+		SetPayloadPoints.Builder request = SetPayloadPoints.newBuilder().setCollectionName(name).putAllPayload(payload).setPointsSelector(selector(uuids))
+				.setWait(wait);
+		if (ordering != null) request.setOrdering(ordering);
+		if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+		await(client.qdrant.setPayloadAsync(request.build(), null));
+	}
+
+	private static void overwritePayload(Client client, String name, Map<String, Value> payload, String uuid, boolean wait, WriteOrdering ordering,
+			Object shardKey) {
+		SetPayloadPoints.Builder request = SetPayloadPoints.newBuilder().setCollectionName(name).putAllPayload(payload)
+				.setPointsSelector(selector(List.of(uuid))).setWait(wait);
+		if (ordering != null) request.setOrdering(ordering);
+		if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+		await(client.qdrant.overwritePayloadAsync(request.build(), null));
+	}
+
+	private static void updateVectors(Client client, String name, Map<String, Vector> named, List<String> uuids, boolean wait, WriteOrdering ordering,
+			Object shardKey) {
+		UpdatePointVectors.Builder request = UpdatePointVectors.newBuilder().setCollectionName(name).setWait(wait);
+		for (String uuid : uuids) {
+			request.addPoints(PointVectors.newBuilder().setId(id(uuid)).setVectors(Vectors.newBuilder().setVectors(NamedVectors.newBuilder().putAllVectors(named))));
+		}
+		if (ordering != null) request.setOrdering(ordering);
+		if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+		await(client.qdrant.updateVectorsAsync(request.build(), null));
+	}
+
+	private static void deletePayload(Client client, String name, List<String> keys, List<String> uuids, boolean wait, WriteOrdering ordering,
+			Object shardKey) {
+		DeletePayloadPoints.Builder request = DeletePayloadPoints.newBuilder().setCollectionName(name).addAllKeys(keys).setPointsSelector(selector(uuids))
+				.setWait(wait);
+		if (ordering != null) request.setOrdering(ordering);
+		if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+		await(client.qdrant.deletePayloadAsync(request.build(), null));
+	}
+
+	/** array-append and array-remove: each target's stored array with the items appended or removed, written back. */
+	private static void arrays(Client client, Map<String, Object> layout, List<String> selected, Map<String, Object> items, List<String> append,
+			List<String> removeItems, boolean wait, WriteOrdering ordering, Object shardKey) {
+		String name = text(layout.get("name"));
+		List<String> fields = new ArrayList<>(append);
+		fields.addAll(removeItems);
+		for (List<String> chunk : chunks(selected, PAGE)) {
+			GetPoints request = GetPoints.newBuilder().setCollectionName(name).addAllIds(ids(chunk))
+					.setWithPayload(WithPayloadSelector.newBuilder().setInclude(PayloadIncludeSelector.newBuilder().addAllFields(fields))).build();
+			for (RetrievedPoint point : await(client.qdrant.retrieveAsync(request, null))) {
+				Map<String, Object> changed = new LinkedHashMap<>();
+				for (String field : append) {
+					List<Object> stored = new ArrayList<>(storedItems(point, field));
+					stored.addAll(items(items.get(field)));
+					changed.put(field, stored);
+				}
+				for (String field : removeItems) {
+					List<Object> dropped = items(items.get(field));
+					changed.put(field, storedItems(point, field).stream().filter(item -> dropped.stream().noneMatch(other -> same(item, other))).toList());
+				}
+				setPayload(client, name, split(layout, changed).getKey(), List.of(point.getId().getUuid()), wait, ordering, shardKey);
+			}
+		}
+	}
+
+	private static List<Object> storedItems(RetrievedPoint point, String field) {
+		Value stored = point.getPayloadMap().get(field);
+		return stored == null ? List.of() : items(fromValue(stored));
+	}
+
+	private static boolean same(Object left, Object right) {
+		if (left instanceof Number a && right instanceof Number b) {
+			return a.doubleValue() == b.doubleValue();
+		}
+		return left == null ? right == null : left.equals(right);
+	}
+
+	public static Map<String, Object> updateRows(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		String name = text(layout.get("name"));
+		String key = text(layout.get("key"));
+		Object shardKey = args.get("shard_key");
+		Map<String, Map<String, Object>> replacements = new LinkedHashMap<>();
+		for (Map<String, Object> row : args.get("rows") == null ? List.<Map<String, Object>>of() : records(args.get("rows"))) {
+			replacements.put(pointId(row.get(key)), row);
+		}
+		List<String> selected;
+		if (!replacements.isEmpty()) {
+			Set<String> chosen = new HashSet<>(items(args.get("ids")).stream().map(QdrantRuntime::pointId).toList());
+			List<Object> keys = records(args.get("rows")).stream().map(row -> row.get(key)).toList();
+			selected = targets(client, layout, keys, args.get("filter"), shardKey).stream().filter(uuid -> chosen.isEmpty() || chosen.contains(uuid)).toList();
+		} else if (!items(args.get("ids")).isEmpty() || args.get("filter") != null) {
+			selected = targets(client, layout, args.get("ids"), args.get("filter"), shardKey);
+		} else {
+			throw new IllegalArgumentException("update requires ids, a filter or records");
+		}
+		boolean wait = waits(args);
+		WriteOrdering ordering = ordering(layout, args.get("ordering"));
+		Map<String, Object> values = args.get("values") == null ? Map.of() : map(args.get("values"));
+		List<String> remove = strings(args.get("remove"));
+		String mode = text(args.getOrDefault("mode", "merge"));
+		if (replacements.isEmpty() && !"replace".equals(mode)) {
+			List<String> append = strings(args.get("append"));
+			List<String> removeItems = strings(args.get("remove_items"));
+			Map<String, Object> items = new LinkedHashMap<>();
+			Map<String, Object> plain = new LinkedHashMap<>();
+			values.forEach((field, item) -> (append.contains(field) || removeItems.contains(field) ? items : plain).put(field, item));
+			var parts = split(layout, plain);
+			if (parts.getKey().containsKey(key)) {
+				throw new IllegalArgumentException("update cannot change the primary key " + key);
+			}
+			if (!parts.getKey().isEmpty() && !selected.isEmpty()) setPayload(client, name, parts.getKey(), selected, wait, ordering, shardKey);
+			if (!parts.getValue().isEmpty() && !selected.isEmpty()) updateVectors(client, name, parts.getValue(), selected, wait, ordering, shardKey);
+			if (!remove.isEmpty() && !selected.isEmpty()) deletePayload(client, name, remove, selected, wait, ordering, shardKey);
+			if (!items.isEmpty() && !selected.isEmpty()) arrays(client, layout, selected, items, append, removeItems, wait, ordering, shardKey);
+			return args("update_count", (long) selected.size());
+		}
+		for (String uuid : selected) {
+			Map<String, Object> record = new LinkedHashMap<>(replacements.getOrDefault(uuid, Map.of()));
+			record.putAll(values);
+			if (record.get(key) != null && !pointId(record.get(key)).equals(uuid)) {
+				throw new IllegalArgumentException("update cannot change the primary key " + key);
+			}
+			var parts = split(layout, record);
+			Map<String, Value> payload = new LinkedHashMap<>(parts.getKey());
+			if ("replace".equals(mode)) {
+				if (!payload.containsKey(key)) {
+					GetPoints request = GetPoints.newBuilder().setCollectionName(name).addIds(id(uuid))
+							.setWithPayload(WithPayloadSelector.newBuilder().setInclude(PayloadIncludeSelector.newBuilder().addFields(key))).build();
+					payload.put(key, await(client.qdrant.retrieveAsync(request, null)).get(0).getPayloadMap().get(key));
+				}
+				overwritePayload(client, name, payload, uuid, wait, ordering, shardKey);
+			} else if (!payload.isEmpty()) {
+				setPayload(client, name, payload, List.of(uuid), wait, ordering, shardKey);
+			}
+			if (!parts.getValue().isEmpty()) updateVectors(client, name, parts.getValue(), List.of(uuid), wait, ordering, shardKey);
+			if (!remove.isEmpty()) deletePayload(client, name, remove, List.of(uuid), wait, ordering, shardKey);
+		}
+		return args("update_count", (long) selected.size());
+	}
+
+	/** The first targets in primary key order. */
+	private static List<String> first(Client client, Map<String, Object> layout, List<String> selected, int limit) {
+		String key = text(layout.get("key"));
+		List<RetrievedPoint> points = new ArrayList<>();
+		for (List<String> chunk : chunks(selected, PAGE)) {
+			GetPoints request = GetPoints.newBuilder().setCollectionName(text(layout.get("name"))).addAllIds(ids(chunk))
+					.setWithPayload(WithPayloadSelector.newBuilder().setInclude(PayloadIncludeSelector.newBuilder().addFields(key))).build();
+			points.addAll(await(client.qdrant.retrieveAsync(request, null)));
+		}
+		points.sort(Comparator.comparing(point -> fromValue(point.getPayloadMap().get(key)), QdrantRuntime::compareKeys));
+		return points.stream().limit(limit).map(point -> point.getId().getUuid()).toList();
+	}
+
+	public static Map<String, Object> deleteRows(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		String name = text(layout.get("name"));
+		Object shardKey = args.get("shard_key");
+		WriteOrdering ordering = ordering(layout, args.get("ordering"));
+		Integer limit = args.get("limit") == null ? null : whole(args, "limit", 0);
+		if (Boolean.TRUE.equals(args.get("delete_all")) && limit == null) {
+			long total = count(client, args("collection", layout, "filter", args.get("filter"), "shard_key", shardKey));
+			DeletePoints.Builder request = DeletePoints.newBuilder().setCollectionName(name)
+					.setPoints(PointsSelector.newBuilder().setFilter(args.get("filter") == null ? Filter.getDefaultInstance() : filter(args.get("filter"))))
+					.setWait(waits(args));
+			if (ordering != null) request.setOrdering(ordering);
+			if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+			await(client.qdrant.deleteAsync(request.build()));
+			return args("delete_count", total);
+		}
+		boolean every = limit != null && items(args.get("ids")).isEmpty() && args.get("filter") == null;
+		List<String> selected = targets(client, layout, args.get("ids"), every ? args() : args.get("filter"), shardKey);
+		if (limit != null) {
+			selected = first(client, layout, selected, limit);
+		}
+		for (List<String> chunk : chunks(selected, PAGE)) {
+			DeletePoints.Builder request = DeletePoints.newBuilder().setCollectionName(name).setPoints(selector(chunk)).setWait(waits(args));
+			if (ordering != null) request.setOrdering(ordering);
+			if (shardKey != null) request.setShardKeySelector(shards(shardKey));
+			await(client.qdrant.deleteAsync(request.build()));
+		}
+		return args("delete_count", (long) selected.size());
+	}
+
+	// ---------------------------------------------------------------- reads
+
+	private static WithPayloadSelector payloadSelector(Map<String, Object> layout, Object output) {
+		Set<String> fields = new LinkedHashSet<>();
+		fields.add(text(layout.get("key")));
+		fields.addAll(strings(output));
+		return WithPayloadSelector.newBuilder().setInclude(PayloadIncludeSelector.newBuilder().addAllFields(fields)).build();
+	}
+
+	private static WithVectorsSelector vectorSelector(Object vectors) {
+		List<String> names = strings(vectors);
+		return names.isEmpty() ? WithVectorsSelector.newBuilder().setEnable(false).build()
+				: WithVectorsSelector.newBuilder().setInclude(VectorsSelector.newBuilder().addAllNames(names)).build();
+	}
+
+	private static Object vectorValue(VectorOutput vector) {
+		return switch (vector.getVectorCase()) {
+		case DENSE -> vector.getDense().getDataList().stream().map(Float::doubleValue).toList();
+		case SPARSE -> args("indices", vector.getSparse().getIndicesList().stream().map(Integer::longValue).toList(), "values",
+				vector.getSparse().getValuesList().stream().map(Float::doubleValue).toList());
+		case MULTI_DENSE -> vector.getMultiDense().getVectorsList().stream().map(row -> row.getDataList().stream().map(Float::doubleValue).toList()).toList();
+		default -> null;
+		};
+	}
+
+	private static Map<String, Object> row(Map<String, Object> layout, Map<String, Value> payload, Map<String, VectorOutput> stored, Object output,
+			Object vectors) {
+		String key = text(layout.get("key"));
+		Map<String, Object> row = new LinkedHashMap<>();
+		row.put(key, payload.containsKey(key) ? fromValue(payload.get(key)) : null);
+		for (String name : strings(output)) {
+			row.put(name, value(payload.containsKey(name) ? fromValue(payload.get(name)) : null));
+		}
+		for (String name : strings(vectors)) {
+			row.put(name, stored.containsKey(name) ? value(vectorValue(stored.get(name))) : null);
+		}
+		return row;
+	}
+
+	private static Map<String, Object> row(Map<String, Object> layout, RetrievedPoint point, Object output, Object vectors) {
+		return row(layout, point.getPayloadMap(), point.getVectors().getVectors().getVectorsMap(), output, vectors);
+	}
+
+	/** Records by primary key; a tenant or namespace filter restricts them to its slice. */
+	public static List<Map<String, Object>> getRows(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		List<String> wanted = new ArrayList<>(new LinkedHashSet<>(items(args.get("ids")).stream().map(QdrantRuntime::pointId).toList()));
+		Map<String, RetrievedPoint> found = new LinkedHashMap<>();
+		if (args.get("filter") != null) {
+			pages(client, layout, args("must", list(args("has_id", wanted), args.get("filter"))), payloadSelector(layout, args.get("output")),
+					vectorSelector(args.get("vectors")), args.get("shard_key")).forEach(point -> found.put(point.getId().getUuid(), point));
+		} else {
+			GetPoints.Builder request = GetPoints.newBuilder().setCollectionName(text(layout.get("name"))).addAllIds(ids(wanted))
+					.setWithPayload(payloadSelector(layout, args.get("output"))).setWithVectors(vectorSelector(args.get("vectors")));
+			ReadConsistency level = consistency(layout);
+			if (level != null) request.setReadConsistency(level);
+			if (args.get("shard_key") != null) request.setShardKeySelector(shards(args.get("shard_key")));
+			await(client.qdrant.retrieveAsync(request.build(), null)).forEach(point -> found.put(point.getId().getUuid(), point));
+		}
+		return wanted.stream().filter(found::containsKey).map(uuid -> row(layout, found.get(uuid), args.get("output"), args.get("vectors"))).toList();
+	}
+
+	/** Exact count; the SDK's count takes no shard key, so a count in partitions goes over REST. */
+	public static long count(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		if (args.get("shard_key") != null) {
+			Map<String, Object> body = args("exact", true, "shard_key", args.get("shard_key"));
+			if (args.get("filter") != null) body.put("filter", args.get("filter"));
+			return integer(map(rest(client, "POST", path(layout.get("name"), "points", "count"), body)).get("count"));
+		}
+		Filter where = args.get("filter") == null ? null : filter(args.get("filter"));
+		return await(client.qdrant.countAsync(text(layout.get("name")), where, true));
+	}
+
+	@SuppressWarnings("unchecked")
+	private static int compareKeys(Object left, Object right) {
+		return ((Comparable<Object>) left).compareTo(right);
+	}
+
+	/** Records in the order of an indexed payload field (the integer key by default), else sorted by key in the runtime. */
+	public static List<Map<String, Object>> scroll(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		String key = text(layout.get("key"));
+		int skip = whole(args, "offset", 0);
+		Integer limit = args.get("limit") == null ? null : whole(args, "limit", 0);
+		WithPayloadSelector payload = payloadSelector(layout, args.get("output"));
+		WithVectorsSelector vectors = vectorSelector(args.get("vectors"));
+		List<RetrievedPoint> selected = new ArrayList<>();
+		if (args.get("order") != null) {
+			long size = limit == null ? count(client, args("collection", layout, "filter", args.get("filter"), "shard_key", args.get("shard_key"))) : skip + limit;
+			if (size == 0) {
+				return List.of();
+			}
+			Map<String, Object> order = map(args.get("order"));
+			OrderBy.Builder orderBy = OrderBy.newBuilder().setKey(text(order.get("key")));
+			if ("desc".equals(order.get("direction"))) orderBy.setDirection(Direction.Desc);
+			ScrollPoints.Builder request = scrollRequest(layout, args.get("filter"), payload, vectors).setLimit((int) size).setOrderBy(orderBy);
+			if (args.get("shard_key") != null) request.setShardKeySelector(shards(args.get("shard_key")));
+			List<RetrievedPoint> page = await(client.qdrant.scrollAsync(request.build())).getResultList();
+			selected.addAll(page.subList(Math.min(skip, page.size()), page.size()));
+		} else {
+			selected.addAll(pages(client, layout, args.get("filter"), payload, vectors, args.get("shard_key")));
+			selected.sort(Comparator.comparing(point -> fromValue(point.getPayloadMap().get(key)), QdrantRuntime::compareKeys));
+			selected = new ArrayList<>(selected.subList(Math.min(skip, selected.size()), selected.size()));
+		}
+		if (limit != null && selected.size() > limit) {
+			selected = selected.subList(0, limit);
+		}
+		return selected.stream().map(point -> row(layout, point, args.get("output"), args.get("vectors"))).toList();
+	}
+
+	/** Canonical similarity of a Qdrant score; Euclid and Manhattan scores are distances. */
+	public static double similarity(Object metric, double score) {
+		return DISTANCES.contains(text(metric)) ? -score : score;
+	}
+
+	/** Qdrant's score_threshold for a lower similarity bound: an upper distance bound for Euclid and Manhattan. */
+	private static Double threshold(Object metric, Double scoreMin) {
+		if (scoreMin == null) {
+			return null;
+		}
+		return DISTANCES.contains(text(metric)) ? -scoreMin : scoreMin;
+	}
+
+	private static boolean within(double score, Double min, Double max) {
+		return (min == null || score >= min) && (max == null || score <= max);
+	}
+
+	private static List<Map<String, Object>> hits(Map<String, Object> layout, List<ScoredPoint> points, List<Double> scores, Map<String, Object> args) {
+		String key = text(layout.get("key"));
+		Double min = optionalNumber(args, "score_min");
+		Double max = optionalNumber(args, "score_max");
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (int i = 0; i < points.size(); i++) {
+			double score = scores.get(i);
+			if (!within(score, min, max)) {
+				continue;
+			}
+			ScoredPoint point = points.get(i);
+			Map<String, Object> row = row(layout, point.getPayloadMap(), point.getVectors().getVectors().getVectorsMap(), args.get("output"),
+					args.get("vectors"));
+			Map<String, Object> hit = new LinkedHashMap<>();
+			hit.put("id", row.remove(key));
+			hit.put("score", value(score));
+			hit.putAll(row);
+			result.add(hit);
+		}
+		return result;
+	}
+
+	private static QueryPoints.Builder request(Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		QueryPoints.Builder request = QueryPoints.newBuilder().setCollectionName(text(layout.get("name"))).setLimit(whole(args, "limit", 10))
+				.setWithPayload(payloadSelector(layout, args.get("output"))).setWithVectors(vectorSelector(args.get("vectors")));
+		if (args.get("filter") != null) request.setFilter(filter(args.get("filter")));
+		if (args.get("offset") != null) request.setOffset(whole(args, "offset", 0));
+		if (args.get("params") != null) request.setParams(searchParams(args.get("params")));
+		ReadConsistency level = consistency(layout);
+		if (level != null) request.setReadConsistency(level);
+		if (args.get("shard_key") != null) request.setShardKeySelector(shards(args.get("shard_key")));
+		return request;
+	}
+
+	private static List<Map<String, Object>> scored(Map<String, Object> args, Object metric, List<ScoredPoint> points) {
+		boolean nativeScore = Boolean.TRUE.equals(args.get("native"));
+		List<Double> scores = points.stream().map(point -> metric == null || nativeScore ? (double) point.getScore() : similarity(metric, point.getScore()))
+				.toList();
+		return hits(map(args.get("collection")), points, scores, args);
+	}
+
+	public static List<Map<String, Object>> vectorSearch(Client client, Map<String, Object> args) {
+		VectorInput nearest = vectorInput(args.get("vector"));
+		Query query;
+		if (args.get("mmr") != null) {
+			Map<String, Object> config = map(args.get("mmr"));
+			Mmr.Builder mmr = Mmr.newBuilder().setDiversity((float) number(config.get("diversity")));
+			if (config.get("candidates_limit") != null) mmr.setCandidatesLimit(whole(config, "candidates_limit", 0));
+			query = Query.newBuilder().setNearestWithMmr(NearestInputWithMmr.newBuilder().setNearest(nearest).setMmr(mmr)).build();
+		} else {
+			query = Query.newBuilder().setNearest(nearest).build();
+		}
+		QueryPoints.Builder request = request(args).setQuery(query).setUsing(text(args.get("field")));
+		Double bound = Boolean.TRUE.equals(args.get("native")) ? null : threshold(args.get("metric"), optionalNumber(args, "score_min"));
+		if (bound != null) request.setScoreThreshold(bound.floatValue());
+		items(args.get("prefetch")).forEach(stage -> request.addPrefetch(prefetch(map(stage))));
+		if (args.get("group_by") != null) {
+			return groups(client, args, request.build());
+		}
+		return scored(args, args.get("metric"), await(client.qdrant.queryAsync(request.build())));
+	}
+
+	/** Point groups of a nearest-vector query: the group value and its hits. */
+	private static List<Map<String, Object>> groups(Client client, Map<String, Object> args, QueryPoints query) {
+		QueryPointGroups.Builder request = QueryPointGroups.newBuilder().setCollectionName(query.getCollectionName()).addAllPrefetch(query.getPrefetchList())
+				.setQuery(query.getQuery()).setUsing(query.getUsing()).setLimit(query.getLimit()).setWithPayload(query.getWithPayload())
+				.setWithVectors(query.getWithVectors()).setGroupBy(text(args.get("group_by")));
+		if (args.get("group_size") != null) request.setGroupSize(whole(args, "group_size", 3));
+		if (query.hasFilter()) request.setFilter(query.getFilter());
+		if (query.hasParams()) request.setParams(query.getParams());
+		if (query.hasScoreThreshold()) request.setScoreThreshold(query.getScoreThreshold());
+		if (query.hasReadConsistency()) request.setReadConsistency(query.getReadConsistency());
+		if (query.hasShardKeySelector()) request.setShardKeySelector(query.getShardKeySelector());
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (PointGroup group : await(client.qdrant.queryGroupsAsync(request.build()))) {
+			Object id = switch (group.getId().getKindCase()) {
+			case UNSIGNED_VALUE -> group.getId().getUnsignedValue();
+			case INTEGER_VALUE -> group.getId().getIntegerValue();
+			default -> group.getId().getStringValue();
+			};
+			result.add(args("group", id, "hits", scored(args, args.get("metric"), group.getHitsList())));
+		}
+		return result;
+	}
+
+	public static List<Map<String, Object>> keywordSearch(Client client, Map<String, Object> args) {
+		QueryPoints.Builder request = request(args).setQuery(Query.newBuilder().setText(textQuery(args.get("query"), args.get("bm25"))))
+				.setUsing(text(args.get("field")));
+		if (args.get("score_min") != null) request.setScoreThreshold((float) number(args.get("score_min")));
+		return scored(args, null, await(client.qdrant.queryAsync(request.build())));
+	}
+
+	/** One hybrid leg as a Qdrant prefetch: a nearest-vector or a BM25 text query with its own filter and limit. */
+	private static Map<String, Object> legQuery(Map<String, Object> leg, long limit) {
+		Map<String, Object> result = args("using", leg.get("field"), "limit", limit);
+		if ("vector".equals(leg.get("kind"))) {
+			result.put("query", leg.get("vector"));
+			result.put("score_threshold", threshold(leg.get("metric"), optionalNumber(leg, "score_min")));
+			result.put("params", leg.get("params"));
+		} else {
+			result.put("query", args("text", leg.get("bm25") == null ? leg.get("query") : args("query", leg.get("query"), "scoring", args("bm25", leg.get("bm25")))));
+		}
+		result.put("filter", leg.get("filter"));
+		return result;
+	}
+
+	private static Map<String, Double> fused(Object fusion, double weight, List<Map.Entry<String, Double>> ranked) {
+		Map<String, Double> result = new LinkedHashMap<>();
+		if ("weighted".equals(fusion)) {
+			ranked.forEach(entry -> result.put(entry.getKey(), weight * entry.getValue()));
+			return result;
+		}
+		double low = ranked.stream().mapToDouble(Map.Entry::getValue).min().orElse(0);
+		double high = ranked.stream().mapToDouble(Map.Entry::getValue).max().orElse(0);
+		ranked.forEach(entry -> result.put(entry.getKey(), weight * (high > low ? (entry.getValue() - low) / (high - low) : 1.0)));
+		return result;
+	}
+
+	/** rrf fuses on the server; weighted and relative_score fuse one batched request per leg in the runtime. */
+	public static List<Map<String, Object>> hybridSearch(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		int limit = whole(args, "limit", 10);
+		int offset = whole(args, "offset", 0);
+		List<Map<String, Object>> legs = items(args.get("legs")).stream().map(QdrantRuntime::map).toList();
+		List<PrefetchQuery> prefetches = legs.stream().map(leg -> prefetch(legQuery(leg, leg.get("limit") == null ? limit + offset : whole(leg, "limit", 0))))
+				.toList();
+		if ("rrf".equals(args.get("fusion"))) {
+			QueryPoints.Builder request = request(args("collection", layout, "limit", limit, "output", args.get("output"), "vectors", args.get("vectors"),
+					"offset", args.get("offset"), "shard_key", args.get("shard_key"))).addAllPrefetch(prefetches)
+					.setQuery(Query.newBuilder().setRrf(Rrf.newBuilder().setK(whole(args, "k", 60) + 1)));
+			List<ScoredPoint> points = await(client.qdrant.queryAsync(request.build()));
+			return hits(layout, points, points.stream().map(point -> (double) point.getScore()).toList(), args);
+		}
+		List<QueryPoints> searches = new ArrayList<>();
+		for (PrefetchQuery leg : prefetches) {
+			QueryPoints.Builder search = QueryPoints.newBuilder().setCollectionName(text(layout.get("name"))).setQuery(leg.getQuery()).setUsing(leg.getUsing())
+					.setLimit(leg.getLimit()).setWithPayload(payloadSelector(layout, args.get("output"))).setWithVectors(vectorSelector(args.get("vectors")));
+			if (leg.hasFilter()) search.setFilter(leg.getFilter());
+			if (leg.hasParams()) search.setParams(leg.getParams());
+			if (leg.hasScoreThreshold()) search.setScoreThreshold(leg.getScoreThreshold());
+			if (args.get("shard_key") != null) search.setShardKeySelector(shards(args.get("shard_key")));
+			searches.add(search.build());
+		}
+		List<BatchResult> responses = await(client.qdrant.queryBatchAsync(text(layout.get("name")), searches, consistency(layout)));
+		Map<String, Double> totals = new LinkedHashMap<>();
+		Map<String, ScoredPoint> found = new LinkedHashMap<>();
+		for (int i = 0; i < legs.size(); i++) {
+			Map<String, Object> leg = legs.get(i);
+			boolean vector = "vector".equals(leg.get("kind"));
+			List<Map.Entry<String, Double>> ranked = new ArrayList<>();
+			for (ScoredPoint point : responses.get(i).getResultList()) {
+				double score = vector ? similarity(leg.get("metric"), point.getScore()) : point.getScore();
+				if (vector && !within(score, optionalNumber(leg, "score_min"), optionalNumber(leg, "score_max"))) {
+					continue;
+				}
+				found.putIfAbsent(point.getId().getUuid(), point);
+				ranked.add(Map.entry(point.getId().getUuid(), score));
+			}
+			double weight = leg.get("weight") == null ? 1.0 : number(leg.get("weight"));
+			fused(args.get("fusion"), weight, ranked).forEach((uuid, part) -> totals.merge(uuid, part, Double::sum));
+		}
+		String key = text(layout.get("key"));
+		List<String> ranking = new ArrayList<>(totals.keySet());
+		ranking.sort(Comparator.<String, Double>comparing(totals::get).reversed()
+				.thenComparing(uuid -> fromValue(found.get(uuid).getPayloadMap().get(key)), QdrantRuntime::compareKeys));
+		List<String> page = ranking.subList(Math.min(offset, ranking.size()), Math.min(offset + limit, ranking.size()));
+		return hits(layout, page.stream().map(found::get).toList(), page.stream().map(totals::get).toList(), args);
+	}
+
+	private static VectorInput example(Object item) {
+		return item instanceof Collection<?> || item instanceof Map<?, ?> ? vectorInput(item)
+				: VectorInput.newBuilder().setId(id(pointId(item))).build();
+	}
+
+	/** Qdrant's average_vector strategy, avg(positive) + avg(positive) - avg(negative); example points are not returned. */
+	public static List<Map<String, Object>> recommend(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		RecommendInput.Builder input = RecommendInput.newBuilder().setStrategy(RecommendStrategy.AverageVector);
+		items(args.get("positives")).forEach(item -> input.addPositive(example(item)));
+		items(args.get("negatives")).forEach(item -> input.addNegative(example(item)));
+		QueryPoints.Builder request = request(args).setQuery(Query.newBuilder().setRecommend(input)).setUsing(text(args.get("field")));
+		if (args.get("lookup") != null && !args.get("lookup").equals(layout.get("name"))) {
+			request.setLookupFrom(LookupLocation.newBuilder().setCollectionName(text(args.get("lookup"))).setVectorName(text(args.get("field"))));
+		}
+		Double bound = Boolean.TRUE.equals(args.get("native")) ? null : threshold(args.get("metric"), optionalNumber(args, "score_min"));
+		if (bound != null) request.setScoreThreshold(bound.floatValue());
+		return scored(args, args.get("metric"), await(client.qdrant.queryAsync(request.build())));
+	}
+
+	/** Discovery (with a target) or context search (without); the scores are Qdrant's own, so 'score native' is required. */
+	public static List<Map<String, Object>> discover(Client client, Map<String, Object> args) {
+		ContextInput.Builder context = ContextInput.newBuilder();
+		for (Object pair : items(args.get("context"))) {
+			context.addPairs(ContextInputPair.newBuilder().setPositive(example(map(pair).get("positive"))).setNegative(example(map(pair).get("negative"))));
+		}
+		Query query = args.get("target") == null ? Query.newBuilder().setContext(context).build()
+				: Query.newBuilder().setDiscover(DiscoverInput.newBuilder().setTarget(example(args.get("target"))).setContext(context)).build();
+		QueryPoints.Builder request = request(args).setQuery(query).setUsing(text(args.get("field")));
+		return scored(args, null, await(client.qdrant.queryAsync(request.build())));
+	}
+
+	public static List<Double> lookupVector(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		String field = text(args.get("field"));
+		GetPoints.Builder request = GetPoints.newBuilder().setCollectionName(text(layout.get("name"))).addIds(id(pointId(args.get("id"))))
+				.setWithPayload(WithPayloadSelector.newBuilder().setEnable(false)).setWithVectors(vectorSelector(List.of(field)));
+		ReadConsistency level = consistency(layout);
+		if (level != null) request.setReadConsistency(level);
+		List<RetrievedPoint> found = await(client.qdrant.retrieveAsync(request.build(), null));
+		if (found.isEmpty()) {
+			throw new IllegalArgumentException("record " + args.get("id") + " not found in " + layout.get("name"));
+		}
+		return found.get(0).getVectors().getVectors().getVectorsMap().get(field).getDense().getDataList().stream().map(Float::doubleValue).toList();
+	}
+
+	// ---------------------------------------------------------------- REST
+
+	/** A REST path of the collections API with encoded segments, for example /collections/books/points/count. */
+	private static String path(Object... segments) {
+		StringBuilder result = new StringBuilder("/collections");
+		for (Object segment : segments) {
+			result.append('/').append(URLEncoder.encode(text(segment), StandardCharsets.UTF_8).replace("+", "%20"));
+		}
+		return result.toString();
+	}
+
+	/**
+	 * The result of a REST call for what the gRPC API lacks (snapshot recovery, optimization progress, collection updates as
+	 * JSON). HTTP/1.1 is forced, because the JDK client otherwise asks to upgrade a plain-http request to HTTP/2; numbers are
+	 * read as longs or doubles, not all as doubles.
+	 */
+	static Object rest(Client client, String method, String path, Object body) {
+		HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(client.rest + path)).header("Content-Type", "application/json")
+				.method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(NUMBERS.toJson(body)));
+		if (client.key != null && !client.key.isBlank()) request.header("api-key", client.key);
+		HttpResponse<String> response;
+		try {
+			response = HTTP.send(request.build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+		} catch (IOException e) {
+			throw new IllegalStateException(method + " " + path + ": " + e.getMessage(), e);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IllegalStateException(e);
+		}
+		if (response.statusCode() >= 300) {
+			throw new IllegalStateException(method + " " + path + ": HTTP " + response.statusCode() + " " + response.body());
+		}
+		return map(NUMBERS.fromJson(response.body(), Object.class)).get("result");
+	}
+
+	private interface Check<T> {
+		T get();
+	}
+
+	/** Calls ready until it returns a value other than null or false; throws after the timeout in seconds. */
+	private static <T> T poll(Check<T> ready, String what, double timeout) {
+		long deadline = System.nanoTime() + (long) (timeout * 1e9);
+		while (true) {
+			T result = ready.get();
+			if (result != null && !Boolean.FALSE.equals(result)) {
+				return result;
+			}
+			if (System.nanoTime() > deadline) {
+				throw new IllegalStateException(what + " did not finish within " + timeout + " s");
+			}
+			try {
+				Thread.sleep(POLL);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException(e);
+			}
+		}
+	}
+
+	private static Map<String, Object> info(Client client, Object name) {
+		return map(rest(client, "GET", path(name), null));
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> T at(Object json, String... keys) {
+		Object current = json;
+		for (String key : keys) {
+			if (!(current instanceof Map<?, ?> object)) {
+				return null;
+			}
+			current = object.get(key);
+		}
+		return (T) current;
+	}
+
+	/** Every point that matches a filter, as REST JSON, through paginated scrolls; a repeated page offset ends the scroll. */
+	private static List<Map<String, Object>> restPages(Client client, Object name, Object where, Object payload, Object vectors) {
+		List<Map<String, Object>> found = new ArrayList<>();
+		Set<Object> seen = new HashSet<>();
+		Object offset = null;
+		while (true) {
+			Map<String, Object> body = args("limit", PAGE, "with_payload", payload, "with_vector", vectors);
+			if (where != null) body.put("filter", where);
+			if (offset != null) body.put("offset", offset);
+			Map<String, Object> page = map(rest(client, "POST", path(name, "points", "scroll"), body));
+			items(page.get("points")).forEach(point -> found.add(map(point)));
+			offset = page.get("next_page_offset");
+			if (offset == null || !seen.add(offset)) {
+				return found;
+			}
+		}
+	}
+
+	/** A record of a REST point: the key, the output fields and the named vectors. */
+	private static Map<String, Object> jsonRow(Map<String, Object> layout, Map<String, Object> point, Object output) {
+		Map<String, Object> payload = point.get("payload") == null ? Map.of() : map(point.get("payload"));
+		String key = text(layout.get("key"));
+		Map<String, Object> row = new LinkedHashMap<>();
+		row.put(key, payload.get(key));
+		for (String name : strings(output)) {
+			row.put(name, value(payload.get(name)));
+		}
+		return row;
+	}
+
+	// ---------------------------------------------------------------- schema changes
+
+	/** The collection must exist; Qdrant serves every collection and payloads are schemaless, so nothing else is due. */
+	public static void requireCollection(Client client, Map<String, Object> args) {
+		if (!await(client.qdrant.collectionExistsAsync(text(args.get("name"))))) {
+			throw new IllegalStateException("collection " + args.get("name") + " does not exist");
+		}
+	}
+
+	/** Qdrant's collection update (PATCH /collections/{name}): only the parts given change. */
+	public static void alterCollection(Client client, Map<String, Object> args) {
+		Map<String, Object> body = new LinkedHashMap<>();
+		Map<String, String> keys = Map.of("vectors", "vectors", "sparse_vectors", "sparse_vectors", "hnsw", "hnsw_config", "quantization",
+				"quantization_config", "optimizers", "optimizers_config", "params", "params", "strict_mode", "strict_mode_config", "metadata", "metadata");
+		keys.forEach((given, sent) -> {
+			if (args.containsKey(given)) body.put(sent, args.get(given));
+		});
+		rest(client, "PATCH", path(args.get("name")), body);
+	}
+
+	/**
+	 * A named vector added to an existing collection (Qdrant 1.20); its index, quantization and memory settings follow as a
+	 * collection update. Existing points have no value for it.
+	 */
+	public static void createVector(Client client, Map<String, Object> args) {
+		boolean sparse = args.get("sparse") != null;
+		Map<String, Object> params = map(sparse ? args.get("sparse") : args.get("dense"));
+		Map<String, Object> created = new LinkedHashMap<>();
+		Map<String, Object> later = new LinkedHashMap<>();
+		params.forEach((key, item) -> (VECTOR_NAME_KEYS.contains(key) ? created : later).put(key, item));
+		rest(client, "PUT", path(args.get("name"), "vectors", args.get("field")) + "?wait=true", args(sparse ? "sparse" : "dense", created));
+		if (!later.isEmpty()) {
+			alterCollection(client, args("name", args.get("name"), sparse ? "sparse_vectors" : "vectors", args(text(args.get("field")), later)));
+		}
+	}
+
+	public static void dropVector(Client client, Map<String, Object> args) {
+		rest(client, "DELETE", path(args.get("name"), "vectors", args.get("field")) + "?wait=true", null);
+	}
+
+	public static void dropPayloadIndex(Client client, Map<String, Object> args) {
+		await(client.qdrant.deletePayloadIndexAsync(text(args.get("name")), text(args.get("field")), true, null, null));
+	}
+
+	/** Payload indexes of a collection by field: the index schema as JSON. */
+	private static Map<String, Object> indexed(Client client, Object name) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		Map<String, Object> schema = at(info(client, name), "payload_schema");
+		if (schema == null) {
+			return result;
+		}
+		schema.forEach((field, entry) -> {
+			Map<String, Object> index = new LinkedHashMap<>();
+			index.put("type", map(entry).get("data_type"));
+			if (map(entry).get("params") != null) index.putAll(map(map(entry).get("params")));
+			result.put(field, index);
+		});
+		return result;
+	}
+
+	/** A default for an added field: every point without the field gets the value. */
+	public static void fillField(Client client, Map<String, Object> args) {
+		rest(client, "POST", path(args.get("name"), "points", "payload") + "?wait=true", args("payload", args(text(args.get("field")), args.get("value")),
+				"filter", args("must", list(args("is_empty", args("key", args.get("field")))))));
+	}
+
+	/** A payload field removed from every point, with its payload index. */
+	public static void dropField(Client client, Map<String, Object> args) {
+		if (indexed(client, args.get("name")).containsKey(text(args.get("field")))) {
+			dropPayloadIndex(client, args);
+		}
+		rest(client, "POST", path(args.get("name"), "points", "payload", "delete") + "?wait=true", args("keys", list(args.get("field")), "filter", args()));
+	}
+
+	/**
+	 * Qdrant cannot rename a payload key: each point's value is copied to the new key, the old key is removed and its payload
+	 * index moves to the new key.
+	 */
+	public static Map<String, Object> renameField(Client client, Map<String, Object> args) {
+		Object name = map(args.get("collection")).get("name");
+		Object field = args.get("field");
+		Object index = indexed(client, name).get(text(field));
+		long moved = 0;
+		for (Map<String, Object> point : restPages(client, name, args("must_not", list(args("is_empty", args("key", field)))), list(field), false)) {
+			rest(client, "POST", path(name, "points", "payload") + "?wait=true",
+					args("payload", args(text(args.get("new_name")), map(point.get("payload")).get(text(field))), "points", list(point.get("id"))));
+			moved++;
+		}
+		if (index != null) {
+			createPayloadIndex(client, args("name", name, "field", args.get("new_name"), "schema", index));
+			dropPayloadIndex(client, args("name", name, "field", field));
+		}
+		rest(client, "POST", path(name, "points", "payload", "delete") + "?wait=true", args("keys", list(field), "filter", args()));
+		return args("renamed_count", moved);
+	}
+
+	/**
+	 * Qdrant cannot rename a named vector: a vector with the same parameters is added under the new name, every point's
+	 * vector is copied to it, and the old vector is removed.
+	 */
+	public static Map<String, Object> renameVector(Client client, Map<String, Object> args) {
+		Object name = map(args.get("collection")).get("name");
+		String field = text(args.get("field"));
+		Map<String, Object> params = at(info(client, name), "config", "params");
+		Map<String, Object> sparseVectors = params.get("sparse_vectors") == null ? Map.of() : map(params.get("sparse_vectors"));
+		boolean sparse = sparseVectors.containsKey(field);
+		Object config = sparse ? sparseVectors.get(field) : map(params.get("vectors")).get(field);
+		createVector(client, args("name", name, "field", args.get("new_name"), sparse ? "sparse" : "dense", config));
+		long moved = 0;
+		for (Map<String, Object> point : restPages(client, name, null, false, list(field))) {
+			Object vector = point.get("vector") instanceof Map<?, ?> vectors ? vectors.get(field) : null;
+			if (vector != null) {
+				rest(client, "PUT", path(name, "points", "vectors") + "?wait=true",
+						args("points", list(args("id", point.get("id"), "vector", args(text(args.get("new_name")), vector)))));
+				moved++;
+			}
+		}
+		dropVector(client, args("name", name, "field", field));
+		return args("renamed_count", moved);
+	}
+
+	public static void dropAlias(Client client, Map<String, Object> args) {
+		await(client.qdrant.deleteAliasAsync(text(args.get("alias"))));
+	}
+
+	public static void createShardKey(Client client, Map<String, Object> args) {
+		rest(client, "PUT", path(args.get("name"), "shards"), args("shard_key", args.get("shard_key")));
+	}
+
+	public static void dropShardKey(Client client, Map<String, Object> args) {
+		rest(client, "POST", path(args.get("name"), "shards", "delete"), args("shard_key", args.get("shard_key")));
+	}
+
+	private static List<String> shardKeys(Client client, Object name) {
+		List<Object> keys = at(rest(client, "GET", path(name, "shards"), null), "shard_keys");
+		return keys == null ? List.of() : keys.stream().map(key -> text(map(key).get("key"))).toList();
+	}
+
+	public static boolean hasShardKey(Client client, Map<String, Object> args) {
+		return shardKeys(client, args.get("name")).contains(text(args.get("shard_key")));
+	}
+
+	private static List<String> aliasNames(Object aliases) {
+		return items(at(aliases, "aliases")).stream().map(alias -> text(map(alias).get("alias_name"))).toList();
+	}
+
+	/** Qdrant cannot rename a collection: it is cloned under the new name, its aliases move, and the old one is dropped. */
+	public static void renameCollection(Client client, Map<String, Object> args) {
+		List<String> aliases = aliasNames(rest(client, "GET", path(args.get("name"), "aliases"), null));
+		cloneCollection(client, args("name", args.get("name"), "target", args.get("new_name")));
+		dropCollection(client, args("name", args.get("name")));
+		for (String alias : aliases) {
+			createAlias(client, args("alias", alias, "collection", args.get("new_name")));
+		}
+	}
+
+	// ---------------------------------------------------------------- operational
+
+	private static long queued(Map<String, Object> info) {
+		Object length = at(info, "update_queue", "length");
+		return length == null ? 0 : integer(length);
+	}
+
+	private static List<Object> running(Client client, Object name) {
+		return items(at(rest(client, "GET", path(name, "optimizations"), null), "running"));
+	}
+
+	/** No queued updates and no running optimization. */
+	private static boolean settled(Client client, Object name) {
+		Map<String, Object> info = info(client, name);
+		return queued(info) == 0 && running(client, name).isEmpty() && "green".equals(info.get("status"));
+	}
+
+	/** Qdrant acknowledges a write after its WAL entry; this waits until the update queue has applied every write. */
+	public static void flush(Client client, Map<String, Object> args) {
+		poll(() -> queued(info(client, args.get("name"))) == 0, "flush of " + args.get("name"), WAIT);
+	}
+
+	/**
+	 * Qdrant compacts with its optimizers: an optimizers update (the target segment count, or no change) runs after the
+	 * current optimizations, and the runtime waits until no optimization runs.
+	 */
+	public static void compact(Client client, Map<String, Object> args) {
+		alterCollection(client, args("name", args.get("name"), "optimizers",
+				args.get("segments") == null ? args() : args("default_segment_number", args.get("segments"))));
+		if (!Boolean.FALSE.equals(args.get("wait"))) {
+			poll(() -> settled(client, args.get("name")), "compaction of " + args.get("name"), WAIT);
+		}
+	}
+
+	public static Map<String, Object> describe(Client client, Map<String, Object> args) {
+		Object name = args.get("name");
+		Map<String, Object> info = info(client, name);
+		Map<String, Object> params = at(info, "config", "params");
+		Map<String, Object> dense = params.get("vectors") == null ? Map.of() : map(params.get("vectors"));
+		Map<String, Object> sparse = params.get("sparse_vectors") == null ? Map.of() : map(params.get("sparse_vectors"));
+		Map<String, Object> schema = info.get("payload_schema") == null ? Map.of() : map(info.get("payload_schema"));
+		Map<String, Object> types = new LinkedHashMap<>();
+		schema.keySet().stream().sorted().forEach(field -> types.put(field, map(schema.get(field)).get("data_type")));
+		Map<String, Object> metadata = at(info, "config", "metadata");
+		Map<String, Object> result = args("name", name, "status", info.get("status"), "vectors",
+				dense.containsKey("size") ? List.of("") : dense.keySet().stream().sorted().toList(), "sparse_vectors", sparse.keySet().stream().sorted().toList(),
+				"payload_schema", types, "metadata", metadata == null ? Map.of() : metadata);
+		if (Boolean.TRUE.equals(args.get("stats"))) {
+			result.put("points_count", info.getOrDefault("points_count", 0L));
+			result.put("segments_count", info.get("segments_count"));
+			result.put("indexed_vectors_count", info.getOrDefault("indexed_vectors_count", 0L));
+		}
+		if (Boolean.TRUE.equals(args.get("index_progress"))) {
+			result.put("optimizations_running", (long) running(client, name).size());
+			result.put("update_queue", queued(info));
+		}
+		return map(value(result));
+	}
+
+	/**
+	 * Index states: a payload index is ready once it is in the payload schema (Qdrant builds it before acknowledging); the
+	 * vector index of a named vector is ready when no update is queued and no optimization runs.
+	 */
+	public static String awaitIndex(Client client, Map<String, Object> args) {
+		Object name = args.get("name");
+		Check<String> current = () -> {
+			if ("payload".equals(args.get("kind"))) {
+				return indexed(client, name).containsKey(text(args.get("field"))) ? "ready" : "pending";
+			}
+			return settled(client, name) ? "ready" : "building";
+		};
+		if (!"ready".equals(args.getOrDefault("state", "ready"))) {
+			return current.get();
+		}
+		return poll(() -> "ready".equals(current.get()) ? "ready" : null, "index " + args.get("field") + " of " + name,
+				args.get("timeout") == null ? WAIT : number(args.get("timeout")));
+	}
+
+	/** Drops and recreates a payload index with its stored schema. */
+	public static void rebuildPayloadIndex(Client client, Map<String, Object> args) {
+		Object schema = indexed(client, args.get("name")).get(text(args.get("field")));
+		dropPayloadIndex(client, args);
+		createPayloadIndex(client, args("name", args.get("name"), "field", args.get("field"), "schema", schema));
+	}
+
+	/** Names of collections, aliases, payload indexes, shard keys, tenant values or snapshots, sorted. */
+	public static List<String> listObjects(Client client, Map<String, Object> args) {
+		String kind = text(args.get("kind"));
+		Object scope = args.get("scope");
+		List<String> names = switch (kind) {
+		case "collections" -> items(at(rest(client, "GET", "/collections", null), "collections")).stream().map(item -> text(map(item).get("name"))).toList();
+		case "aliases" -> aliasNames(rest(client, "GET", scope == null ? "/aliases" : path(scope, "aliases"), null));
+		case "indexes" -> new ArrayList<>(indexed(client, scope).keySet());
+		case "partitions" -> shardKeys(client, scope);
+		case "slices" -> items(at(rest(client, "POST", path(scope, "facet"), args("key", args.get("key"), "limit", 1_000_000, "exact", true)), "hits"))
+				.stream().map(hit -> String.valueOf(value(map(hit).get("value")))).toList();
+		case "snapshots" -> new ArrayList<>(snapshotNames(client, scope).keySet());
+		default -> throw new IllegalArgumentException("cannot list " + kind);
+		};
+		String prefix = text(args.get("prefix"));
+		List<String> result = names.stream().filter(name -> prefix == null || name.startsWith(prefix)).sorted().toList();
+		return args.get("limit") == null ? result : result.subList(0, Math.min(result.size(), whole(args, "limit", 0)));
+	}
+
+	// ---------------------------------------------------------------- snapshots
+
+	/**
+	 * vecDSL snapshot names of a collection and the files Qdrant gave them; Qdrant names snapshots itself, so the runtime
+	 * keeps the names in the collection metadata.
+	 */
+	private static Map<String, String> snapshotNames(Client client, Object name) {
+		Set<String> files = new HashSet<>(items(rest(client, "GET", path(name, "snapshots"), null)).stream().map(item -> text(map(item).get("name"))).toList());
+		Map<String, Object> names = at(info(client, name), "config", "metadata", SNAPSHOT_NAMES);
+		Map<String, String> result = new LinkedHashMap<>();
+		if (names != null) {
+			names.forEach((label, file) -> {
+				if (files.contains(text(file))) result.put(label, text(file));
+			});
+		}
+		return result;
+	}
+
+	private static void remember(Client client, Object name, Object names) {
+		alterCollection(client, args("name", name, "metadata", args(SNAPSHOT_NAMES, names)));
+	}
+
+	public static Map<String, Object> createSnapshot(Client client, Map<String, Object> args) {
+		if ("full".equals(args.get("scope"))) {
+			return args("snapshot", args.get("snapshot"), "file", text(map(rest(client, "POST", "/snapshots?wait=true", null)).get("name")));
+		}
+		Object name = args.get("name");
+		flush(client, args("name", name));
+		String file = text(map(rest(client, "POST", path(name, "snapshots") + "?wait=true", null)).get("name"));
+		Map<String, Object> names = at(info(client, name), "config", "metadata", SNAPSHOT_NAMES);
+		Map<String, Object> updated = new LinkedHashMap<>(names == null ? Map.of() : names);
+		updated.put(text(args.get("snapshot")), file);
+		remember(client, name, updated);
+		return args("snapshot", args.get("snapshot"), "file", file);
+	}
+
+	private static String snapshotSource(Client client, Object snapshot, Object source) {
+		if (source != null) {
+			return text(source);
+		}
+		List<String> owners = new ArrayList<>();
+		for (Object item : items(at(rest(client, "GET", "/collections", null), "collections"))) {
+			String name = text(map(item).get("name"));
+			if (snapshotNames(client, name).containsKey(text(snapshot))) owners.add(name);
+		}
+		if (owners.size() != 1) {
+			throw new IllegalStateException("snapshot " + snapshot + " belongs to " + owners.size() + " collections; name the collection");
+		}
+		return owners.get(0);
+	}
+
+	private static void recover(Client client, Object name, String location, boolean wait) {
+		rest(client, "PUT", path(name, "snapshots", "recover") + "?wait=" + wait, args("location", location));
+	}
+
+	/**
+	 * Recovery from a snapshot file of the server's snapshots directory, or from a URL. A collection restored from its own
+	 * snapshot is recovered in place and keeps its snapshot names; any other existing target is replaced (Qdrant recovers
+	 * into an existing collection only with the snapshot's vector configuration), and its aliases are kept.
+	 */
+	public static Map<String, Object> restoreSnapshot(Client client, Map<String, Object> args) {
+		Object name = args.get("name");
+		boolean wait = !Boolean.FALSE.equals(args.get("wait"));
+		String location = text(args.get("location"));
+		String owner = null;
+		Map<String, String> names = Map.of();
+		if (location == null) {
+			owner = snapshotSource(client, args.get("snapshot"), args.get("source"));
+			names = snapshotNames(client, owner);
+			location = "file://" + SNAPSHOTS + "/" + owner + "/" + names.get(text(args.get("snapshot")));
+		}
+		List<String> aliases = List.of();
+		if (!text(name).equals(owner) && await(client.qdrant.collectionExistsAsync(text(name)))) {
+			aliases = aliasNames(rest(client, "GET", path(name, "aliases"), null));
+			dropCollection(client, args("name", name));
+		}
+		recover(client, name, location, wait);
+		for (String alias : aliases) {
+			createAlias(client, args("alias", alias, "collection", name));
+		}
+		if (wait && text(name).equals(owner)) {
+			remember(client, name, names);
+		}
+		Map<String, Object> result = args("collection", name);
+		result.put("count", wait ? count(client, args("collection", args("name", name))) : null);
+		return result;
+	}
+
+	public static void dropSnapshot(Client client, Map<String, Object> args) {
+		String owner = snapshotSource(client, args.get("snapshot"), args.get("source"));
+		Map<String, String> names = new LinkedHashMap<>(snapshotNames(client, owner));
+		rest(client, "DELETE", path(owner, "snapshots", names.remove(text(args.get("snapshot")))) + "?wait=true", null);
+		remember(client, owner, names);
+	}
+
+	/** A materialized copy: snapshot, recovery under the new name, and removal of the snapshot file. */
+	public static Map<String, Object> cloneCollection(Client client, Map<String, Object> args) {
+		Object name = args.get("name");
+		Object target = args.get("target");
+		flush(client, args("name", name));
+		String file = text(map(rest(client, "POST", path(name, "snapshots") + "?wait=true", null)).get("name"));
+		try {
+			recover(client, target, "file://" + SNAPSHOTS + "/" + name + "/" + file, true);
+		} finally {
+			rest(client, "DELETE", path(name, "snapshots", file) + "?wait=true", null);
+		}
+		if (at(info(client, target), "config", "metadata") != null) {
+			remember(client, target, null);
+		}
+		return args("collection", target, "count", count(client, args("collection", args("name", target))));
+	}
+
+	// ---------------------------------------------------------------- import and sampling
+
+	/** Records of a local JSON array or JSON Lines file (file:// URI or path). */
+	public static List<Map<String, Object>> readRecords(Client client, Map<String, Object> args) {
+		String location = text(args.get("location"));
+		String text;
+		try {
+			text = Files.readString(Path.of(location.startsWith("file://") ? location.substring("file://".length()) : location), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			throw new IllegalStateException("cannot read " + location + ": " + e.getMessage(), e);
+		}
+		if (text.stripLeading().startsWith("[")) {
+			return items(NUMBERS.fromJson(text, Object.class)).stream().map(QdrantRuntime::map).toList();
+		}
+		return text.lines().filter(line -> !line.isBlank()).map(line -> map(NUMBERS.fromJson(line, Object.class))).toList();
+	}
+
+	/** Qdrant has no server-side file import: the runtime reads the file and writes its records in batches. */
+	public static Map<String, Object> importFile(Client client, Map<String, Object> args) {
+		Map<String, Object> write = new LinkedHashMap<>(args);
+		write.remove("location");
+		write.put("rows", readRecords(client, args));
+		write.put("wait", !Boolean.FALSE.equals(args.get("wait")));
+		Object conflict = args.get("on_conflict");
+		if ("update".equals(conflict) || "replace".equals(conflict)) {
+			write.remove("on_conflict");
+			return upsertRows(client, write);
+		}
+		return insertRows(client, write);
+	}
+
+	/** Qdrant's random sample query, or the first records in primary key order. */
+	public static List<Map<String, Object>> sampleRows(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		if (Boolean.TRUE.equals(args.get("first"))) {
+			return scroll(client, args("collection", layout, "output", args.get("output"), "filter", args.get("filter"), "limit", args.get("size"),
+					"shard_key", args.get("shard_key")));
+		}
+		Set<String> fields = new LinkedHashSet<>();
+		fields.add(text(layout.get("key")));
+		fields.addAll(strings(args.get("output")));
+		Map<String, Object> body = args("query", args("sample", "random"), "limit", args.get("size"), "with_payload", new ArrayList<>(fields));
+		if (args.get("filter") != null) body.put("filter", args.get("filter"));
+		if (args.get("shard_key") != null) body.put("shard_key", args.get("shard_key"));
+		if (layout.get("read_consistency") != null) body.put("consistency", layout.get("read_consistency"));
+		String key = text(layout.get("key"));
+		List<Map<String, Object>> rows = new ArrayList<>(items(at(rest(client, "POST", path(layout.get("name"), "points", "query"), body), "points"))
+				.stream().map(point -> jsonRow(layout, map(point), args.get("output"))).toList());
+		rows.sort(Comparator.comparing(row -> row.get(key), QdrantRuntime::compareKeys));
+		return rows;
+	}
+
+	/**
+	 * Qdrant's distance matrix (pairs of a random sample and their nearest neighbours) with primary keys and canonical
+	 * similarities, sorted by key.
+	 */
+	public static List<Map<String, Object>> distanceMatrix(Client client, Map<String, Object> args) {
+		Map<String, Object> layout = map(args.get("collection"));
+		Object name = layout.get("name");
+		String key = text(layout.get("key"));
+		Map<String, Object> body = args("sample", args.getOrDefault("sample", 10L), "limit", args.getOrDefault("limit", 3L), "using", args.get("field"));
+		if (args.get("filter") != null) body.put("filter", args.get("filter"));
+		if (args.get("shard_key") != null) body.put("shard_key", args.get("shard_key"));
+		List<Map<String, Object>> pairs = items(at(rest(client, "POST", path(name, "points", "search", "matrix", "pairs"), body), "pairs")).stream()
+				.map(QdrantRuntime::map).toList();
+		Set<Object> ids = new LinkedHashSet<>();
+		pairs.forEach(pair -> {
+			ids.add(pair.get("a"));
+			ids.add(pair.get("b"));
+		});
+		Map<Object, Object> keys = new LinkedHashMap<>();
+		items(rest(client, "POST", path(name, "points"), args("ids", new ArrayList<>(ids), "with_payload", list(key)))).forEach(point -> keys.put(
+				map(point).get("id"), map(map(point).get("payload")).get(key)));
+		List<Map<String, Object>> rows = new ArrayList<>(pairs.stream().map(pair -> args("a", keys.get(pair.get("a")), "b", keys.get(pair.get("b")), "score",
+				value(similarity(args.get("metric"), number(pair.get("score")))))).toList());
+		rows.sort(Comparator.<Map<String, Object>, Object>comparing(row -> row.get("a"), QdrantRuntime::compareKeys)
+				.thenComparing(row -> row.get("b"), QdrantRuntime::compareKeys));
+		return rows;
+	}
+}

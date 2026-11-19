@@ -1,0 +1,12 @@
+{
+  "vecdsl-ir": "1.0",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "org.eclipse.xtext.diagnostics.Diagnostic.Linking",
+      "message": "Couldn't resolve reference to Field 'author'.",
+      "line": 14,
+      "column": 89
+    }
+  ]
+}

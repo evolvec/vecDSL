@@ -1,0 +1,10 @@
+**
+!out/extension.js
+!server/vecdsl-lsp.jar
+!syntaxes/vecdsl.tmLanguage.json
+!language-configuration.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!NOTICE
+!THIRD-PARTY-NOTICES.txt

@@ -1,0 +1,21 @@
+// Axis: declared vector index, S1 plus an explicit HNSW index with max-degree and build-candidates. Hypothesis: realizable where the target lets the user choose and tune an HNSW index.
+script s9VectorIndex
+version "7.1"
+
+createBooks: create collection books {
+    primary id
+    field id type varchar
+    field genre type varchar
+    vector-field embedding type float_vector dim 4 metric cosine {
+        vector-index embeddingHnsw family hnsw max-degree 16 build-candidates 200
+    }
+}
+
+seed: upsert into books values [
+    { id: "00000000-0000-4000-8000-000000000001", genre: "fiction", embedding: [0.9, 0.1, 0.0, 0.1] },
+    { id: "00000000-0000-4000-8000-000000000002", genre: "science", embedding: [0.1, 0.8, 0.2, 0.0] }
+]
+
+nearest: vector-search in books top 10 query vector [0.8, 0.2, 0.1, 0.0] using embedding
+    output [id, genre]
+    where genre eq "fiction"

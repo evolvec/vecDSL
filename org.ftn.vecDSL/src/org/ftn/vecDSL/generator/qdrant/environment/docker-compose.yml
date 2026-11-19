@@ -1,0 +1,32 @@
+# {{product}} {{server.version}} server for the generated programs. REST on {{rest.port}} (Python, TypeScript), gRPC on {{grpc.port}} (Java).
+# Data persists in the named volume {{storage.volume}} ({{storage.path}} in the container), snapshots in
+# {{snapshots.volume}} ({{snapshots.path}}, the server's snapshots_path); docker compose down -v removes both.
+# The server requires an API key: VECDSL_QDRANT_API_KEY if set when the container starts, else the local
+# placeholder {{api.key.placeholder}}. Give the generated programs the same value in VECDSL_QDRANT_API_KEY.
+# Start with: docker compose up -d   Health: http://localhost:{{rest.port}}/readyz (open without the key).
+# The image has no curl or wget; the health check uses bash's /dev/tcp.
+# The node runs as a one-peer cluster (cluster.enabled, its own URI on the internal p2p port 6335), because shard keys,
+# which the programs use for partitions, are cluster operations that a standalone server refuses.
+services:
+  qdrant:
+    image: {{server.image}}
+    ports:
+      - "{{rest.port}}:6333"
+      - "{{grpc.port}}:6334"
+    environment:
+      QDRANT__SERVICE__API_KEY: ${VECDSL_QDRANT_API_KEY:-{{api.key.placeholder}}}
+      QDRANT__CLUSTER__ENABLED: "true"
+      QDRANT_URI: http://qdrant:6335
+    volumes:
+      - {{storage.volume}}:{{storage.path}}
+      - {{snapshots.volume}}:{{snapshots.path}}
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/6333 && printf 'GET /readyz HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  {{storage.volume}}:
+  {{snapshots.volume}}:

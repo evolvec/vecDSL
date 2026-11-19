@@ -1,0 +1,2 @@
+{"id": 5, "title": "Vector search at scale", "category": "books", "price": 45.0, "embedding": [0.7, 0.3, 0.1, 0.1]}
+{"id": 6, "title": "Kitchen scale", "category": "kitchen", "price": 19.0, "embedding": [0.1, 0.0, 0.8, 0.5]}

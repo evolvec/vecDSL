@@ -1,0 +1,14 @@
+// Expect: wf.recall.one
+// target-recall 1 is written exact.
+script rejected
+param queryVector : vector = [0.9, 0.1]
+
+createBooks: create collection books {
+    primary id
+    field id type int
+    field title type varchar max-length 128
+    vector-field embedding type float_vector dim 2 metric cosine
+    vector-field cover type float_vector dim 2 metric cosine
+}
+
+nearest: vector-search in books top 2 query vector $queryVector using embedding params { target-recall 1.0 } output *

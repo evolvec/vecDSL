@@ -1,0 +1,207 @@
+#!/usr/bin/env python3
+"""Generates the TextMate grammar and the language configuration of vscode-vecdsl from the vecDSL grammar.
+
+Reads org.ftn.vecDSL/src/org/ftn/vecDSL/VecDSL.xtext (vecDSL 1.0) and writes syntaxes/vecdsl.tmLanguage.json and
+language-configuration.json. Keywords are the alphabetic literals of the parser and enum rules, vendor ids the
+alternatives of the rule VendorId; terminals, comments and quotes are those of org.eclipse.xtext.common.Terminals
+(Xtext 2.42.0), which the grammar must extend, plus the grammar's own terminal DECIMAL. The script stops when the
+grammar extends other terminals or declares a terminal it does not know, so that a grammar change cannot be
+highlighted wrongly without notice. Standard library only.
+
+Usage: tmgrammar.py [--grammar FILE] [--out DIR] [--check]
+  --grammar FILE  the .xtext file (default: ../org.ftn.vecDSL/src/org/ftn/vecDSL/VecDSL.xtext from the extension folder)
+  --out DIR       the extension folder (default: the folder above this script)
+  --check         write nothing; exit 1 if a generated file differs from what the grammar gives
+"""
+
+import argparse
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+
+EXTENSION = Path(__file__).resolve().parent.parent
+GRAMMAR = EXTENSION.parent / "org.ftn.vecDSL/src/org/ftn/vecDSL/VecDSL.xtext"
+TM_GRAMMAR = Path("syntaxes/vecdsl.tmLanguage.json")
+CONFIGURATION = Path("language-configuration.json")
+TERMINALS = "org.eclipse.xtext.common.Terminals"
+OWN_TERMINALS = {"DECIMAL": "INT '.' INT"}
+LITERALS = {"true", "false", "null"}
+BRACKETS = [("{", "}"), ("[", "]"), ("(", ")")]
+QUOTES = ['"', "'"]
+WORD = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
+BOUNDARY_BEFORE = r"(?<![\w$^-])"
+BOUNDARY_AFTER = r"(?![\w-])"
+
+
+def strip_comments(text):
+    """The grammar text with // and /* */ comments replaced by spaces; quoted literals are kept as written."""
+    out = []
+    i = 0
+    quote = None
+    while i < len(text):
+        c = text[i]
+        if quote:
+            out.append(c)
+            if c == "\\":
+                out.append(text[i + 1])
+                i += 1
+            elif c == quote:
+                quote = None
+        elif c in "'\"":
+            quote = c
+            out.append(c)
+        elif text.startswith("//", i):
+            end = text.find("\n", i)
+            end = len(text) if end < 0 else end
+            out.append(" " * (end - i))
+            i = end - 1
+        elif text.startswith("/*", i):
+            end = text.index("*/", i) + 2
+            out.append(re.sub(r"[^\n]", " ", text[i:end]))
+            i = end - 1
+        else:
+            out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def rules(text):
+    """(kind, name, body) of every rule: kind is terminal, enum, fragment or parser."""
+    header = re.compile(r"(?m)^(terminal\s+|enum\s+|fragment\s+)?([A-Za-z_]\w*)\s*\*?\s*(?:returns\s+[\w:.]+\s*)?:")
+    result = []
+    for match in header.finditer(text):
+        body, i, quote = [], match.end(), None
+        while True:
+            c = text[i]
+            if quote:
+                if c == "\\":
+                    body.append(c)
+                    i += 1
+                    c = text[i]
+                elif c == quote:
+                    quote = None
+            elif c in "'\"":
+                quote = c
+            elif c == ";":
+                break
+            body.append(c)
+            i += 1
+        kind = (match.group(1) or "parser").strip()
+        result.append((kind, match.group(2), "".join(body)))
+    return result
+
+
+def literals(body):
+    return [m.group(2) for m in re.finditer(r"(['\"])((?:\\.|(?!\1).)*)\1", body)]
+
+
+def analyse(source):
+    text = strip_comments(source)
+    declaration = re.search(r"\bgrammar\s+([\w.]+)\s+with\s+([\w.]+)", text)
+    if not declaration or declaration.group(2) != TERMINALS:
+        sys.exit("tmgrammar.py: the grammar must extend %s; extend this script for other terminals" % TERMINALS)
+    keywords, vendors, punctuation = set(), set(), set()
+    for kind, name, body in rules(text):
+        if kind == "terminal":
+            if " ".join(body.split()) != OWN_TERMINALS.get(name):
+                sys.exit("tmgrammar.py: unknown terminal %s: %s; extend this script" % (name, " ".join(body.split())))
+            continue
+        for literal in literals(body):
+            (keywords if WORD.match(literal) else punctuation).add(literal)
+            if name == "VendorId" and WORD.match(literal):
+                vendors.add(literal)
+    if not vendors:
+        sys.exit("tmgrammar.py: no rule VendorId with vendor ids")
+    return declaration.group(1), keywords, vendors, punctuation
+
+
+def alternation(words):
+    return BOUNDARY_BEFORE + "(?:" + "|".join(re.escape(w) for w in sorted(words, key=lambda w: (-len(w), w))) + ")" \
+        + BOUNDARY_AFTER
+
+
+def tm_grammar(name, keywords, vendors, digest, grammar_path):
+    plain = keywords - vendors - LITERALS
+    return {
+        "information_for_contributors": [
+            "Generated by tools/tmgrammar.py from %s (grammar %s, md5 %s). Do not edit; run npm run grammar."
+            % (grammar_path, name, digest)],
+        "name": "vecDSL",
+        "scopeName": "source.vecdsl",
+        "fileTypes": ["vecDSL"],
+        "patterns": [{"include": "#comments"}, {"include": "#strings"}, {"include": "#env"},
+                     {"include": "#parameters"}, {"include": "#escaped"}, {"include": "#numbers"},
+                     {"include": "#literals"}, {"include": "#vendors"}, {"include": "#keywords"}],
+        "repository": {
+            "comments": {"patterns": [
+                {"name": "comment.block.vecdsl", "begin": r"/\*", "end": r"\*/"},
+                {"name": "comment.line.double-slash.vecdsl", "match": r"//.*$"}]},
+            "strings": {"patterns": [
+                {"name": "string.quoted.%s.vecdsl" % kind, "begin": quote, "end": quote,
+                 "patterns": [{"name": "constant.character.escape.vecdsl", "match": r"\\."}]}
+                for kind, quote in [("double", '"'), ("single", "'")]]},
+            "env": {"begin": BOUNDARY_BEFORE + r"(env)\s*(\()", "end": r"\)",
+                    "beginCaptures": {"1": {"name": "support.function.env.vecdsl"}},
+                    "patterns": [{"include": "#strings"}, {"include": "#comments"}]},
+            "parameters": {"name": "variable.parameter.vecdsl", "match": r"\$\^?[A-Za-z_][A-Za-z0-9_]*"},
+            "escaped": {"name": "variable.other.escaped.vecdsl", "match": r"\^[A-Za-z_][A-Za-z0-9_]*"},
+            "numbers": {"name": "constant.numeric.vecdsl", "match": r"(?<![\w.])[0-9]+(?:\.[0-9]+)?(?![\w.])"},
+            "literals": {"name": "constant.language.vecdsl", "match": alternation(LITERALS & keywords)},
+            "vendors": {"name": "support.constant.vendor.vecdsl", "match": alternation(vendors)},
+            "keywords": {"name": "keyword.other.vecdsl", "match": alternation(plain)},
+        },
+    }
+
+
+def configuration(keywords, punctuation):
+    brackets = [[o, c] for o, c in BRACKETS if o in punctuation and c in punctuation]
+    pairs = [{"open": o, "close": c} for o, c in brackets] + [
+        {"open": q, "close": q, "notIn": ["string", "comment"]} for q in QUOTES]
+    identifier = r"\^?[A-Za-z_][A-Za-z0-9_]*" + (r"(?:-[A-Za-z0-9_]+)*" if any("-" in k for k in keywords) else "")
+    return {
+        "comments": {"lineComment": "//", "blockComment": ["/*", "*/"]},
+        "brackets": brackets,
+        "autoClosingPairs": pairs,
+        "surroundingPairs": [[o, c] for o, c in brackets] + [[q, q] for q in QUOTES],
+        "wordPattern": r"\$?" + identifier + r"|-?[0-9]+(?:\.[0-9]+)?",
+    }
+
+
+def render(value):
+    return json.dumps(value, indent=2, ensure_ascii=False) + "\n"
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--grammar", type=Path, default=GRAMMAR)
+    parser.add_argument("--out", type=Path, default=EXTENSION)
+    parser.add_argument("--check", action="store_true")
+    arguments = parser.parse_args()
+    source = arguments.grammar.read_bytes()
+    name, keywords, vendors, punctuation = analyse(source.decode("utf-8"))
+    shown = "org.ftn.vecDSL/src/org/ftn/vecDSL/VecDSL.xtext" if arguments.grammar.resolve() == GRAMMAR.resolve() \
+        else arguments.grammar.name
+    files = {TM_GRAMMAR: render(tm_grammar(name, keywords, vendors, hashlib.md5(source).hexdigest(), shown)),
+             CONFIGURATION: render(configuration(keywords, punctuation))}
+    differing = []
+    for path, text in files.items():
+        target = arguments.out / path
+        if arguments.check:
+            if not target.is_file() or target.read_text("utf-8") != text:
+                differing.append(str(path))
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text, "utf-8", newline="\n")
+    summary = "%d keywords (%d vendor ids), brackets %s" % (
+        len(keywords), len(vendors), " ".join(o + c for o, c in BRACKETS if o in punctuation))
+    if differing:
+        print("tmgrammar.py: differs from the grammar, run npm run grammar: " + ", ".join(differing))
+        return 1
+    print(("checked: " if arguments.check else "wrote: ") + summary)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

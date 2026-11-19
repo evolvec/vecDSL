@@ -1,0 +1,313 @@
+script pineconeCoverage
+targets [ pinecone ]
+version "1.0"
+description "Every native and concealed Pinecone construct of vecDSL 7.1 that a Starter project allows, in an order that runs on an empty project and deletes every index it creates"
+param queryVector : vector = [0.9, 0.1, 0.0, 0.1]
+
+connectCloud: create connection cloudProject uri "https://api.pinecone.io" api-key env("VECDSL_PINECONE_API_KEY") cloud "aws" region "us-east-1"
+
+dropOld: drop books if-exists
+
+dropNotes: drop notes if-exists
+
+dropArticles: drop articles if-exists
+
+dropGlossary: drop glossary if-exists
+
+createCopyShell: create collection booksCopy {
+    primary id
+    field id type int
+    vector-field shellVector type float_vector dim 4 metric cosine
+} if-not-exists
+
+dropCopy: drop booksCopy
+
+createBooks: create collection books tags ["catalog"] {
+    primary id
+    analyzer english tokenizer standard language "en"
+    field id type int
+    field title type varchar max-length 256 full-text analyzer english description "Book title"
+    field genre type varchar max-length 64
+    field price type float
+    field tags type array element-type varchar field-limit tagLimit array_len = 8
+    field meta type varchar
+    field note type varchar
+    vector-field embedding type float_vector dim 4 metric cosine {
+        vector-index embeddingIndex family hnsw max-degree 16 build-candidates 200
+    }
+    payload-index genreIndex on genre kind keyword
+} description "Books about databases"
+
+createNotes: create collection notes {
+    primary id
+    field id type int
+    field body type varchar
+    vector-field noteVector type float_vector dim 2 metric euclidean
+    namespace teamA key "team-a"
+    tenant north
+    tenant beta
+}
+
+checkEmbedder: create embedding-model llamaText provider "pinecone" model-id "llama-text-embed-v2"
+
+checkReranker: create reranker bgeReranker provider "pinecone" model "bge-reranker-v2-m3"
+
+checkSparseModel: create embedding-model sparseEnglish provider "pinecone" model-id "pinecone-sparse-english-v0"
+
+seed: insert into books values [
+    { id: 1, title: "Vector database design", genre: "databases", price: 35.0, tags: ["vector", "database"], meta: "first", note: "draft", embedding: [0.9, 0.1, 0.0, 0.1] },
+    { id: 2, title: "Approximate nearest neighbour search", genre: "databases", price: 52.0, tags: ["ann"], meta: "second", embedding: [0.8, 0.2, 0.1, 0.0] },
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 249.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] },
+    { id: 4, title: "Graph databases explained", genre: "databases", price: 30.0, tags: ["graph", "database"], embedding: [0.5, 0.5, 0.2, 0.1] }
+] wait
+
+reseed: insert into books values [
+    { id: 1, title: "Vector database design", genre: "databases", price: 99.0, embedding: [0.9, 0.1, 0.0, 0.1] }
+] on-conflict ignore wait
+
+localImport: bulk-import into books from "file://../books.jsonl" format json
+
+evolveBooks: alter books {
+    add-field field pages type int default 100
+    set tags = ["catalog", "vectors"]
+    set dynamic = true
+}
+
+protectBooks: alter books { set deletion-protection = true }
+
+unprotectBooks: alter books { set deletion-protection = false }
+
+renameMeta: alter books { rename-field meta to remark }
+
+pruneBooks: alter books { drop-field note }
+
+tuneIndex: create books if-not-exists with {
+    create vector-index tunedIndex on embedding family hnsw search-candidates 80
+}
+
+addTagIndex: create books if-not-exists with {
+    create payload-index tagIndex on tags kind keyword
+}
+
+addGamma: create notes if-not-exists with {
+    create tenant gamma
+}
+
+restock: upsert into books values [
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 239.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] }
+] wait
+
+reprice: update books set { price: 32.0 } ids [4] wait
+
+tagMore: update books set { tags: ["classic"] } ids [4] array-append [tags] wait
+
+untag: update books set { tags: ["graph"] } ids [4] array-remove [tags] wait
+
+replaceTwo: update books set { title: "ANN search", genre: "databases", price: 50.0, embedding: [0.8, 0.2, 0.1, 0.0] } mode replace ids [2] wait
+
+clearTags: update books ids [5] remove-fields [tags] wait
+
+trimKitchen: delete from books limit 1 wait where genre eq "kitchen"
+
+writeNorth: insert into notes values [ { id: 1, body: "north note", noteVector: [1.0, 0.0] } ] tenant north wait
+
+writeBeta: insert into notes values [
+    { id: 2, body: "beta note", noteVector: [0.0, 1.0] },
+    { id: 3, body: "beta memo", noteVector: [0.6, 0.8] }
+] tenant beta wait
+
+writeTeam: upsert into notes values [ { id: 4, body: "team note", noteVector: [0.8, 0.6] } ] namespace "team-a" wait
+
+loadBooks: load books
+
+persist: flush books
+
+compactBooks: compact books
+
+vectorsReady: await-index embeddingIndex timeout 60
+
+info: describe books stats index-progress
+
+similar: vector-search in books top 3 query vector $queryVector using embedding
+    output [title, price]
+    where genre eq "databases"
+
+pagedSimilar: vector-search in books top 2 query vector $queryVector using embedding offset 1
+    score similarity bounds min 0.5 with-vectors output [title]
+
+nearFirst: vector-search in books top 2 query id 1 using embedding output [title]
+
+nativeScores: vector-search in books top 2 query vector $queryVector using embedding score native output [title]
+
+keywords: search in books top 3 query text "vector database" fields [title] output [title]
+
+allTerms: search in books top 3 query text "vector database" fields [title] operator and output [title]
+
+luceneQuery: search in books top 3 query text "vector AND database" text-query query_string output [title]
+
+fusedRrf: hybrid-search in books top 3 fusion rrf fusion-k 60 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text "vector database" fields [title] }
+} output [title]
+
+fusedWeighted: hybrid-search in books top 3 fusion weighted alpha 0.7 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text "vector database" fields [title] }
+} output [title]
+
+fusedRelative: hybrid-search in books top 3 fusion relative_score {
+    vector { query vector $queryVector using embedding weight 0.7 limit 4 }
+    keyword { query text "vector database" fields [title] weight 0.3 limit 4 }
+} output [title]
+
+suggest: recommend in books top 2 positive [1] negative [6] using embedding output [title]
+
+fuzzyTitle: search in books top 3 query text "databse" fields [title] fuzziness "AUTO" output [title]
+
+oneEdit: search in books top 3 query text "vectr" fields [title] fuzziness "1" output [title]
+
+bothFuzzy: search in books top 3 query text "vectr databse" fields [title] operator and fuzziness "1" output [title]
+
+exactPhrase: search in books top 3 query text "database design" text-query phrase fields [title] output [title]
+
+loosePhrase: search in books top 3 query text "vector design" text-query phrase fields [title] slop 1 output [title]
+
+phrasePrefix: search in books top 3 query text "graph data" text-query phrase_prefix fields [title] output [title]
+
+fuzzyTerm: search in books top 3 query text "grap" text-query fuzzy fields [title] output [title]
+
+regexTitle: search in books top 3 query text "grind.*" text-query regexp fields [title] output [title]
+
+boostedTitle: search in books top 3 query text "vector" fields [title boost 2] output [title]
+
+scopedLucene: search in books top 3 query text "vector OR graph" text-query query_string fields [title boost 1.5] output [title]
+
+phraseFusion: hybrid-search in books top 3 fusion rrf {
+    vector { query vector $queryVector using embedding }
+    keyword { query text "vector database" text-query phrase fields [title] }
+} output [title]
+
+rerankedKeywords: search in books top 3 query text "vector database" fields [title] rerank bgeReranker output [title]
+
+rerankedFusion: hybrid-search in books top 3 fusion rrf rerank bgeReranker {
+    vector { query vector $queryVector using embedding }
+    keyword { query text "vector database" fields [title] }
+} output [title]
+
+createArticles: create collection articles {
+    primary id
+    field id type int
+    field passage type varchar max-length 512
+    field topic type varchar max-length 32
+    vector-field passageMeaning type float_vector dim 1024 metric cosine model llamaText from [passage]
+    vector-field keywordWeights type sparse_float_vector
+}
+
+createGlossary: create collection glossary {
+    primary id
+    field id type int
+    field entry type varchar max-length 256
+    vector-field entryTerms type sparse_float_vector model sparseEnglish from [entry]
+}
+
+importArticles: bulk-import into articles from "file://../articles.jsonl" format json
+
+writeArticles: insert into articles values [
+    { id: 101, passage: "Vector databases index embeddings for similarity search", topic: "databases", keywordWeights: sparse { 1: 0.9, 7: 0.3 } },
+    { id: 102, passage: "Brewing espresso coffee at home needs fresh beans and a good grinder", topic: "coffee", keywordWeights: sparse { 2: 0.8, 7: 0.4 } },
+    { id: 103, passage: "Relational databases store rows in tables and answer SQL queries", topic: "databases", keywordWeights: sparse { 1: 0.4, 3: 0.7 } },
+    { id: 104, passage: "Trains connect Novi Sad and Belgrade in about forty minutes", topic: "travel", keywordWeights: sparse { 4: 0.9 } }
+] wait
+
+writeGlossary: insert into glossary values [
+    { id: 201, entry: "espresso: a concentrated coffee brewed by forcing hot water through ground beans" },
+    { id: 202, entry: "embedding: a vector of numbers that represents the meaning of a text" },
+    { id: 203, entry: "namespace: a separate group of records inside one index" }
+] wait
+
+articleCount: count in articles
+
+meaningSearch: vector-search in articles top 2 query text "how to brew espresso coffee at home" using passageMeaning output [passage, topic]
+
+meaningWithModel: vector-search in articles top 2 query text "similarity search over vector embeddings" using passageMeaning model llamaText output [passage]
+
+rerankedMeaning: vector-search in articles top 3 query text "espresso grinder" using passageMeaning rerank bgeReranker output [passage]
+
+sparseNearest: vector-search in articles top 2 query sparse_vector sparse { 1: 1.0, 7: 0.5 } using keywordWeights output [passage]
+
+sparseById: vector-search in articles top 2 query id 102 using keywordWeights output [topic]
+
+sparseRecommend: recommend in articles top 1 positive [101] negative [103] using keywordWeights output [topic]
+
+sparsePairs: distance-matrix in articles using keywordWeights sample 3 limit 1 where topic eq "databases"
+
+sparseFusion: hybrid-search in articles top 2 fusion rrf {
+    vector { query text "espresso coffee" using passageMeaning }
+    vector { query sparse_vector sparse { 2: 1.0 } using keywordWeights }
+} output [topic]
+
+termSearch: vector-search in glossary top 2 query text "espresso coffee" using entryTerms output [entry]
+
+dropArticlesEnd: drop articles
+
+dropGlossaryEnd: drop glossary
+
+byId: get from books ids [1, 4] output [title, price, tags]
+
+browse: scroll in books limit 3 offset 1 sort { sort-by price desc } output [title, price]
+
+firstTwo: sample in books size 2 method first output [title]
+
+anyTwo: sample in books size 2 output [title]
+
+pairs: distance-matrix in books using embedding sample 3 limit 1
+
+cheap: count in books where price lt 40
+
+aboutVectors: count in books where title match "vector databases"
+
+notKitchen: count in books where not (genre eq "kitchen" or tags contains "ann")
+
+noNote: count in books where note is_null
+
+withPages: count in books where path "pages" eq 100
+
+withRemark: count in books where path "remark" exists
+
+northCount: count in notes tenant north
+
+teamCount: count in notes namespace "team-a"
+
+northNotes: vector-search in notes top 5 query vector [1.0, 0.0] tenant north output [body]
+
+betaDistances: vector-search in notes top 5 query vector [1.0, 0.0] tenant beta output [body]
+
+betaNotes: get from notes ids [1, 2, 3] tenant beta output [body]
+
+collectionNames: list collections prefix "books"
+
+tenantNames: list tenants in notes
+
+namespaceNames: list namespaces in notes
+
+copyBooks: clone books to "booksCopy"
+
+copyCount: count in booksCopy
+
+dropNorth: drop north
+
+tenantsLeft: list tenants in notes
+
+clearTeam: truncate notes namespace "team-a"
+
+emptyNotes: truncate notes
+
+remaining: count in books
+
+dropCopyEnd: drop booksCopy
+
+dropBooksEnd: drop books
+
+dropNotesEnd: drop notes
+
+finalNames: list collections prefix "books"

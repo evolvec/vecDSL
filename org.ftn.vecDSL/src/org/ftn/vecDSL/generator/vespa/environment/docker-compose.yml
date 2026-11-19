@@ -1,0 +1,25 @@
+# {{product}} {{server.version}} as one node for the generated programs: the config server and the services in the official image
+# {{server.image}} (the quick start's container). Ports on 127.0.0.1 only: {{query.port}} for the query and document APIs (8080 in
+# the container) and {{config.port}} for the config server's deploy API. Vespa needs at least 4 GB for a single node; the limit here
+# is {{server.memory}}, so Docker Desktop must offer more than that. The programs deploy their own application package; the first
+# deployment after a start takes a minute or more. Data persists in the named volume {{storage.volume}}; docker compose down -v
+# removes it. Start with: docker compose up -d   Health: the config server's /state/v1/health answers "up".
+services:
+  vespa:
+    image: {{server.image}}
+    hostname: vespa-container
+    ports:
+      - "127.0.0.1:{{query.port}}:8080"
+      - "127.0.0.1:{{config.port}}:19071"
+    mem_limit: {{server.memory}}
+    volumes:
+      - {{storage.volume}}:{{storage.path}}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -m 5 http://127.0.0.1:19071/state/v1/health | grep -Eq '\"code\" *: *\"up\"'"]
+      interval: 10s
+      timeout: 6s
+      retries: 30
+      start_period: 20s
+
+volumes:
+  {{storage.volume}}:

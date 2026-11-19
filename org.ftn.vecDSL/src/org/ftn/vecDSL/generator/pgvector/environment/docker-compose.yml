@@ -1,0 +1,26 @@
+# {{product}} for the generated programs: PostgreSQL {{postgres.major}} with pgvector {{server.version}}, port {{server.port}}.
+# Image {{server.image}} ({{server.image.digest}}); data persists in the named volume {{storage.volume}}
+# ({{storage.path}} in the container, the volume path of the PostgreSQL 18 images); docker compose down -v removes it.
+# The superuser password comes only from the environment variable VECDSL_PGVECTOR_PASSWORD, which compose refuses to start
+# without. The generated programs create the vector extension themselves (CREATE EXTENSION IF NOT EXISTS vector).
+# Start with: docker compose up -d   Health: pg_isready inside the container.
+services:
+  pgvector:
+    image: {{server.image}}
+    ports:
+      - "127.0.0.1:{{server.port}}:5432"
+    environment:
+      POSTGRES_USER: {{user}}
+      POSTGRES_DB: {{database}}
+      POSTGRES_PASSWORD: ${VECDSL_PGVECTOR_PASSWORD:?set VECDSL_PGVECTOR_PASSWORD}
+    volumes:
+      - {{storage.volume}}:{{storage.path}}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "{{user}}", "-d", "{{database}}"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 10s
+
+volumes:
+  {{storage.volume}}:

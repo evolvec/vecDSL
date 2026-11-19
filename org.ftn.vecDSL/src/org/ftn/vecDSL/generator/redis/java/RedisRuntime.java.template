@@ -1,0 +1,1445 @@
+package {{java.package}};
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.google.gson.ToNumberPolicy;
+
+import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.RedisProtocol;
+import redis.clients.jedis.SslOptions;
+import redis.clients.jedis.commands.ProtocolCommand;
+import redis.clients.jedis.exceptions.JedisDataException;
+
+/**
+ * Runtime support for vecDSL programs generated for Redis Open Source with the Query Engine, through Jedis and Gson. Generated
+ * by vecDSL 7. Do not edit.
+ *
+ * Every statement arrives as Redis command argument arrays built by the generator, identical in the Python, TypeScript and Java
+ * programs; values travel as separate arguments or as PARAMS of a query, never inside a query string. Records are JSON documents
+ * under the collection's key prefix. Writes read the affected documents under WATCH, compute the new documents and commit them
+ * in one MULTI/EXEC, so a write is atomic and fails when another client changed a key in between. Replies are read in RESP2
+ * through Jedis.sendCommand, as raw bytes.
+ */
+public final class RedisRuntime {
+
+	private static final int DIGITS = 6;
+	private static final int BATCH = 500;
+	private static final int PAGE = 1000;
+	private static final int TIMEOUT = 10_000;
+	private static final String SCORE = "vecdsl_score";
+	private static final String SEPARATORS = " \t,./(){}[]:;~!@#$%^&*-=+|'`\"<>?";
+	private static final Pattern MARKER = Pattern.compile("\\{\\{(and|or|fuzzy1|fuzzy2|fuzzy3|prefix|prefixlast|tags):([A-Za-z0-9_]+)\\}\\}");
+	/** RediSearch's built-in stop-word list (src/stopwords.h), which an index uses unless STOPWORDS is given. */
+	private static final List<String> DEFAULT_STOPWORDS = List.of("a", "is", "the", "an", "and", "are", "as", "at", "be", "but", "by", "for",
+			"if", "in", "into", "it", "no", "not", "of", "on", "or", "such", "that", "their", "then", "there", "these", "they", "this", "to",
+			"was", "will", "with");
+	private static final Gson PRETTY = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+	private static final Gson NUMBERS = new GsonBuilder().setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE).create();
+
+	private RedisRuntime() {
+	}
+
+	public static final class UnsupportedFeature extends UnsupportedOperationException {
+
+		private static final long serialVersionUID = 1L;
+
+		UnsupportedFeature(String message) {
+			super(message);
+		}
+	}
+
+	public static final class ConflictException extends IllegalStateException {
+
+		private static final long serialVersionUID = 1L;
+
+		ConflictException(String message) {
+			super(message);
+		}
+	}
+
+	public static RuntimeException unsupported(String vendor, String feature) {
+		return new UnsupportedFeature(feature + " is not supported for target " + vendor);
+	}
+
+	// ---------------------------------------------------------------- program values
+
+	public static Map<String, Object> args(Object... pairs) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		for (int i = 0; i < pairs.length; i += 2) {
+			result.put((String) pairs[i], pairs[i + 1]);
+		}
+		return result;
+	}
+
+	public static List<Object> list(Object... items) {
+		return new ArrayList<>(Arrays.asList(items));
+	}
+
+	public static String env(String name) {
+		String value = System.getenv(name);
+		if (value == null) {
+			throw new IllegalStateException("environment variable " + name + " is not set");
+		}
+		return value;
+	}
+
+	public static String envOr(String name, String fallback) {
+		String value = System.getenv(name);
+		return value == null ? fallback : value;
+	}
+
+	public static String text(Object value) {
+		return value == null ? null : value.toString();
+	}
+
+	public static long integer(Object value) {
+		return ((Number) value).longValue();
+	}
+
+	public static double decimal(Object value) {
+		return ((Number) value).doubleValue();
+	}
+
+	public static boolean flag(Object value) {
+		return (Boolean) value;
+	}
+
+	public static List<Float> floats(Object value) {
+		return ((Collection<?>) value).stream().map(item -> ((Number) item).floatValue()).toList();
+	}
+
+	public static List<String> texts(Object value) {
+		return ((Collection<?>) value).stream().map(String::valueOf).toList();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<Map<String, Object>> records(Object value) {
+		return (List<Map<String, Object>>) value;
+	}
+
+	public static String toJson(Object value) {
+		return PRETTY.toJson(value);
+	}
+
+	public static Map<String, Object> parameters(Map<String, Object> given, Map<String, Object> defaults, List<String> names) {
+		Set<String> unknown = new HashSet<>(given.keySet());
+		unknown.removeAll(names);
+		if (!unknown.isEmpty()) {
+			throw new IllegalArgumentException("unknown program parameters: " + unknown);
+		}
+		Map<String, Object> values = new LinkedHashMap<>(defaults);
+		values.putAll(given);
+		List<String> missing = names.stream().filter(name -> !values.containsKey(name)).toList();
+		if (!missing.isEmpty()) {
+			throw new IllegalArgumentException("missing program parameters: " + missing);
+		}
+		return values;
+	}
+
+	public static Map<String, Object> parseArguments(String[] arguments) {
+		Map<String, Object> parameters = new LinkedHashMap<>();
+		for (String argument : arguments) {
+			int separator = argument.indexOf('=');
+			if (separator < 0) {
+				throw new IllegalArgumentException("expected name=value, got " + argument);
+			}
+			String raw = argument.substring(separator + 1);
+			Object value;
+			try {
+				value = NUMBERS.fromJson(JsonParser.parseString(raw), Object.class);
+			} catch (JsonParseException e) {
+				value = raw;
+			}
+			parameters.put(argument.substring(0, separator), value);
+		}
+		return parameters;
+	}
+
+	// ---------------------------------------------------------------- values
+
+	/** A number as text in one form for every host language: integers without a fraction, others in plain decimal notation. */
+	public static String plain(Number value) {
+		double number = value.doubleValue();
+		if (!Double.isFinite(number)) {
+			throw new IllegalArgumentException("JSON has no infinite or NaN numbers");
+		}
+		if (number == Math.rint(number) && Math.abs(number) < 1e15) {
+			return Long.toString((long) number);
+		}
+		String shortest = value instanceof Float single ? Float.toString(single) : Double.toString(number);
+		return new BigDecimal(shortest).stripTrailingZeros().toPlainString();
+	}
+
+	/** Compact JSON with numbers written by plain(), so that the three runtimes send identical documents. */
+	public static String dumps(Object value) {
+		StringBuilder out = new StringBuilder();
+		json(value, out);
+		return out.toString();
+	}
+
+	private static void json(Object value, StringBuilder out) {
+		if (value == null) {
+			out.append("null");
+		} else if (value instanceof String text) {
+			out.append(PRETTY.toJson(text));
+		} else if (value instanceof Boolean flag) {
+			out.append(flag);
+		} else if (value instanceof Number number) {
+			out.append(plain(number));
+		} else if (value instanceof Map<?, ?> map) {
+			out.append('{');
+			boolean first = true;
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				if (!first) {
+					out.append(',');
+				}
+				first = false;
+				out.append(PRETTY.toJson(String.valueOf(entry.getKey()))).append(':');
+				json(entry.getValue(), out);
+			}
+			out.append('}');
+		} else if (value instanceof Collection<?> items) {
+			out.append('[');
+			boolean first = true;
+			for (Object item : items) {
+				if (!first) {
+					out.append(',');
+				}
+				first = false;
+				json(item, out);
+			}
+			out.append(']');
+		} else {
+			throw new IllegalArgumentException("cannot write " + value.getClass().getSimpleName() + " as JSON");
+		}
+	}
+
+	/** Result values in one form for every host language: floats rounded, integral numbers as integers. */
+	@SuppressWarnings("unchecked")
+	static Object value(Object item) {
+		if (item instanceof Float || item instanceof Double) {
+			double number = ((Number) item).doubleValue();
+			if (!Double.isFinite(number)) {
+				return number;
+			}
+			double rounded = new BigDecimal(number).setScale(DIGITS, RoundingMode.HALF_EVEN).doubleValue();
+			return rounded == Math.rint(rounded) && Math.abs(rounded) < 1e15 ? (Object) (long) rounded : (Object) rounded;
+		}
+		if (item instanceof Number number) {
+			return number.longValue();
+		}
+		if (item instanceof Collection<?> items) {
+			return items.stream().map(RedisRuntime::value).toList();
+		}
+		if (item instanceof Map<?, ?> map) {
+			Map<String, Object> result = new LinkedHashMap<>();
+			((Map<String, Object>) map).forEach((key, entry) -> result.put(key, value(entry)));
+			return result;
+		}
+		return item;
+	}
+
+	private static String argument(Object value) {
+		if (value instanceof Boolean flag) {
+			return flag ? "true" : "false";
+		}
+		if (value instanceof Number number) {
+			return plain(number);
+		}
+		if (value instanceof String text) {
+			return text;
+		}
+		throw new IllegalArgumentException("a query parameter must be a string, number or boolean, not " + value);
+	}
+
+	public static String keyText(Object identifier) {
+		if (identifier instanceof Number number) {
+			return plain(number);
+		}
+		if (identifier instanceof String text) {
+			return text;
+		}
+		throw new IllegalArgumentException("invalid record key " + identifier);
+	}
+
+	private static int float16(float number) {
+		int bits = Float.floatToRawIntBits(number);
+		int sign = (bits >>> 16) & 0x8000;
+		int exponent = (bits >>> 23) & 0xff;
+		int mantissa = bits & 0x7fffff;
+		if (exponent == 0xff) {
+			return sign | 0x7c00 | (mantissa != 0 ? 0x200 : 0);
+		}
+		int half = exponent - 112;
+		if (half >= 0x1f) {
+			return sign | 0x7c00;
+		}
+		long significand = half > 0 ? mantissa : mantissa | 0x800000;
+		int shift = half > 0 ? 13 : 14 - half;
+		if (shift > 24) {
+			return sign;
+		}
+		long kept = significand >>> shift;
+		long rest = significand - (kept << shift);
+		long middle = 1L << (shift - 1);
+		long rounded = kept + (rest > middle || (rest == middle && (kept & 1) == 1) ? 1 : 0);
+		return (int) (sign | (half > 0 ? ((long) half << 10) + rounded : rounded));
+	}
+
+	private static int bfloat16(float number) {
+		int bits = Float.floatToRawIntBits(number);
+		return ((bits + 0x7fff + ((bits >>> 16) & 1)) >>> 16) & 0xffff;
+	}
+
+	/** A query vector as the little-endian bytes of the attribute's element type. */
+	public static byte[] blob(List<?> vector, String kind) {
+		int size = switch (kind) {
+		case "FLOAT32" -> 4;
+		case "FLOAT64" -> 8;
+		case "FLOAT16", "BFLOAT16" -> 2;
+		case "INT8", "UINT8" -> 1;
+		default -> throw new IllegalArgumentException("unknown vector type " + kind);
+		};
+		ByteBuffer buffer = ByteBuffer.allocate(size * vector.size()).order(ByteOrder.LITTLE_ENDIAN);
+		for (Object item : vector) {
+			double number = ((Number) item).doubleValue();
+			switch (kind) {
+			case "FLOAT32" -> buffer.putFloat((float) number);
+			case "FLOAT64" -> buffer.putDouble(number);
+			case "FLOAT16" -> buffer.putShort((short) float16((float) number));
+			case "BFLOAT16" -> buffer.putShort((short) bfloat16((float) number));
+			default -> buffer.put((byte) (long) number);
+			}
+		}
+		return buffer.array();
+	}
+
+	/** The terms of a text as the Query Engine tokenizes it (separators of src/toksep.h), without the index's stop words. */
+	public static List<String> terms(String text, List<String> stopwords) {
+		List<String> result = new ArrayList<>();
+		StringBuilder current = new StringBuilder();
+		text.codePoints().forEach(character -> {
+			if (character < 128 && SEPARATORS.indexOf(character) >= 0) {
+				if (current.length() > 0) {
+					result.add(current.toString());
+					current.setLength(0);
+				}
+			} else {
+				current.appendCodePoint(character);
+			}
+		});
+		if (current.length() > 0) {
+			result.add(current.toString());
+		}
+		Set<String> stop = new HashSet<>();
+		stopwords.forEach(word -> stop.add(word.toLowerCase(java.util.Locale.ROOT)));
+		return result.stream().filter(term -> !stop.contains(term.toLowerCase(java.util.Locale.ROOT))).toList();
+	}
+
+	// ---------------------------------------------------------------- connection
+
+	/** One RESP2 connection; the user and password come from the environment, never from the URL. */
+	public static final class Client implements AutoCloseable {
+
+		private final Jedis jedis;
+
+		Client(Jedis jedis) {
+			this.jedis = jedis;
+		}
+
+		Object call(List<?> args) {
+			byte[][] raw = new byte[args.size() - 1][];
+			for (int i = 1; i < args.size(); i++) {
+				Object item = args.get(i);
+				raw[i - 1] = item instanceof byte[] bytes ? bytes : String.valueOf(item).getBytes(StandardCharsets.UTF_8);
+			}
+			byte[] name = String.valueOf(args.get(0)).getBytes(StandardCharsets.UTF_8);
+			ProtocolCommand command = () -> name;
+			return decode(jedis.sendCommand(command, raw));
+		}
+
+		@Override
+		public void close() {
+			jedis.close();
+		}
+	}
+
+	private static Object decode(Object reply) {
+		if (reply instanceof byte[] bytes) {
+			return new String(bytes, StandardCharsets.UTF_8);
+		}
+		if (reply instanceof JedisDataException error) {
+			throw error;
+		}
+		if (reply instanceof List<?> items) {
+			List<Object> result = new ArrayList<>(items.size());
+			for (Object item : items) {
+				result.add(decode(item));
+			}
+			return result;
+		}
+		return reply;
+	}
+
+	public static Client connect(Map<String, Object> args) {
+		URI uri = URI.create((String) args.get("url"));
+		if (!"redis".equals(uri.getScheme()) && !"rediss".equals(uri.getScheme())) {
+			throw new IllegalArgumentException("expected a redis:// or rediss:// URL, got " + uri);
+		}
+		String info = uri.getRawUserInfo();
+		if (info != null && info.contains(":")) {
+			throw new IllegalArgumentException("the connection URL must not contain a password; set it in the environment");
+		}
+		String database = uri.getPath() == null ? "" : uri.getPath().replaceFirst("^/", "");
+		if (!database.isEmpty() && !database.equals("0")) {
+			throw new IllegalArgumentException("the Query Engine indexes only database 0 (FT.CREATE answers 'Cannot create index on db != 0')");
+		}
+		String userVariable = (String) args.getOrDefault("user_variable", "VECDSL_REDIS_USER");
+		String user = System.getenv(userVariable);
+		if ((user == null || user.isEmpty()) && info != null && !info.isEmpty()) {
+			user = URLDecoder.decode(info, StandardCharsets.UTF_8);
+		}
+		String password = System.getenv((String) args.getOrDefault("password_variable", "VECDSL_REDIS_PASSWORD"));
+		DefaultJedisClientConfig.Builder config = DefaultJedisClientConfig.builder().connectionTimeoutMillis(TIMEOUT)
+				.socketTimeoutMillis(3 * TIMEOUT).protocol(RedisProtocol.RESP2);
+		if ("rediss".equals(uri.getScheme())) {
+			config.sslOptions(SslOptions.defaults());
+		}
+		if (user != null && !user.isEmpty()) {
+			config.user(user);
+		}
+		if (password != null) {
+			config.password(password);
+		}
+		String host = uri.getHost() == null ? "127.0.0.1" : uri.getHost();
+		int port = uri.getPort() < 0 ? 6379 : uri.getPort();
+		Jedis jedis = new Jedis(new HostAndPort(host, port), config.build());
+		jedis.connect();
+		return new Client(jedis);
+	}
+
+	private static Object send(Client client, List<?> args) {
+		return client.call(args);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<String> strings(Object value) {
+		return value == null ? List.of() : (List<String>) value;
+	}
+
+	/** One command; an error whose message contains one of the ignored phrases (lower case) returns null. */
+	/** Whether a lookup command (ACL GETUSER, for one) answers with a value rather than nil. */
+	public static boolean exists(Client client, Map<String, Object> args) {
+		return send(client, (List<?>) args.get("args")) != null;
+	}
+
+	public static Object command(Client client, Map<String, Object> args) {
+		try {
+			return send(client, (List<?>) args.get("args"));
+		} catch (JedisDataException e) {
+			String message = String.valueOf(e.getMessage()).toLowerCase(java.util.Locale.ROOT);
+			if (strings(args.get("ignore")).stream().anyMatch(message::contains)) {
+				return null;
+			}
+			throw e;
+		}
+	}
+
+	/** Waits until the local append-only file has fsynced every write so far (WAITAOF 1 0, at most ten seconds). */
+	public static void durable(Client client, Map<String, Object> args) {
+		durable(client);
+	}
+
+	private static void durable(Client client) {
+		List<?> reply = (List<?>) send(client, List.of("WAITAOF", "1", "0", String.valueOf(TIMEOUT)));
+		if (((Number) reply.get(0)).longValue() < 1) {
+			throw new IllegalStateException("WAITAOF: the append-only file was not fsynced within ten seconds");
+		}
+	}
+
+	// ---------------------------------------------------------------- documents
+
+	private static List<String> scan(Client client, String prefix) {
+		String pattern = prefix.replaceAll("([*?\\[\\]\\\\])", "\\\\$1") + "*";
+		String cursor = "0";
+		Set<String> keys = new TreeSet<>();
+		do {
+			List<?> reply = (List<?>) send(client, List.of("SCAN", cursor, "MATCH", pattern, "COUNT", String.valueOf(PAGE)));
+			cursor = (String) reply.get(0);
+			keys.addAll(strings(reply.get(1)));
+		} while (!cursor.equals("0"));
+		return new ArrayList<>(keys);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<Map<String, Object>> documents(Client client, List<String> keys) {
+		List<Map<String, Object>> result = new ArrayList<>();
+		if (keys.isEmpty()) {
+			return result;
+		}
+		List<Object> args = new ArrayList<>();
+		args.add("JSON.MGET");
+		args.addAll(keys);
+		args.add("$");
+		for (Object reply : (List<?>) send(client, args)) {
+			result.add(reply == null ? null : (Map<String, Object>) ((List<?>) NUMBERS.fromJson((String) reply, Object.class)).get(0));
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> project(Map<String, Object> document, String key, List<String> output, List<String> vectors, Double score) {
+		Map<String, Object> hit = new LinkedHashMap<>();
+		hit.put("id", document.get(key));
+		if (score != null) {
+			hit.put("score", score);
+		}
+		for (String name : output) {
+			hit.put(name, document.get(name));
+		}
+		for (String name : vectors) {
+			hit.put(name, document.get(name));
+		}
+		return (Map<String, Object>) value(hit);
+	}
+
+	private static final class Plan {
+
+		final Client client;
+		final Map<String, Map<String, Object>> docs = new LinkedHashMap<>();
+		final Map<String, Long> ttl = new LinkedHashMap<>();
+		final Map<String, Long> expire = new LinkedHashMap<>();
+		final List<String> changed = new ArrayList<>();
+
+		Plan(Client client) {
+			this.client = client;
+		}
+
+		void load(List<String> keys) {
+			List<String> fresh = new ArrayList<>(new LinkedHashSet<>(keys));
+			fresh.removeIf(docs::containsKey);
+			if (fresh.isEmpty()) {
+				return;
+			}
+			List<Object> watch = new ArrayList<>();
+			watch.add("WATCH");
+			watch.addAll(fresh);
+			send(client, watch);
+			List<Map<String, Object>> found = documents(client, fresh);
+			for (int i = 0; i < fresh.size(); i++) {
+				docs.put(fresh.get(i), found.get(i));
+				ttl.put(fresh.get(i), ((Number) send(client, List.of("PTTL", fresh.get(i)))).longValue());
+			}
+		}
+
+		void put(String key, Map<String, Object> document) {
+			docs.put(key, document);
+			if (!changed.contains(key)) {
+				changed.add(key);
+			}
+		}
+
+		void commit(boolean wait) {
+			if (changed.isEmpty()) {
+				send(client, List.of("UNWATCH"));
+				return;
+			}
+			send(client, List.of("MULTI"));
+			try {
+				for (String key : changed) {
+					Map<String, Object> document = docs.get(key);
+					if (document == null) {
+						send(client, List.of("DEL", key));
+						continue;
+					}
+					send(client, List.of("JSON.SET", key, "$", dumps(document)));
+					if (expire.containsKey(key)) {
+						send(client, List.of("EXPIRE", key, String.valueOf(expire.get(key))));
+					} else if (ttl.getOrDefault(key, -1L) > 0) {
+						send(client, List.of("PEXPIRE", key, String.valueOf(ttl.get(key))));
+					}
+				}
+			} catch (RuntimeException e) {
+				send(client, List.of("DISCARD"));
+				throw e;
+			}
+			if (send(client, List.of("EXEC")) == null) {
+				throw new ConflictException("another client changed a written key during the write (WATCH); nothing was written");
+			}
+			if (wait) {
+				durable(client);
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> recordDocument(Map<String, Object> record, String key, Map<String, Object> vectors, Map<String, Object> slices) {
+		if (record.get(key) == null) {
+			throw new IllegalArgumentException("a record without its key field " + key);
+		}
+		Map<String, Object> document = new LinkedHashMap<>();
+		record.forEach((name, item) -> {
+			if (item != null) {
+				document.put(name, item);
+			}
+		});
+		for (Map.Entry<String, Object> entry : vectors.entrySet()) {
+			Object vector = document.get(entry.getKey());
+			long dim = ((Number) entry.getValue()).longValue();
+			if (vector instanceof List<?> items && items.size() != dim) {
+				throw new IllegalArgumentException("vector field " + entry.getKey() + " has " + items.size() + " dimensions, the index expects " + dim);
+			}
+		}
+		if (slices != null) {
+			document.putAll(slices);
+		}
+		return document;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> map(Object value) {
+		return value == null ? Map.of() : (Map<String, Object>) value;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<Object> items(Object value) {
+		return (List<Object>) value;
+	}
+
+	private static int writeInto(Plan plan, String prefix, String key, List<Map<String, Object>> records, String policy,
+			Map<String, Object> vectors, Map<String, Object> slices, Object ttl) {
+		List<Map<String, Object>> docs = records.stream().map(record -> recordDocument(record, key, vectors, slices)).toList();
+		List<String> keys = docs.stream().map(document -> prefix + keyText(document.get(key))).toList();
+		if (policy.equals("error") && new HashSet<>(keys).size() != keys.size()) {
+			throw new IllegalArgumentException("duplicate keys in one insert");
+		}
+		plan.load(keys);
+		int written = 0;
+		for (int i = 0; i < keys.size(); i++) {
+			if (plan.docs.get(keys.get(i)) != null && (policy.equals("error") || policy.equals("ignore"))) {
+				if (policy.equals("error")) {
+					throw new IllegalArgumentException("duplicate key " + keys.get(i));
+				}
+				continue;
+			}
+			plan.put(keys.get(i), docs.get(i));
+			if (ttl != null) {
+				plan.expire.put(keys.get(i), ((Number) ttl).longValue());
+			}
+			written++;
+		}
+		return written;
+	}
+
+	/** Writes records as documents in batches, each batch atomic; policy error, ignore or replace (update and upsert). */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> write(Client client, Map<String, Object> args) {
+		List<Map<String, Object>> records = (List<Map<String, Object>>) args.get("records");
+		int size = args.containsKey("batch_size") ? ((Number) args.get("batch_size")).intValue() : BATCH;
+		long total = 0;
+		for (int start = 0; start < records.size(); start += size) {
+			Plan plan = new Plan(client);
+			total += writeInto(plan, (String) args.get("prefix"), (String) args.get("key"), records.subList(start, Math.min(start + size, records.size())),
+					(String) args.get("policy"), map(args.get("vectors")), (Map<String, Object>) args.get("slices"), args.get("ttl"));
+			plan.commit(Boolean.TRUE.equals(args.get("wait")));
+		}
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put((String) args.get("counter"), total);
+		return result;
+	}
+
+	private static List<String> select(Client client, String prefix, List<Object> ids, Map<String, Object> search) {
+		if (ids != null) {
+			return new ArrayList<>(new LinkedHashSet<>(ids.stream().map(identifier -> prefix + keyText(identifier)).toList()));
+		}
+		if (search != null) {
+			return keys(client, search, null);
+		}
+		return scan(client, prefix);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> change(Map<String, Object> document, Map<String, Object> edit) {
+		Map<String, Object> result = new LinkedHashMap<>(document);
+		Map<String, Object> replace = (Map<String, Object>) edit.get("replace");
+		if (replace != null) {
+			Map<String, Object> kept = new LinkedHashMap<>();
+			for (String name : strings(replace.get("keep"))) {
+				if (result.containsKey(name)) {
+					kept.put(name, result.get(name));
+				}
+			}
+			result = kept;
+		}
+		for (Map.Entry<String, Object> entry : map(edit.get("set")).entrySet()) {
+			if (entry.getValue() == null) {
+				result.remove(entry.getKey());
+			} else {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+		for (Map.Entry<String, Object> entry : map(edit.get("append")).entrySet()) {
+			List<Object> combined = new ArrayList<>();
+			if (result.get(entry.getKey()) instanceof List<?> existing) {
+				combined.addAll(existing);
+			}
+			combined.addAll(items(entry.getValue()));
+			result.put(entry.getKey(), combined);
+		}
+		for (Map.Entry<String, Object> entry : map(edit.get("remove")).entrySet()) {
+			if (result.get(entry.getKey()) instanceof List<?> existing) {
+				Set<String> removed = new HashSet<>();
+				items(entry.getValue()).forEach(item -> removed.add(dumps(item)));
+				result.put(entry.getKey(), existing.stream().filter(item -> !removed.contains(dumps(item))).toList());
+			}
+		}
+		for (String name : strings(edit.get("delete"))) {
+			result.remove(name);
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static int updateInto(Plan plan, Client client, String prefix, String key, Map<String, Object> edit, List<Object> ids,
+			Map<String, Object> search, List<Map<String, Object>> records) {
+		Map<String, Map<String, Object>> byKey = new LinkedHashMap<>();
+		List<String> targets;
+		if (records != null) {
+			records.forEach(record -> byKey.put(prefix + keyText(record.get(key)), record));
+			Set<String> allowed = ids == null ? null : new HashSet<>(ids.stream().map(identifier -> prefix + keyText(identifier)).toList());
+			targets = new ArrayList<>(byKey.keySet().stream().filter(name -> allowed == null || allowed.contains(name)).toList());
+		} else {
+			targets = select(client, prefix, ids, search);
+		}
+		plan.load(targets);
+		int updated = 0;
+		for (String name : targets) {
+			Map<String, Object> document = plan.docs.get(name);
+			if (document == null) {
+				continue;
+			}
+			if (records != null) {
+				Map<String, Object> given = new LinkedHashMap<>(byKey.get(name));
+				given.remove(key);
+				Map<String, Object> withSet = new LinkedHashMap<>(edit);
+				withSet.put("set", given);
+				plan.put(name, change(document, withSet));
+			} else {
+				plan.put(name, change(document, edit));
+			}
+			updated++;
+		}
+		return updated;
+	}
+
+	/** Changes existing documents: set fields (null removes one), append to and remove from arrays, delete fields, replace. */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> update(Client client, Map<String, Object> args) {
+		Plan plan = new Plan(client);
+		int count = updateInto(plan, client, (String) args.get("prefix"), (String) args.get("key"), args, (List<Object>) args.get("ids"),
+				(Map<String, Object>) args.get("search"), (List<Map<String, Object>>) args.get("records"));
+		plan.commit(Boolean.TRUE.equals(args.get("wait")));
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put("update_count", (long) count);
+		return result;
+	}
+
+	/** Deletes documents by key, by a filter (in key order, at most limit) or all documents under the prefix. */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> delete(Client client, Map<String, Object> args) {
+		Map<String, Object> search = (Map<String, Object>) args.get("search");
+		Integer limit = args.get("limit") == null ? null : ((Number) args.get("limit")).intValue();
+		List<String> keys = search != null ? keys(client, search, limit) : select(client, (String) args.get("prefix"), (List<Object>) args.get("ids"), null);
+		long count = 0;
+		for (int start = 0; start < keys.size(); start += PAGE) {
+			List<Object> command = new ArrayList<>();
+			command.add("DEL");
+			command.addAll(keys.subList(start, Math.min(start + PAGE, keys.size())));
+			count += ((Number) send(client, command)).longValue();
+		}
+		if (Boolean.TRUE.equals(args.get("wait"))) {
+			durable(client);
+		}
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put("delete_count", count);
+		return result;
+	}
+
+	/** Writes by key of several statements in one MULTI/EXEC; each step sees the documents the earlier steps wrote. */
+	@SuppressWarnings("unchecked")
+	public static List<Object> transaction(Client client, Map<String, Object> args) {
+		Plan plan = new Plan(client);
+		List<Object> results = new ArrayList<>();
+		for (Object item : (List<?>) args.get("steps")) {
+			Map<String, Object> step = (Map<String, Object>) item;
+			String prefix = (String) step.get("prefix");
+			Map<String, Object> result = new LinkedHashMap<>();
+			switch ((String) step.get("op")) {
+			case "write" -> result.put((String) step.get("counter"), (long) writeInto(plan, prefix, (String) step.get("key"),
+					(List<Map<String, Object>>) step.get("records"), (String) step.get("policy"), map(step.get("vectors")),
+					(Map<String, Object>) step.get("slices"), step.get("ttl")));
+			case "update" -> result.put("update_count", (long) updateInto(plan, client, prefix, (String) step.get("key"), step,
+					(List<Object>) step.get("ids"), null, (List<Map<String, Object>>) step.get("records")));
+			default -> {
+				List<String> names = new ArrayList<>(new LinkedHashSet<>(items(step.get("ids")).stream().map(identifier -> prefix + keyText(identifier)).toList()));
+				plan.load(names);
+				long count = 0;
+				for (String name : names) {
+					if (plan.docs.get(name) != null) {
+						plan.put(name, null);
+						count++;
+					}
+				}
+				result.put("delete_count", count);
+			}
+			}
+			results.add(result);
+		}
+		plan.commit(Boolean.TRUE.equals(args.get("wait")));
+		return results;
+	}
+
+	public static Map<String, Object> truncate(Client client, Map<String, Object> args) {
+		return delete(client, args("prefix", args.get("prefix")));
+	}
+
+	/** FT.DROPINDEX without DD, then every key under the prefix (DD deletes only the documents the index holds). */
+	public static void dropCollection(Client client, Map<String, Object> args) {
+		String index = (String) args.get("index");
+		if (!(Boolean.TRUE.equals(args.get("if_exists")) && !strings(send(client, List.of("FT._LIST"))).contains(index))) {
+			send(client, List.of("FT.DROPINDEX", index));
+		}
+		truncate(client, args("prefix", args.get("prefix")));
+	}
+
+	/** Records of a local JSON array or JSON Lines file (file:// URI or path). */
+	@SuppressWarnings("unchecked")
+	public static List<Map<String, Object>> readRecords(Client client, Map<String, Object> args) {
+		String location = (String) args.get("location");
+		Path path = Path.of(location.startsWith("file://") ? location.substring("file://".length()) : location);
+		String text;
+		try {
+			text = Files.readString(path, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+		if (text.stripLeading().startsWith("[")) {
+			return (List<Map<String, Object>>) NUMBERS.fromJson(text, Object.class);
+		}
+		List<Map<String, Object>> records = new ArrayList<>();
+		for (String line : text.split("\\R")) {
+			if (!line.isBlank()) {
+				records.add((Map<String, Object>) NUMBERS.fromJson(line, Object.class));
+			}
+		}
+		return records;
+	}
+
+	public static Map<String, Object> importFile(Client client, Map<String, Object> args) {
+		Map<String, Object> write = new LinkedHashMap<>(args);
+		write.put("records", readRecords(client, args));
+		return write(client, write);
+	}
+
+	// ---------------------------------------------------------------- queries
+
+	@SuppressWarnings("unchecked")
+	private static List<Object> expand(Map<String, Object> search, Map<String, byte[]> vectors) {
+		Map<String, Object> params = new LinkedHashMap<>();
+		map(search.get("params")).forEach((name, item) -> params.put(name, argument(item)));
+		List<String> stopwords = search.get("stopwords") == null ? DEFAULT_STOPWORDS : strings(search.get("stopwords"));
+		Map<String, Object> texts = map(search.get("texts"));
+		List<Object> args = new ArrayList<>();
+		for (String item : (List<String>) search.get("command")) {
+			Matcher matcher = MARKER.matcher(item);
+			StringBuilder out = new StringBuilder();
+			while (matcher.find()) {
+				String mode = matcher.group(1);
+				String name = matcher.group(2);
+				Object value = texts.get(name);
+				List<String> found = mode.equals("tags") ? items(value).stream().map(RedisRuntime::argument).toList() : terms(String.valueOf(value), stopwords);
+				if (found.isEmpty()) {
+					throw new IllegalArgumentException("the text " + PRETTY.toJson(value) + " has no terms to search for");
+				}
+				List<String> names = new ArrayList<>();
+				for (int i = 0; i < found.size(); i++) {
+					params.put(name + "_" + i, found.get(i));
+					names.add("$" + name + "_" + i);
+				}
+				String replacement;
+				if (mode.startsWith("fuzzy")) {
+					String marks = "%".repeat(mode.charAt(mode.length() - 1) - '0');
+					replacement = String.join(" ", names.stream().map(term -> marks + term + marks).toList());
+				} else if (mode.equals("prefix")) {
+					replacement = String.join(" ", names.stream().map(term -> term + "*").toList());
+				} else {
+					if (mode.equals("prefixlast")) {
+						names.set(names.size() - 1, names.get(names.size() - 1) + "*");
+					}
+					replacement = String.join(mode.equals("or") || mode.equals("tags") ? " | " : " ", names);
+				}
+				matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
+			}
+			matcher.appendTail(out);
+			args.add(out.toString());
+		}
+		params.putAll(vectors);
+		if (!params.isEmpty()) {
+			args.add("PARAMS");
+			args.add(String.valueOf(2 * params.size()));
+			params.forEach((name, item) -> {
+				args.add(name);
+				args.add(item);
+			});
+		}
+		return args;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<Double> queryVector(Client client, Map<String, Object> lookup) {
+		List<List<Double>> positives = new ArrayList<>();
+		List<List<Double>> negatives = new ArrayList<>();
+		for (Object vector : lookup.get("positive_vectors") == null ? List.of() : items(lookup.get("positive_vectors"))) {
+			positives.add(doubles(vector));
+		}
+		for (Object vector : lookup.get("negative_vectors") == null ? List.of() : items(lookup.get("negative_vectors"))) {
+			negatives.add(doubles(vector));
+		}
+		String prefix = (String) lookup.get("prefix");
+		String path = (String) lookup.get("path");
+		for (int side = 0; side < 2; side++) {
+			Object ids = lookup.get(side == 0 ? "positive_ids" : "negative_ids");
+			List<String> names = ids == null ? List.of() : items(ids).stream().map(identifier -> prefix + keyText(identifier)).toList();
+			List<Map<String, Object>> found = documents(client, names);
+			for (int i = 0; i < names.size(); i++) {
+				Map<String, Object> document = found.get(i);
+				if (document == null || !(document.get(path) instanceof List<?>)) {
+					throw new IllegalArgumentException("no vector " + path + " stored under " + names.get(i));
+				}
+				(side == 0 ? positives : negatives).add(doubles(document.get(path)));
+			}
+		}
+		if (positives.isEmpty()) {
+			throw new IllegalArgumentException("no positive example to search with");
+		}
+		List<Double> positive = mean(positives);
+		if (negatives.isEmpty()) {
+			return positive;
+		}
+		List<Double> negative = mean(negatives);
+		List<Double> result = new ArrayList<>();
+		for (int i = 0; i < positive.size(); i++) {
+			result.add(2 * positive.get(i) - negative.get(i));
+		}
+		return result;
+	}
+
+	private static List<Double> doubles(Object vector) {
+		return ((List<?>) vector).stream().map(item -> ((Number) item).doubleValue()).toList();
+	}
+
+	private static List<Double> mean(List<List<Double>> vectors) {
+		List<Double> result = new ArrayList<>();
+		for (int i = 0; i < vectors.get(0).size(); i++) {
+			double sum = 0;
+			for (List<Double> vector : vectors) {
+				sum += vector.get(i);
+			}
+			result.add(sum / vectors.size());
+		}
+		return result;
+	}
+
+	private static double similarity(double distance, String metric, boolean nativeScore) {
+		if (metric == null || nativeScore) {
+			return distance;
+		}
+		if (metric.equals("euclidean")) {
+			return -Math.sqrt(Math.max(distance, 0.0));
+		}
+		return 1.0 - distance;
+	}
+
+	private static Map<String, Object> pairs(List<?> reply) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		for (int i = 0; i + 1 < reply.size(); i += 2) {
+			result.put(String.valueOf(reply.get(i)), reply.get(i + 1));
+		}
+		return result;
+	}
+
+	private record Scored(String key, Double score) {
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<Scored> scored(Client client, Map<String, Object> search) {
+		Map<String, List<?>> raw = new LinkedHashMap<>();
+		Map<String, Object> lookup = (Map<String, Object>) search.get("lookup");
+		if (lookup != null) {
+			raw.put((String) lookup.get("param"), queryVector(client, lookup));
+		}
+		Map<String, Object> blobs = map(search.get("blobs"));
+		Map<String, Object> params = new LinkedHashMap<>();
+		map(search.get("params")).forEach((name, item) -> {
+			if (blobs.containsKey(name)) {
+				raw.putIfAbsent(name, (List<?>) item);
+			} else {
+				params.put(name, item);
+			}
+		});
+		Map<String, byte[]> vectors = new LinkedHashMap<>();
+		blobs.forEach((name, kind) -> vectors.put(name, blob(raw.get(name), (String) kind)));
+		Map<String, Object> definition = new LinkedHashMap<>(search);
+		definition.put("params", params);
+		List<?> reply = (List<?>) send(client, expand(definition, vectors));
+		String form = String.valueOf(search.get("reply"));
+		List<Scored> result = new ArrayList<>();
+		if (form.equals("hybrid")) {
+			for (Object row : (List<?>) pairs(reply).get("results")) {
+				Map<String, Object> values = pairs((List<?>) row);
+				result.add(new Scored((String) values.get("__key"), Double.parseDouble(String.valueOf(values.get("__score")))));
+			}
+			return result;
+		}
+		List<?> rest = reply.subList(1, reply.size());
+		if (form.equals("scores")) {
+			for (int i = 0; i < rest.size(); i += 2) {
+				result.add(new Scored((String) rest.get(i), Double.parseDouble(String.valueOf(rest.get(i + 1)))));
+			}
+		} else if (form.equals("knn")) {
+			for (int i = 0; i < rest.size(); i += 2) {
+				result.add(new Scored((String) rest.get(i), Double.parseDouble(String.valueOf(pairs((List<?>) rest.get(i + 1)).get(SCORE)))));
+			}
+		} else {
+			for (Object row : rest) {
+				List<?> values = (List<?>) row;
+				result.add(new Scored((String) values.get(values.indexOf("__key") + 1), null));
+			}
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static List<String> paged(Object args, int offset, int limit) {
+		List<String> result = new ArrayList<>((List<String>) args);
+		int at = result.indexOf("LIMIT");
+		result.set(at + 1, String.valueOf(offset));
+		result.set(at + 2, String.valueOf(limit));
+		return result;
+	}
+
+	/** Keys of the documents a filter matches, in key order: every page of an FT.AGGREGATE, or the first limit keys. */
+	private static List<String> keys(Client client, Map<String, Object> search, Integer limit) {
+		Map<String, Object> page = new LinkedHashMap<>(search);
+		page.put("reply", "keys");
+		if (limit != null) {
+			page.put("command", paged(search.get("command"), 0, limit));
+			return scored(client, page).stream().map(Scored::key).toList();
+		}
+		List<String> keys = new ArrayList<>();
+		while (true) {
+			page.put("command", paged(search.get("command"), keys.size(), PAGE));
+			List<String> found = scored(client, page).stream().map(Scored::key).toList();
+			keys.addAll(found);
+			if (found.size() < PAGE) {
+				return keys;
+			}
+		}
+	}
+
+	private static List<Object> hits(Client client, List<Scored> found, String key, List<String> output, List<String> vectors, String metric,
+			boolean nativeScore, Number low, Number high) {
+		List<Map<String, Object>> docs = documents(client, found.stream().map(Scored::key).toList());
+		List<Object> result = new ArrayList<>();
+		for (int i = 0; i < found.size(); i++) {
+			Map<String, Object> document = docs.get(i);
+			if (document == null) {
+				continue;
+			}
+			Double score = found.get(i).score() == null ? null : similarity(found.get(i).score(), metric, nativeScore);
+			if (score != null && ((low != null && score < low.doubleValue()) || (high != null && score > high.doubleValue()))) {
+				continue;
+			}
+			result.add(project(document, key, output, vectors, score));
+		}
+		return result;
+	}
+
+	/** A search built by the generator: the hits (id, score, output fields, vector fields), or {hits, total} with total. */
+	@SuppressWarnings("unchecked")
+	public static Object search(Client client, Map<String, Object> args) {
+		List<Object> result = hits(client, scored(client, args), (String) args.get("key"), strings(args.get("output")), strings(args.get("vectors")),
+				(String) args.get("metric"), Boolean.TRUE.equals(args.get("native")), (Number) args.get("low"), (Number) args.get("high"));
+		if (args.get("total") == null) {
+			return result;
+		}
+		Map<String, Object> withTotal = new LinkedHashMap<>();
+		withTotal.put("hits", result);
+		withTotal.put("total", count(client, (Map<String, Object>) args.get("total")));
+		return withTotal;
+	}
+
+	/** Documents in the order of an FT.AGGREGATE SORTBY: one page, or with every all pages from the command's offset. */
+	public static List<Object> scroll(Client client, Map<String, Object> args) {
+		Map<String, Object> definition = new LinkedHashMap<>(args);
+		definition.put("reply", "keys");
+		List<String> names = Boolean.TRUE.equals(args.get("every")) ? keys(client, definition, null)
+				: scored(client, definition).stream().map(Scored::key).toList();
+		return hits(client, names.stream().map(name -> new Scored(name, null)).toList(), (String) args.get("key"), strings(args.get("output")),
+				strings(args.get("vectors")), null, false, null, null);
+	}
+
+	private static int compareIds(Object left, Object right) {
+		boolean leftNumber = left instanceof Number;
+		boolean rightNumber = right instanceof Number;
+		if (leftNumber != rightNumber) {
+			return leftNumber ? -1 : 1;
+		}
+		if (leftNumber) {
+			return Double.compare(((Number) left).doubleValue(), ((Number) right).doubleValue());
+		}
+		return String.valueOf(left).compareTo(String.valueOf(right));
+	}
+
+	/** Legs searched one by one and fused as vecDSL defines rrf (sum of 1/(k + rank)), weighted and relative_score; ties by key. */
+	@SuppressWarnings("unchecked")
+	public static List<Object> hybrid(Client client, Map<String, Object> args) {
+		List<Object> legs = items(args.get("legs"));
+		String fusion = (String) args.get("fusion");
+		String key = (String) args.get("key");
+		double k = args.containsKey("k") ? ((Number) args.get("k")).doubleValue() : 60;
+		Map<String, Double> fused = new LinkedHashMap<>();
+		for (int i = 0; i < legs.size(); i++) {
+			Map<String, Object> leg = (Map<String, Object>) legs.get(i);
+			double weight = args.containsKey("weights") ? ((Number) items(args.get("weights")).get(i)).doubleValue() : 1.0;
+			List<Scored> found = scored(client, leg);
+			List<Double> values = new ArrayList<>();
+			for (Scored item : found) {
+				values.add(similarity(item.score() == null ? 0.0 : item.score(), (String) leg.get("metric"), false));
+			}
+			if (fusion.equals("relative_score") && !values.isEmpty()) {
+				double least = Collections.min(values);
+				double most = Collections.max(values);
+				values.replaceAll(value -> most == least ? 1.0 : (value - least) / (most - least));
+			}
+			for (int rank = 0; rank < found.size(); rank++) {
+				double part = fusion.equals("rrf") ? 1.0 / (k + rank + 1) : weight * values.get(rank);
+				fused.merge(found.get(rank).key(), part, Double::sum);
+			}
+		}
+		List<String> names = new ArrayList<>(fused.keySet());
+		List<Map<String, Object>> docs = documents(client, names);
+		Map<String, Map<String, Object>> found = new LinkedHashMap<>();
+		for (int i = 0; i < names.size(); i++) {
+			if (docs.get(i) != null) {
+				found.put(names.get(i), docs.get(i));
+			}
+		}
+		List<String> ranked = new ArrayList<>(found.keySet());
+		ranked.sort((left, right) -> {
+			int byScore = Double.compare(fused.get(right), fused.get(left));
+			return byScore != 0 ? byScore : compareIds(found.get(left).get(key), found.get(right).get(key));
+		});
+		Number low = (Number) args.get("low");
+		Number high = (Number) args.get("high");
+		List<Object> result = new ArrayList<>();
+		for (String name : ranked) {
+			double value = fused.get(name);
+			if ((low != null && value < low.doubleValue()) || (high != null && value > high.doubleValue())) {
+				continue;
+			}
+			result.add(project(found.get(name), key, strings(args.get("output")), strings(args.get("vectors")), value));
+		}
+		int offset = args.containsKey("offset") ? ((Number) args.get("offset")).intValue() : 0;
+		int limit = ((Number) args.get("limit")).intValue();
+		return new ArrayList<>(result.subList(Math.min(offset, result.size()), Math.min(offset + limit, result.size())));
+	}
+
+	/** The total of an FT.SEARCH with LIMIT 0 0. */
+	public static long count(Client client, Map<String, Object> args) {
+		List<?> reply = (List<?>) send(client, expand(args, Map.of()));
+		return ((Number) reply.get(0)).longValue();
+	}
+
+	/** Documents by key, in the order of the ids; missing keys are skipped, and documents outside the slices (attribute -> values). */
+	public static List<Object> get(Client client, Map<String, Object> args) {
+		String prefix = (String) args.get("prefix");
+		List<String> names = items(args.get("ids")).stream().map(identifier -> prefix + keyText(identifier)).toList();
+		Map<String, Object> slices = map(args.get("slices"));
+		List<Object> result = new ArrayList<>();
+		for (Map<String, Object> document : documents(client, names)) {
+			if (document != null && slices.entrySet().stream().allMatch(slice -> items(slice.getValue()).contains(document.get(slice.getKey())))) {
+				result.add(project(document, (String) args.get("key"), strings(args.get("output")), strings(args.get("vectors")), null));
+			}
+		}
+		return result;
+	}
+
+	private static List<String> shuffled(List<String> items, int size) {
+		List<String> copy = new ArrayList<>(items);
+		Collections.shuffle(copy, ThreadLocalRandom.current());
+		return copy.subList(0, Math.min(size, copy.size()));
+	}
+
+	/** first: the first records in key order; random: a uniform sample of the matching records (runs differ). */
+	@SuppressWarnings("unchecked")
+	public static List<Object> sample(Client client, Map<String, Object> args) {
+		int size = ((Number) args.get("size")).intValue();
+		boolean first = Boolean.TRUE.equals(args.get("first"));
+		String key = (String) args.get("key");
+		Map<String, Object> search = (Map<String, Object>) args.get("search");
+		List<String> keys = search != null ? keys(client, search, first ? size : null) : scan(client, (String) args.get("prefix"));
+		List<Map<String, Object>> docs;
+		if (first && search == null) {
+			docs = new ArrayList<>(documents(client, keys));
+			docs.removeIf(document -> document == null);
+			docs.sort((left, right) -> compareIds(left.get(key), right.get(key)));
+			docs = docs.subList(0, Math.min(size, docs.size()));
+		} else {
+			docs = documents(client, first ? keys.subList(0, Math.min(size, keys.size())) : shuffled(keys, size));
+		}
+		List<Object> result = new ArrayList<>();
+		for (Map<String, Object> document : docs) {
+			if (document != null) {
+				result.add(project(document, key, strings(args.get("output")), List.of(), null));
+			}
+		}
+		return result;
+	}
+
+	/** Each sampled record with its nearest neighbours among the sample (canonical similarity, computed in the runtime). */
+	@SuppressWarnings("unchecked")
+	public static Object distanceMatrix(Client client, Map<String, Object> args) {
+		Map<String, Object> search = (Map<String, Object>) args.get("search");
+		String key = (String) args.get("key");
+		String field = (String) args.get("field");
+		String metric = (String) args.get("metric");
+		List<String> keys = search != null ? keys(client, search, null) : scan(client, (String) args.get("prefix"));
+		List<Map<String, Object>> chosen = new ArrayList<>(documents(client, shuffled(keys, ((Number) args.get("size")).intValue())));
+		chosen.removeIf(document -> document == null || !(document.get(field) instanceof List<?>));
+		List<Object> result = new ArrayList<>();
+		for (Map<String, Object> left : chosen) {
+			List<Double> u = doubles(left.get(field));
+			List<Object[]> scores = new ArrayList<>();
+			for (Map<String, Object> right : chosen) {
+				if (right == left) {
+					continue;
+				}
+				List<Double> v = doubles(right.get(field));
+				double dot = 0;
+				double squares = 0;
+				double leftNorm = 0;
+				double rightNorm = 0;
+				for (int i = 0; i < u.size(); i++) {
+					dot += u.get(i) * v.get(i);
+					squares += (u.get(i) - v.get(i)) * (u.get(i) - v.get(i));
+					leftNorm += u.get(i) * u.get(i);
+					rightNorm += v.get(i) * v.get(i);
+				}
+				double norms = Math.sqrt(leftNorm) * Math.sqrt(rightNorm);
+				double score = metric.equals("euclidean") ? -Math.sqrt(squares) : metric.equals("dot") ? dot : norms == 0 ? 0.0 : dot / norms;
+				scores.add(new Object[] { score, right });
+			}
+			scores.sort((a, b) -> {
+				int byScore = Double.compare((Double) b[0], (Double) a[0]);
+				return byScore != 0 ? byScore : compareIds(((Map<String, Object>) a[1]).get(key), ((Map<String, Object>) b[1]).get(key));
+			});
+			for (Object[] pair : scores.subList(0, Math.min(((Number) args.get("limit")).intValue(), scores.size()))) {
+				Map<String, Object> entry = new LinkedHashMap<>();
+				entry.put("a", left.get(key));
+				entry.put("b", ((Map<String, Object>) pair[1]).get(key));
+				entry.put("score", pair[0]);
+				result.add(entry);
+			}
+		}
+		return value(result);
+	}
+
+	// ---------------------------------------------------------------- operations
+
+	/** FT.INFO as {name, prefix, attributes} with count and indexing state on request. */
+	public static Object describe(Client client, Map<String, Object> args) {
+		Map<String, Object> info = pairs((List<?>) send(client, List.of("FT.INFO", (String) args.get("index"))));
+		Map<String, Object> definition = pairs((List<?>) info.get("index_definition"));
+		List<Object> attributes = new ArrayList<>();
+		Set<String> known = Set.of("identifier", "attribute", "type", "WEIGHT", "SEPARATOR", "algorithm", "data_type", "dim", "distance_metric", "M",
+				"ef_construction");
+		for (Object item : (List<?>) info.get("attributes")) {
+			List<Object> rest = new ArrayList<>((List<?>) item);
+			Map<String, Object> fields = new LinkedHashMap<>();
+			while (!rest.isEmpty()) {
+				String name = String.valueOf(rest.remove(0));
+				if (!rest.isEmpty() && known.contains(name)) {
+					fields.put(name.toLowerCase(java.util.Locale.ROOT), rest.remove(0));
+				}
+			}
+			Map<String, Object> attribute = new LinkedHashMap<>();
+			attribute.put("name", fields.get("attribute"));
+			attribute.put("path", fields.get("identifier"));
+			attribute.put("type", fields.get("type"));
+			attributes.add(attribute);
+		}
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put("name", info.get("index_name"));
+		List<?> prefixes = (List<?>) definition.get("prefixes");
+		result.put("prefix", prefixes == null || prefixes.isEmpty() ? null : prefixes.get(0));
+		result.put("attributes", attributes);
+		if (Boolean.TRUE.equals(args.get("stats"))) {
+			result.put("count", Long.parseLong(String.valueOf(info.get("num_docs"))));
+		}
+		if (Boolean.TRUE.equals(args.get("progress"))) {
+			result.put("indexing", Long.parseLong(String.valueOf(info.get("indexing"))) != 0);
+			result.put("percent_indexed", Double.parseDouble(String.valueOf(info.get("percent_indexed"))));
+		}
+		return value(result);
+	}
+
+	/** Polls FT.INFO until the background scan of existing keys has finished, at most timeout seconds. */
+	public static Object awaitIndex(Client client, Map<String, Object> args) {
+		String index = (String) args.get("index");
+		double timeout = args.containsKey("timeout") ? ((Number) args.get("timeout")).doubleValue() : 60;
+		long deadline = System.nanoTime() + (long) (timeout * 1e9);
+		while (true) {
+			Map<String, Object> info = pairs((List<?>) send(client, List.of("FT.INFO", index)));
+			if (Long.parseLong(String.valueOf(info.get("indexing"))) == 0) {
+				Map<String, Object> result = new LinkedHashMap<>();
+				result.put("index", index);
+				result.put("state", "ready");
+				result.put("percent_indexed", value(Double.parseDouble(String.valueOf(info.get("percent_indexed")))));
+				return result;
+			}
+			if (System.nanoTime() > deadline) {
+				throw new IllegalStateException("index " + index + " was still indexing after " + timeout + " seconds");
+			}
+			try {
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException("interrupted while waiting for index " + index, e);
+			}
+		}
+	}
+
+	/** collections and databases (from FT._LIST), aliases (FT.ALIASLIST), tag values of a slice attribute (FT.TAGVALS). */
+	public static List<String> names(Client client, Map<String, Object> args) {
+		String kind = (String) args.get("kind");
+		String database = (String) args.get("database");
+		String index = (String) args.get("index");
+		List<String> found;
+		switch (kind) {
+		case "collections" -> found = strings(send(client, List.of("FT._LIST"))).stream()
+				.filter(name -> database == null ? !name.contains(":") : name.startsWith(database + ":"))
+				.map(name -> database == null ? name : name.substring(name.indexOf(':') + 1)).toList();
+		case "databases" -> found = new ArrayList<>(new LinkedHashSet<>(strings(send(client, List.of("FT._LIST"))).stream()
+				.filter(name -> name.contains(":")).map(name -> name.substring(0, name.indexOf(':'))).toList()));
+		case "aliases" -> found = index == null ? List.of() : strings(send(client, List.of("FT.ALIASLIST", index)));
+		case "indexes" -> found = index == null ? List.of() : List.of(index);
+		default -> found = strings(send(client, List.of("FT.TAGVALS", index, (String) args.get("attribute"))));
+		}
+		String prefix = (String) args.get("prefix");
+		List<String> result = new ArrayList<>(found.stream().filter(name -> prefix == null || name.startsWith(prefix)).sorted().toList());
+		return args.get("limit") == null ? result : result.subList(0, Math.min(((Number) args.get("limit")).intValue(), result.size()));
+	}
+
+	/** Drops the index without its documents and creates it again; the new index scans the existing keys in the background. */
+	public static void recreate(Client client, Map<String, Object> args) {
+		String index = (String) args.get("index");
+		Object aliases = send(client, List.of("FT.ALIASLIST", index));
+		send(client, List.of("FT.DROPINDEX", index));
+		send(client, (List<?>) args.get("create"));
+		for (Object alias : aliases instanceof List<?> list ? list : List.of()) {
+			command(client, Map.<String, Object>of("args", List.of("FT.ALIASADD", String.valueOf(alias), index), "ignore", List.of("alias already exists")));
+		}
+	}
+
+	/** Renames or removes fields in every document under the prefix (an alter of the collection), in batches. */
+	public static Map<String, Object> rewrite(Client client, Map<String, Object> args) {
+		List<String> keys = scan(client, (String) args.get("prefix"));
+		Map<String, Object> rename = map(args.get("rename"));
+		List<String> removed = strings(args.get("delete"));
+		long changed = 0;
+		for (int start = 0; start < keys.size(); start += BATCH) {
+			Plan plan = new Plan(client);
+			List<String> batch = keys.subList(start, Math.min(start + BATCH, keys.size()));
+			plan.load(batch);
+			for (String name : batch) {
+				Map<String, Object> document = plan.docs.get(name);
+				if (document == null) {
+					continue;
+				}
+				Map<String, Object> updated = new LinkedHashMap<>();
+				document.forEach((field, item) -> {
+					if (!removed.contains(field)) {
+						updated.put((String) rename.getOrDefault(field, field), item);
+					}
+				});
+				if (!dumps(updated).equals(dumps(document))) {
+					plan.put(name, updated);
+					changed++;
+				}
+			}
+			plan.commit(false);
+		}
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put("update_count", changed);
+		return result;
+	}
+
+	/** EXPIRE on every key under the prefix (a collection ttl set by alter; later writes set it themselves). */
+	public static Map<String, Object> expire(Client client, Map<String, Object> args) {
+		long count = 0;
+		for (String name : scan(client, (String) args.get("prefix"))) {
+			count += ((Number) send(client, List.of("EXPIRE", name, plain((Number) args.get("seconds"))))).longValue();
+		}
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put("expire_count", count);
+		return result;
+	}
+
+	/** Copies (COPY) or renames (RENAME) every key under the prefix to the target prefix, then creates the target's index. */
+	public static Map<String, Object> copyCollection(Client client, Map<String, Object> args) {
+		String prefix = (String) args.get("prefix");
+		boolean move = Boolean.TRUE.equals(args.get("move"));
+		List<String> keys = scan(client, prefix);
+		for (String name : keys) {
+			send(client, List.of(move ? "RENAME" : "COPY", name, args.get("target") + name.substring(prefix.length())));
+		}
+		if (args.get("drop") != null) {
+			send(client, List.of("FT.DROPINDEX", (String) args.get("drop")));
+		}
+		send(client, (List<?>) args.get("create"));
+		Map<String, Object> result = new LinkedHashMap<>();
+		result.put(move ? "moved_count" : "copied_count", (long) keys.size());
+		return result;
+	}
+}

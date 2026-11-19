@@ -1,0 +1,364 @@
+script lancedbCoverage
+targets [ lancedb ]
+version "1.0"
+description "Every native and concealed LanceDB construct of vecDSL 7.1, in an order that runs on an empty data directory and leaves it as found"
+param queryVector : vector = [0.9, 0.1, 0.0, 0.1]
+param queryText : text = "vector databases"
+param minPrice : float = 30
+
+connectLocal: create connection local path "lancedb-data"
+
+cleanBooks: drop books if-exists
+
+cleanLogs: drop logs if-exists
+
+cleanSignals: drop signals if-exists
+
+cleanCopy: drop booksCopy if-exists
+
+cleanMirror: drop booksMirror if-exists
+
+createShop: create database shop {
+    connection shopConnection path "lancedb-data"
+    logical-db catalog {
+        collection notes {
+            primary id
+            field id type int
+            field body type varchar
+            vector-field noteVector type float_vector dim 2 metric euclidean
+            namespace teamA key "team-a"
+            tenant north
+            tenant beta
+        }
+    }
+} if-not-exists
+
+createBooks: create collection books tags ["catalogue"] {
+    primary id
+    analyzer english tokenizer standard language "en"
+    field id type int
+    field title type varchar max-length 256 full-text analyzer english
+    field genre type varchar max-length 64
+    field price type float
+    field tags type array element-type varchar field-limit tagLimit array_len = 8
+    field meta type varchar
+    field note type varchar
+    field details type struct {
+        field pageCount type int
+        field lang type varchar
+    }
+    vector-field embedding type float_vector dim 4 metric cosine {
+        vector-index embeddingIndex family hnsw max-degree 16 build-candidates 200 search-candidates 80
+    }
+    payload-index genreIndex on genre kind keyword
+    payload-index priceIndex on price kind float
+    payload-index tagIndex on tags kind keyword
+    payload-index pagesIndex on details.pageCount kind integer
+} description "Books about databases"
+
+seed: insert into books values [
+    { id: 1, title: "Vector database design", genre: "databases", price: 35.0, tags: ["vector", "database"], meta: "first", note: "draft", embedding: [0.9, 0.1, 0.0, 0.1] },
+    { id: 2, title: "Approximate nearest neighbour search", genre: "databases", price: 52.0, tags: ["ann"], meta: "second", embedding: [0.8, 0.2, 0.1, 0.0] },
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 249.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] },
+    { id: 4, title: "Graph databases explained", genre: "databases", price: 30.0, tags: ["graph", "database"], embedding: [0.5, 0.5, 0.2, 0.1] }
+] wait
+
+reseed: insert into books values [
+    { id: 1, title: "Vector database design", genre: "databases", price: 99.0, embedding: [0.9, 0.1, 0.0, 0.1] }
+] on-conflict ignore wait
+
+localImport: bulk-import into books from "file://../books.jsonl" format json
+
+firstTag: snapshot books as "seeded"
+
+evolveBooks: alter books {
+    add-field field pages type int default 100
+    set description = "Books about vector databases"
+    set consistency = "strong"
+}
+
+renameMeta: alter books { rename-field meta to remark }
+
+pruneBooks: alter books { drop-field note }
+
+addGenreText: create books if-not-exists with {
+    create payload-index genreText on genre kind full_text
+}
+
+restock: upsert into books values [
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 239.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] }
+] wait
+
+reprice: update books set { price: 32.0 } ids [4] wait
+
+tagMore: update books set { tags: ["classic"] } ids [4] array-append [tags] wait
+
+untag: update books set { tags: ["graph"] } ids [4] array-remove [tags] wait
+
+moveVector: update books set { embedding: [0.5, 0.5, 0.2, 0.0] } ids [4] wait
+
+replaceTwo: update books set { title: "ANN search", genre: "databases", price: 50.0 } mode replace ids [2] wait
+
+clearTags: update books ids [5] remove-fields [tags] wait
+
+trimKitchen: delete from books limit 1 wait where genre eq "kitchen"
+
+writeNorth: insert into notes values [ { id: 1, body: "north note", noteVector: [1.0, 0.0] } ] tenant north wait
+
+writeBeta: insert into notes values [
+    { id: 2, body: "beta note", noteVector: [0.0, 1.0] },
+    { id: 3, body: "beta memo", noteVector: [0.6, 0.8] }
+] tenant beta wait
+
+writeTeam: upsert into notes values [ { id: 4, body: "team note", noteVector: [0.8, 0.6] } ] namespace "team-a" wait
+
+createLogs: create collection logs {
+    primary id
+    field id type int
+    field body type varchar
+    vector-field v type float_vector dim 2 metric euclidean {
+        vector-index logIndex family ivf centroids 2
+    }
+    partition hot default
+    partition cold
+} if-not-exists
+
+writeHot: insert into logs values [
+    { id: 1, body: "hot one", v: [1.0, 0.0] },
+    { id: 2, body: "hot two", v: [0.8, 0.6] }
+] partition hot wait
+
+writeCold: insert into logs values [ { id: 3, body: "cold one", v: [0.0, 1.0] } ] partition cold wait
+
+writeUnfiled: insert into logs values [ { id: 4, body: "unfiled", v: [0.6, 0.8] } ] wait
+
+addWarm: create logs if-not-exists with {
+    create partition warm
+}
+
+hotNearest: vector-search in logs top 5 query vector [1.0, 0.0] using v partitions [hot] params { probes 2 } output [body]
+
+coldCount: count in logs partitions [cold]
+
+logParts: list partitions in logs
+
+createSignals: create collection signals {
+    primary id
+    field id type int
+    vector-field dense type float_vector dim 4 metric euclidean {
+        vector-index denseIndex family ivf centroids 1 {
+            quantization type product bits 8 subvectors 2
+        }
+    }
+    vector-field half type float16_vector dim 2 metric dot
+    vector-field wide type float64_vector dim 2 metric cosine
+    vector-field flags type binary_vector dim 8 metric hamming {
+        vector-index flagsIndex family ivf centroids 1
+    }
+    vector-field coarse type float_vector dim 4 metric cosine {
+        vector-index coarseIndex family ivf centroids 1 {
+            quantization type binary
+        }
+    }
+} if-not-exists
+
+writeSignals: insert into signals values [
+    { id: 1, dense: [1.0, 0.0, 0.0, 0.0], half: [1.0, 0.0], wide: [1.0, 0.0], flags: [1, 0, 1, 1, 0, 1, 0, 1], coarse: [0.9, 0.1, 0.0, 0.1] },
+    { id: 2, dense: [0.0, 1.0, 0.0, 0.0], half: [0.0, 1.0], wide: [0.0, 1.0], flags: [0, 1, 0, 0, 1, 0, 1, 0], coarse: [0.0, 0.1, 0.9, 0.3] },
+    { id: 3, dense: [0.5, 0.5, 0.0, 0.0], half: [0.6, 0.8], wide: [0.6, 0.8], flags: [1, 0, 1, 0, 0, 1, 0, 1], coarse: [0.5, 0.5, 0.2, 0.1] }
+] wait
+
+denseNearest: vector-search in signals top 2 query vector [1.0, 0.0, 0.0, 0.0] using dense exact output [id]
+
+halfNearest: vector-search in signals top 2 query vector [1.0, 0.0] using half output [id]
+
+wideNearest: vector-search in signals top 2 query vector [1.0, 0.0] using wide output [id]
+
+coarseNearest: vector-search in signals top 2 query vector $queryVector using coarse params { oversampling 4 } output [id]
+
+coarseScan: vector-search in signals top 2 query vector [0.9, 0.1, 0.0, 0.1] using coarse params { exhaustive } output [id]
+
+releaseLogs: release logs
+
+loadBooks: load books
+
+persist: flush books
+
+info: describe books stats index-progress
+
+similar: vector-search in books top 3 query vector $queryVector using embedding
+    output [title, price]
+    where genre eq "databases"
+
+pagedSimilar: vector-search in books top 2 query vector $queryVector using embedding offset 1
+    score similarity bounds min 0.5 with-vectors output [title]
+
+nearFirst: vector-search in books top 2 query id 1 using embedding output [title]
+
+nativeScores: vector-search in books top 2 query vector $queryVector using embedding score native output [title]
+
+exactScan: vector-search in books top 2 query vector $queryVector using embedding exact output [title]
+
+postFiltered: vector-search in books top 2 query vector $queryVector using embedding params { candidates 40 filter-strategy post_filter } output [title] where price gte $minPrice
+
+keywords: search in books top 3 query text $queryText fields [title] output [title, price]
+
+phrased: search in books top 3 query text "databases explained" text-query phrase fields [title] output [title]
+
+anyTerm: search in books top 5 query text "espresso graph" fields [title] operator or output [title]
+
+allTerms: search in books top 5 query text "vector design" fields [title] operator and output [title]
+
+twoFields: search in books top 3 query text "databases" fields [title boost 2.0, genre] output [title, genre]
+
+hybridRrf: hybrid-search in books top 3 fusion rrf fusion-k 60 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text $queryText fields [title] }
+} output [title]
+
+hybridWeighted: hybrid-search in books top 3 fusion weighted alpha 0.7 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text $queryText fields [title] }
+} output [title]
+
+hybridRelative: hybrid-search in books top 3 fusion relative_score {
+    vector { query vector $queryVector using embedding weight 0.6 }
+    keyword { query text $queryText fields [title] weight 0.4 }
+} output [title]
+
+suggest: recommend in books top 2 positive [1] negative [6] using embedding output [title]
+
+suggestSorted: recommend in books top 3 positive [1] using embedding sort { sort-by price desc } output [title, price]
+
+byId: get from books ids [1, 4] output [title, price, tags, meta]
+
+browse: scroll in books limit 3 offset 1 sort { sort-by price desc } output [title, price]
+
+byPrice: vector-search in books top 3 query vector $queryVector using embedding sort { sort-by price asc } output [title, price]
+
+perGenre: vector-search in books top 2 query vector $queryVector using embedding group-by genre size 2 output [title]
+
+keywordPerGenre: search in books top 2 query text "databases" fields [title] group-by genre size 2 output [title]
+
+hybridPerGenre: hybrid-search in books top 2 fusion rrf group-by genre size 2 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text $queryText fields [title] }
+} output [title]
+
+suggestPerGenre: recommend in books top 2 positive [1] negative [6] using embedding group-by genre size 2 output [title]
+
+firstTwo: sample in books size 2 method first output [title]
+
+anyTwo: sample in books size 2 output [title]
+
+pairs: distance-matrix in books using embedding sample 3 limit 1
+
+cheap: count in books where price lt 40
+
+aboutVectors: count in books where title match_all_terms "vector design"
+
+titledGraph: scroll in books limit 5 output [title] where title like "Graph%"
+
+startsWithVector: count in books where title prefix "Vector"
+
+notKitchen: count in books where not (genre eq "kitchen" or tags contains "ann")
+
+anyTag: count in books where tags contains_any ["coffee", "classic"]
+
+longBooks: count in books where details.pageCount gt 100
+
+unremarked: count in books where meta is_null
+
+priceBand: count in books where price between 30 to 50
+
+firstSlice: scroll in books slice 0 of 2 output [title]
+
+secondSlice: scroll in books slice 1 of 2 output [title]
+
+northCount: count in notes tenant north
+
+teamCount: count in notes namespace "team-a"
+
+northNotes: vector-search in notes top 5 query vector [1.0, 0.0] using noteVector tenant north output [body]
+
+betaNotes: get from notes ids [1, 2, 3] tenant beta output [body]
+
+seededCount: count in books as-of "seeded"
+
+seededTitles: scroll in books limit 10 as-of "seeded" output [title]
+
+collectionNames: list collections
+
+catalogCollections: list collections in catalog
+
+databaseNames: list databases
+
+tenantNames: list tenants in notes
+
+namespaceNames: list namespaces in notes
+
+bookIndexes: list indexes in books prefix "embedding"
+
+bookSnapshots: list snapshots in books
+
+compactBooks: compact books
+
+fuzzyTitle: search in books top 3 query text "grapj" text-query fuzzy fields [title] output [title]
+
+vectorsReady: await-index embeddingIndex timeout 60
+
+priceReady: await-index priceIndex until ready
+
+retrain: rebuild-index embeddingIndex
+
+dropPages: drop pagesIndex
+
+copyBooks: clone books to "booksCopy" mode snapshot
+
+mirrorSeeded: clone books to "booksMirror" as-of "seeded"
+
+dropNorth: drop north
+
+northLeft: count in notes tenant north
+
+clearTeam: truncate notes namespace "team-a"
+
+emptyNotes: truncate notes
+
+dropCold: drop cold
+
+rollBack: restore books from "seeded"
+
+restoredCount: count in books
+
+untagSeeded: drop-snapshot "seeded"
+
+renameBooks: alter books rename to shelf
+
+shelfCount: count in books
+
+dropShelf: drop books
+
+declareCopy: create collection booksCopy {
+    primary id
+    field id type int
+    vector-field embedding type float_vector dim 4 metric cosine
+} if-not-exists
+
+declareMirror: create collection booksMirror {
+    primary id
+    field id type int
+    vector-field embedding type float_vector dim 4 metric cosine
+} if-not-exists
+
+dropCopy: drop booksCopy
+
+dropMirror: drop booksMirror
+
+dropLogs: drop logs
+
+dropSignals: drop signals
+
+dropCatalog: drop catalog
+
+finalNames: list collections

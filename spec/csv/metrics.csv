@@ -1,0 +1,17 @@
+metric,v7.0,v7.1
+parser rules (incl. fragments and datatype rules),159,159
+fragments,9,9
+datatype rules,4,4
+enumerations,58,58
+enumeration literals,302,302
+terminal rules (declared),1,1
+keywords (distinct),596,597
+TERM,600,601
+VAR,217,217
+MCC,1116,1118
+AVS,8.74,8.76
+HEI,19,19
+CLEV,96.31,96.31
+NSLEV,5,5
+DEP,5,5
+TIMP,1.18,1.18

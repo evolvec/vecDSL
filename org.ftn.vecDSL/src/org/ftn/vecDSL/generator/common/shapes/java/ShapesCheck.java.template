@@ -1,0 +1,202 @@
+package {{java.package}};
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * The cases of fixture.json against Shapes, without a test framework. Render both templates with a package, compile them with
+ * javac and run: java -cp <classes> <package>.ShapesCheck <fixture.json>. Exits with 1 on a failure.
+ */
+public final class ShapesCheck {
+
+	private final String text;
+	private int position;
+
+	private ShapesCheck(String text) {
+		this.text = text;
+	}
+
+	public static void main(String[] args) throws IOException {
+		Map<?, ?> fixture = (Map<?, ?>) parse(Files.readString(Path.of(args[0]), StandardCharsets.UTF_8));
+		int passed = 0;
+		List<String> failures = new ArrayList<>();
+		for (Object item : (List<?>) fixture.get("cases")) {
+			Map<?, ?> entry = (Map<?, ?>) item;
+			String name = (String) entry.get("name");
+			List<?> candidates = (List<?>) decode(entry.get("candidates"));
+			Map<?, ?> spec = (Map<?, ?>) decode(entry.get("spec"));
+			String failure;
+			try {
+				Object actual = Shapes.shape(candidates, spec);
+				failure = entry.containsKey("error") ? "no error, result " + write(actual)
+						: write(entry.get("expected")).equals(write(actual)) ? null
+								: "\n  expected " + write(entry.get("expected")) + "\n  actual   " + write(actual);
+			} catch (RuntimeException error) {
+				Map<?, ?> expected = (Map<?, ?>) entry.get("error");
+				boolean unsupported = error instanceof Shapes.UnsupportedShape;
+				boolean invalid = error instanceof IllegalArgumentException;
+				if (expected == null) {
+					failure = "unexpected " + error;
+				} else if (!(expected.get("kind").equals("unsupported") ? unsupported : invalid)) {
+					failure = "wrong error kind " + error;
+				} else {
+					failure = expected.get("message").equals(error.getMessage()) ? null : "message " + error.getMessage();
+				}
+			}
+			if (failure == null) passed++;
+			else failures.add(name + ": " + failure);
+		}
+		for (Object item : (List<?>) fixture.get("windows")) {
+			Map<?, ?> entry = (Map<?, ?>) item;
+			Integer actual = Shapes.windowSize((Map<?, ?>) entry.get("spec"));
+			Object expected = entry.get("expected");
+			boolean same = expected == null ? actual == null : actual != null && ((Number) expected).longValue() == actual;
+			if (same) passed++;
+			else failures.add("window " + entry.get("name") + ": " + actual);
+		}
+		Map<?, ?> boosted = null;
+		for (Object item : (List<?>) fixture.get("cases")) {
+			if ("pgvector boosted".equals(((Map<?, ?>) item).get("name"))) boosted = (Map<?, ?>) item;
+		}
+		List<?> candidates = (List<?>) decode(((Map<?, ?>) boosted).get("candidates"));
+		String before = write(candidates);
+		Shapes.shape(candidates, (Map<?, ?>) decode(boosted.get("spec")));
+		if (before.equals(write(candidates))) passed++;
+		else failures.add("the input changed");
+		failures.forEach(System.out::println);
+		System.out.println(passed + " passed, " + failures.size() + " failed");
+		System.exit(failures.isEmpty() ? 0 : 1);
+	}
+
+	static Object decode(Object value) {
+		if (value instanceof Map<?, ?> entries) {
+			if (entries.size() == 1 && entries.containsKey("$number")) return Double.parseDouble((String) entries.get("$number"));
+			Map<String, Object> result = new LinkedHashMap<>();
+			entries.forEach((key, item) -> result.put((String) key, decode(item)));
+			return result;
+		}
+		if (value instanceof List<?> items) {
+			List<Object> result = new ArrayList<>();
+			for (Object item : items) result.add(decode(item));
+			return result;
+		}
+		return value;
+	}
+
+	/** Compact JSON with integral numbers as integers and others in Java's shortest form, for comparing values. */
+	static String write(Object value) {
+		if (value == null) return "null";
+		if (value instanceof Boolean || value instanceof Long || value instanceof Integer) return value.toString();
+		if (value instanceof Double number) {
+			return number == Math.rint(number) && Math.abs(number) < 1e15 ? Long.toString(number.longValue()) : number.toString();
+		}
+		if (value instanceof String string) return Shapes.canonical(string);
+		if (value instanceof List<?> items) {
+			List<String> parts = new ArrayList<>();
+			for (Object item : items) parts.add(write(item));
+			return "[" + String.join(",", parts) + "]";
+		}
+		Map<?, ?> entries = (Map<?, ?>) value;
+		List<String> parts = new ArrayList<>();
+		entries.forEach((key, item) -> parts.add(Shapes.canonical(String.valueOf(key)) + ":" + write(item)));
+		return "{" + String.join(",", parts) + "}";
+	}
+
+	static Object parse(String json) {
+		ShapesCheck parser = new ShapesCheck(json);
+		Object value = parser.value();
+		parser.space();
+		if (parser.position != json.length()) throw new IllegalStateException("trailing text at " + parser.position);
+		return value;
+	}
+
+	private void space() {
+		while (position < text.length() && Character.isWhitespace(text.charAt(position))) position++;
+	}
+
+	private Object value() {
+		space();
+		char c = text.charAt(position);
+		if (c == '{') {
+			Map<String, Object> result = new LinkedHashMap<>();
+			position++;
+			space();
+			if (text.charAt(position) == '}') {
+				position++;
+				return result;
+			}
+			while (true) {
+				space();
+				String key = string();
+				space();
+				position++;
+				result.put(key, value());
+				space();
+				if (text.charAt(position++) == '}') return result;
+			}
+		}
+		if (c == '[') {
+			List<Object> result = new ArrayList<>();
+			position++;
+			space();
+			if (text.charAt(position) == ']') {
+				position++;
+				return result;
+			}
+			while (true) {
+				result.add(value());
+				space();
+				if (text.charAt(position++) == ']') return result;
+			}
+		}
+		if (c == '"') return string();
+		if (text.startsWith("true", position)) {
+			position += 4;
+			return Boolean.TRUE;
+		}
+		if (text.startsWith("false", position)) {
+			position += 5;
+			return Boolean.FALSE;
+		}
+		if (text.startsWith("null", position)) {
+			position += 4;
+			return null;
+		}
+		int start = position;
+		while (position < text.length() && "+-0123456789.eE".indexOf(text.charAt(position)) >= 0) position++;
+		String number = text.substring(start, position);
+		return number.matches("-?[0-9]+") ? (Object) Long.valueOf(number) : (Object) Double.valueOf(number);
+	}
+
+	private String string() {
+		StringBuilder out = new StringBuilder();
+		position++;
+		while (true) {
+			char c = text.charAt(position++);
+			if (c == '"') return out.toString();
+			if (c != '\\') {
+				out.append(c);
+				continue;
+			}
+			char escaped = text.charAt(position++);
+			switch (escaped) {
+			case 'b' -> out.append('\b');
+			case 'f' -> out.append('\f');
+			case 'n' -> out.append('\n');
+			case 'r' -> out.append('\r');
+			case 't' -> out.append('\t');
+			case 'u' -> {
+				out.append((char) Integer.parseInt(text.substring(position, position + 4), 16));
+				position += 4;
+			}
+			default -> out.append(escaped);
+			}
+		}
+	}
+}

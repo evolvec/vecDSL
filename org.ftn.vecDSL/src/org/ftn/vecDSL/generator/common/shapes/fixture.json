@@ -1,0 +1,8667 @@
+{
+ "about": "Cases of the shared result-shape module. Do not edit.",
+ "cases": [
+  {
+   "name": "pgvector similar",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title",
+     "price"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1,
+     "title": "Vector database design",
+     "price": 35
+    },
+    {
+     "id": 2,
+     "score": 0.977841,
+     "title": "ANN search",
+     "price": 50
+    },
+    {
+     "id": 5,
+     "score": 0.949424,
+     "title": "Vector search in practice",
+     "price": 45
+    }
+   ]
+  },
+  {
+   "name": "pgvector paged_similar",
+   "spec": {
+    "offset": 1,
+    "limit": 2,
+    "cursor": null,
+    "bounds": {
+     "min": 0.5,
+     "max": null
+    },
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": true,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.15854836525234986,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.977841,
+     "title": "ANN search",
+     "embedding": [
+      0.8,
+      0.2,
+      0.1,
+      0
+     ]
+    },
+    {
+     "id": 5,
+     "score": 0.949424,
+     "title": "Vector search in practice",
+     "embedding": [
+      0.7,
+      0.3,
+      0.1,
+      0.1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pgvector page_after",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": "1",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.15854836525234986,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.977841,
+     "title": "ANN search"
+    },
+    {
+     "id": 5,
+     "score": 0.949424,
+     "title": "Vector search in practice"
+    }
+   ]
+  },
+  {
+   "name": "pgvector keyword_after",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": "1",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.060793,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.060793,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 4,
+     "score": 0.060793,
+     "title": "Graph databases explained"
+    }
+   ]
+  },
+  {
+   "name": "pgvector counted",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [
+     {
+      "name": "max_price",
+      "kind": "max",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": {
+    "hits": [
+     {
+      "id": 1,
+      "score": 1,
+      "title": "Vector database design"
+     },
+     {
+      "id": 2,
+      "score": 0.977841,
+      "title": "ANN search"
+     }
+    ],
+    "total": 5,
+    "aggregations": {
+     "max_price": 50
+    }
+   }
+  },
+  {
+   "name": "pgvector by_price",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "price"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title",
+     "price"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.15854836525234986,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1,
+     "title": "Vector database design",
+     "price": 35
+    },
+    {
+     "id": 5,
+     "score": 0.949424,
+     "title": "Vector search in practice",
+     "price": 45
+    },
+    {
+     "id": 2,
+     "score": 0.977841,
+     "title": "ANN search",
+     "price": 50
+    }
+   ]
+  },
+  {
+   "name": "pgvector per_genre",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "genre"
+     ],
+     "size": 2
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.15854836525234986,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "group": "databases",
+     "hits": [
+      {
+       "id": 1,
+       "score": 1,
+       "title": "Vector database design"
+      },
+      {
+       "id": 2,
+       "score": 0.977841,
+       "title": "ANN search"
+      }
+     ]
+    },
+    {
+     "group": "kitchen",
+     "hits": [
+      {
+       "id": 6,
+       "score": 0.158548,
+       "title": "Coffee grinders"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pgvector genre_stats",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [
+     {
+      "name": "genres",
+      "kind": "terms",
+      "field": [
+       "genre"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "meanPrice",
+      "kind": "avg",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "stats_price",
+      "kind": "stats",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "tagTerms",
+      "kind": "terms",
+      "field": [
+       "tags"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "histogram_details_pageCount",
+      "kind": "histogram",
+      "field": [
+       "details",
+       "pageCount"
+      ],
+      "interval": 100,
+      "size": null
+     },
+     {
+      "name": "percentiles_price",
+      "kind": "percentiles",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.060793,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.060793,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    }
+   ],
+   "expected": {
+    "hits": [
+     {
+      "id": 1,
+      "score": 0.060793,
+      "title": "Vector database design"
+     },
+     {
+      "id": 4,
+      "score": 0.060793,
+      "title": "Graph databases explained"
+     }
+    ],
+    "total": 2,
+    "aggregations": {
+     "genres": [
+      {
+       "key": "databases",
+       "count": 2
+      }
+     ],
+     "meanPrice": 33.5,
+     "stats_price": {
+      "count": 2,
+      "min": 32,
+      "max": 35,
+      "avg": 33.5,
+      "sum": 67
+     },
+     "tagTerms": [
+      {
+       "key": "database",
+       "count": 2
+      },
+      {
+       "key": "classic",
+       "count": 1
+      },
+      {
+       "key": "vector",
+       "count": 1
+      }
+     ],
+     "histogram_details_pageCount": [],
+     "percentiles_price": {
+      "1": 32.03,
+      "5": 32.15,
+      "25": 32.75,
+      "50": 33.5,
+      "75": 34.25,
+      "95": 34.85,
+      "99": 34.97
+     }
+    }
+   }
+  },
+  {
+   "name": "pgvector marked",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.099103,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     },
+     "highlight": {
+      "title": [
+       "<b>Vector</b> <b>database</b> design"
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.099103,
+     "title": "Vector database design",
+     "highlight": {
+      "title": [
+       "<b>Vector</b> <b>database</b> design"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "pgvector boosted",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": "cheap",
+       "kind": "decay",
+       "field": [
+        "price"
+       ],
+       "weight": null,
+       "shape": "gauss",
+       "origin": 30.0,
+       "scale": 20.0,
+       "offset": null,
+       "rate": null,
+       "when": null
+      },
+      {
+       "name": "sqlTag",
+       "kind": "condition",
+       "field": null,
+       "weight": 2.0,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "tags"
+        ],
+        "op": "contains",
+        "value": "sql"
+       }
+      }
+     ],
+     "combine": "sum",
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title",
+     "price"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.15854836525234986,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 7,
+     "score": 2.484314,
+     "title": "Transactions in PostgreSQL",
+     "price": 40
+    },
+    {
+     "id": 1,
+     "score": 0.957603,
+     "title": "Vector database design",
+     "price": 35
+    },
+    {
+     "id": 4,
+     "score": 0.749617,
+     "title": "Graph databases explained",
+     "price": 32
+    }
+   ]
+  },
+  {
+   "name": "pgvector diverse",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.2,
+     "candidates": 6,
+     "vectorField": "embedding",
+     "metric": "cosine"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9778407235994799,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548310849756681,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238141462399,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.15854836525234986,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823258351349,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1,
+     "title": "Vector database design"
+    },
+    {
+     "id": 6,
+     "score": 0.158548,
+     "title": "Coffee grinders"
+    },
+    {
+     "id": 4,
+     "score": 0.754831,
+     "title": "Graph databases explained"
+    }
+   ]
+  },
+  {
+   "name": "pgvector hybrid_grouped",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "genre"
+     ],
+     "size": 1
+    },
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [],
+    "output": [
+     "title"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.03278688524590164,
+     "fields": {
+      "title": "Vector database design",
+      "genre": "databases",
+      "price": 35.0,
+      "tags": [
+       "vector",
+       "database"
+      ],
+      "remark": "first",
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.8999999761581421,
+       0.10000000149011612,
+       0.0,
+       0.10000000149011612
+      ]
+     },
+     "highlight": {
+      "title": [
+       "<b>Vector</b> <b>database</b> design"
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.016129032258064516,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     },
+     "highlight": {
+      "title": [
+       "ANN search"
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.015384615384615385,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     },
+     "highlight": {
+      "title": [
+       "Graph databases explained"
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.015873015873015872,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     },
+     "highlight": {
+      "title": [
+       "Vector search in practice"
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.015151515151515152,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     },
+     "highlight": {
+      "title": [
+       "Coffee grinders"
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.015625,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     },
+     "highlight": {
+      "title": [
+       "Transactions in PostgreSQL"
+      ]
+     }
+    }
+   ],
+   "expected": {
+    "hits": [
+     {
+      "group": "databases",
+      "hits": [
+       {
+        "id": 1,
+        "score": 0.032787,
+        "title": "Vector database design",
+        "highlight": {
+         "title": [
+          "<b>Vector</b> <b>database</b> design"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "group": "kitchen",
+      "hits": [
+       {
+        "id": 6,
+        "score": 0.015152,
+        "title": "Coffee grinders",
+        "highlight": {
+         "title": [
+          "Coffee grinders"
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "total": 6
+   }
+  },
+  {
+   "name": "pgvector suggest_diverse",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.3,
+     "candidates": null,
+     "vectorField": "embedding",
+     "metric": "cosine"
+    },
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "price"
+      ],
+      "direction": "desc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title",
+     "price"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 2,
+     "score": 0.9778406799482751,
+     "fields": {
+      "title": "ANN search",
+      "genre": "databases",
+      "price": 50.0,
+      "tags": null,
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.800000011920929,
+       0.20000000298023224,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.7548311120789464,
+     "fields": {
+      "title": "Graph databases explained",
+      "genre": "databases",
+      "price": 32.0,
+      "tags": [
+       "database",
+       "classic"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.5,
+       0.5,
+       0.20000000298023224,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.9494238482366455,
+     "fields": {
+      "title": "Vector search in practice",
+      "genre": "databases",
+      "price": 45.0,
+      "tags": null,
+      "remark": null,
+      "details": {
+       "pageCount": 320,
+       "lang": "en"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.699999988079071,
+       0.30000001192092896,
+       0.10000000149011612,
+       0.10000000149011612
+      ]
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.15854837094525326,
+     "fields": {
+      "title": "Coffee grinders",
+      "genre": "kitchen",
+      "price": 19.0,
+      "tags": [
+       "coffee"
+      ],
+      "remark": null,
+      "details": {
+       "pageCount": 96,
+       "lang": "de"
+      },
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.10000000149011612,
+       0.0,
+       0.800000011920929,
+       0.4000000059604645
+      ]
+     }
+    },
+    {
+     "key": 7,
+     "score": 0.8744823572346603,
+     "fields": {
+      "title": "Transactions in PostgreSQL",
+      "genre": "databases",
+      "price": 40.0,
+      "tags": [
+       "sql"
+      ],
+      "remark": null,
+      "details": null,
+      "pages": 100
+     },
+     "vectors": {
+      "embedding": [
+       0.6000000238418579,
+       0.4000000059604645,
+       0.10000000149011612,
+       0.0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.977841,
+     "title": "ANN search",
+     "price": 50
+    },
+    {
+     "id": 6,
+     "score": 0.158548,
+     "title": "Coffee grinders",
+     "price": 19
+    }
+   ]
+  },
+  {
+   "name": "ties order numbers before strings",
+   "spec": {
+    "offset": 1,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": "b",
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": "a",
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": 10,
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": "B",
+     "score": 0.7,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.5
+    },
+    {
+     "id": 10,
+     "score": 0.5
+    },
+    {
+     "id": "a",
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "bounds after the page",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": {
+     "min": 0.5,
+     "max": null
+    },
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.4,
+     "fields": {}
+    },
+    {
+     "key": 4,
+     "score": 0.3,
+     "fields": {}
+    }
+   ],
+   "expected": {
+    "hits": [
+     {
+      "id": 1,
+      "score": 0.9
+     },
+     {
+      "id": 2,
+      "score": 0.8
+     }
+    ],
+    "total": 2
+   }
+  },
+  {
+   "name": "bounds max",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": {
+     "min": null,
+     "max": 0.7
+    },
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.6,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.2,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.6
+    }
+   ]
+  },
+  {
+   "name": "cursor not found",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": "9",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {}
+    }
+   ],
+   "expected": {
+    "hits": [],
+    "total": 3
+   }
+  },
+  {
+   "name": "cursor text of a number key",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": "02",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 3,
+     "score": 0.7
+    }
+   ]
+  },
+  {
+   "name": "cursor of a string key",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": "a",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": "c",
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": "a",
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": "b",
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": "b",
+     "score": 0.5
+    },
+    {
+     "id": "c",
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "cursor text against a string key and a number key",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": "1",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": "1",
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": 1,
+     "score": 0.4,
+     "fields": {}
+    },
+    {
+     "key": "2",
+     "score": 0.3,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.4
+    },
+    {
+     "id": "2",
+     "score": 0.3
+    }
+   ]
+  },
+  {
+   "name": "cursor then offset",
+   "spec": {
+    "offset": 1,
+    "limit": 2,
+    "cursor": "1",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {}
+    },
+    {
+     "key": 4,
+     "score": 0.6,
+     "fields": {}
+    },
+    {
+     "key": 5,
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 3,
+     "score": 0.7
+    },
+    {
+     "id": 4,
+     "score": 0.6
+    }
+   ]
+  },
+  {
+   "name": "offset past the end",
+   "spec": {
+    "offset": 5,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    }
+   ],
+   "expected": []
+  },
+  {
+   "name": "empty candidates",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [],
+   "expected": []
+  },
+  {
+   "name": "empty candidates with total and aggregations",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [
+     {
+      "name": "count_price",
+      "kind": "count",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "sum_price",
+      "kind": "sum",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "avg_price",
+      "kind": "avg",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "min_price",
+      "kind": "min",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "max_price",
+      "kind": "max",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "terms_genre",
+      "kind": "terms",
+      "field": [
+       "genre"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "stats_price",
+      "kind": "stats",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "percentiles_price",
+      "kind": "percentiles",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "histogram_price",
+      "kind": "histogram",
+      "field": [
+       "price"
+      ],
+      "interval": 10,
+      "size": null
+     },
+     {
+      "name": "distinct_count_genre",
+      "kind": "distinct_count",
+      "field": [
+       "genre"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "date_histogram_when",
+      "kind": "date_histogram",
+      "field": [
+       "when"
+      ],
+      "interval": "1d",
+      "size": null
+     }
+    ],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [],
+   "expected": {
+    "hits": [],
+    "total": 0,
+    "aggregations": {
+     "count_price": 0,
+     "sum_price": null,
+     "avg_price": null,
+     "min_price": null,
+     "max_price": null,
+     "terms_genre": [],
+     "stats_price": {
+      "count": 0,
+      "min": null,
+      "max": null,
+      "avg": null,
+      "sum": null
+     },
+     "percentiles_price": {
+      "1": null,
+      "5": null,
+      "25": null,
+      "50": null,
+      "75": null,
+      "95": null,
+      "99": null
+     },
+     "histogram_price": [],
+     "distinct_count_genre": 0,
+     "date_histogram_when": []
+    }
+   }
+  },
+  {
+   "name": "groups with a null group and bounds",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": {
+     "min": 0.5,
+     "max": null
+    },
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "genre"
+     ],
+     "size": 2
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "genre": "a"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "genre": "a"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.6,
+     "fields": {
+      "genre": "b"
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.3,
+     "fields": {
+      "genre": "c"
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.2,
+     "fields": {
+      "genre": "b"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "group": "a",
+     "hits": [
+      {
+       "id": 1,
+       "score": 0.9,
+       "genre": "a"
+      },
+      {
+       "id": 3,
+       "score": 0.7,
+       "genre": "a"
+      }
+     ]
+    },
+    {
+     "group": null,
+     "hits": [
+      {
+       "id": 2,
+       "score": 0.8
+      }
+     ]
+    },
+    {
+     "group": "b",
+     "hits": [
+      {
+       "id": 4,
+       "score": 0.6,
+       "genre": "b"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "group offset and a group left empty",
+   "spec": {
+    "offset": 2,
+    "limit": 2,
+    "cursor": null,
+    "bounds": {
+     "min": 0.5,
+     "max": null
+    },
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "genre"
+     ],
+     "size": null
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "genre": "a"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "genre": "a"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.6,
+     "fields": {
+      "genre": "b"
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.3,
+     "fields": {
+      "genre": "c"
+     }
+    },
+    {
+     "key": 6,
+     "score": 0.2,
+     "fields": {
+      "genre": "b"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "group": "b",
+     "hits": [
+      {
+       "id": 4,
+       "score": 0.6,
+       "genre": "b"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "group values 1 and 1.0 are one group",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "n"
+     ],
+     "size": 2
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "n": 1
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "n": 1.0
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "n": 2
+     }
+    }
+   ],
+   "expected": [
+    {
+     "group": 1,
+     "hits": [
+      {
+       "id": 1,
+       "score": 0.9,
+       "n": 1
+      },
+      {
+       "id": 2,
+       "score": 0.8,
+       "n": 1
+      }
+     ]
+    },
+    {
+     "group": 2,
+     "hits": [
+      {
+       "id": 3,
+       "score": 0.7,
+       "n": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "group by a sub-field",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "d",
+      "lang"
+     ],
+     "size": 1
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "d": {
+       "lang": "en"
+      }
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "d": {
+       "lang": "de"
+      }
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "d": {
+       "lang": "en"
+      }
+     }
+    }
+   ],
+   "expected": [
+    {
+     "group": "en",
+     "hits": [
+      {
+       "id": 1,
+       "score": 0.9
+      }
+     ]
+    },
+    {
+     "group": "de",
+     "hits": [
+      {
+       "id": 2,
+       "score": 0.8
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "sort desc with missing values last",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "p"
+      ],
+      "direction": "desc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "p": 10
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "p": 30
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.6,
+     "fields": {
+      "p": 10
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 3,
+     "score": 0.7
+    },
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 4,
+     "score": 0.6
+    },
+    {
+     "id": 2,
+     "score": 0.8
+    }
+   ]
+  },
+  {
+   "name": "sort by a field then relevance ascending",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "g"
+      ],
+      "direction": "asc"
+     },
+     {
+      "relevance": true,
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "x"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "g": "y"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "g": "x"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.6,
+     "fields": {
+      "g": "y"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 3,
+     "score": 0.7
+    },
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 4,
+     "score": 0.6
+    },
+    {
+     "id": 2,
+     "score": 0.8
+    }
+   ]
+  },
+  {
+   "name": "sort orders the selected hits only",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "p"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "p": 5
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "p": 1
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "p": 0
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.8
+    },
+    {
+     "id": 1,
+     "score": 0.9
+    }
+   ]
+  },
+  {
+   "name": "sort strings by code point",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "g"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "b"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "g": "B"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "g": "a"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.6,
+     "fields": {
+      "g": "é"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.8
+    },
+    {
+     "id": 3,
+     "score": 0.7
+    },
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 4,
+     "score": 0.6
+    }
+   ]
+  },
+  {
+   "name": "sort mixed types",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "v"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "v": "x"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "v": true
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {
+      "v": 5
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.6,
+     "fields": {}
+    },
+    {
+     "key": 5,
+     "score": 0.5,
+     "fields": {
+      "v": [
+       1
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 3,
+     "score": 0.7
+    },
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 2,
+     "score": 0.8
+    },
+    {
+     "id": 5,
+     "score": 0.5
+    },
+    {
+     "id": 4,
+     "score": 0.6
+    }
+   ]
+  },
+  {
+   "name": "boost field value, multiply by default",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "field_value",
+       "field": [
+        "pop"
+       ],
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "pop": 3
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.9,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.4,
+     "fields": {
+      "pop": 1
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 3,
+     "pop": 3
+    },
+    {
+     "id": 2,
+     "score": 0.9
+    },
+    {
+     "id": 3,
+     "score": 0.8,
+     "pop": 1
+    }
+   ]
+  },
+  {
+   "name": "boost combine and apply sum",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "tag"
+        ],
+        "op": "eq",
+        "value": "x"
+       }
+      },
+      {
+       "name": null,
+       "kind": "field_value",
+       "field": [
+        "v"
+       ],
+       "weight": null,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": "sum",
+     "apply": "sum"
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "tag": "x",
+      "v": 3
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {
+      "tag": "y",
+      "v": 4
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.5,
+     "fields": {
+      "tag": "x"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 5.5
+    },
+    {
+     "id": 2,
+     "score": 4.5
+    },
+    {
+     "id": 3,
+     "score": 2.5
+    },
+    {
+     "id": 4,
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "boost combine and apply multiply",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "tag"
+        ],
+        "op": "eq",
+        "value": "x"
+       }
+      },
+      {
+       "name": null,
+       "kind": "field_value",
+       "field": [
+        "v"
+       ],
+       "weight": null,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": "multiply",
+     "apply": "multiply"
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "tag": "x",
+      "v": 3
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {
+      "tag": "y",
+      "v": 4
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.5,
+     "fields": {
+      "tag": "x"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 3
+    },
+    {
+     "id": 2,
+     "score": 2
+    },
+    {
+     "id": 3,
+     "score": 1
+    },
+    {
+     "id": 4,
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "boost combine and apply max",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "tag"
+        ],
+        "op": "eq",
+        "value": "x"
+       }
+      },
+      {
+       "name": null,
+       "kind": "field_value",
+       "field": [
+        "v"
+       ],
+       "weight": null,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": "max",
+     "apply": "max"
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "tag": "x",
+      "v": 3
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {
+      "tag": "y",
+      "v": 4
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.5,
+     "fields": {
+      "tag": "x"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 4
+    },
+    {
+     "id": 1,
+     "score": 3
+    },
+    {
+     "id": 3,
+     "score": 2
+    },
+    {
+     "id": 4,
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "boost combine and apply avg",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "tag"
+        ],
+        "op": "eq",
+        "value": "x"
+       }
+      },
+      {
+       "name": null,
+       "kind": "field_value",
+       "field": [
+        "v"
+       ],
+       "weight": null,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": "avg",
+     "apply": "avg"
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "tag": "x",
+      "v": 3
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {
+      "tag": "y",
+      "v": 4
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.5,
+     "fields": {
+      "tag": "x"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 2.25
+    },
+    {
+     "id": 1,
+     "score": 1.5
+    },
+    {
+     "id": 3,
+     "score": 1.25
+    },
+    {
+     "id": 4,
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "boost combine and apply replace",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "tag"
+        ],
+        "op": "eq",
+        "value": "x"
+       }
+      },
+      {
+       "name": null,
+       "kind": "field_value",
+       "field": [
+        "v"
+       ],
+       "weight": null,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": "replace",
+     "apply": "replace"
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "tag": "x",
+      "v": 3
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {
+      "tag": "y",
+      "v": 4
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.5,
+     "fields": {
+      "tag": "x"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 4
+    },
+    {
+     "id": 1,
+     "score": 2
+    },
+    {
+     "id": 3,
+     "score": 2
+    },
+    {
+     "id": 4,
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "boost linear decay with offset",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "decay",
+       "field": [
+        "x"
+       ],
+       "weight": null,
+       "shape": "linear",
+       "origin": 10,
+       "scale": 5,
+       "offset": 1,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "x": 10
+     }
+    },
+    {
+     "key": 2,
+     "score": 1.0,
+     "fields": {
+      "x": 16
+     }
+    },
+    {
+     "key": 3,
+     "score": 1.0,
+     "fields": {
+      "x": 40
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1
+    },
+    {
+     "id": 2,
+     "score": 0.5
+    },
+    {
+     "id": 3,
+     "score": 0
+    }
+   ]
+  },
+  {
+   "name": "boost exp decay with rate",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "decay",
+       "field": [
+        "x"
+       ],
+       "weight": null,
+       "shape": "exp",
+       "origin": 10,
+       "scale": 5,
+       "offset": 1,
+       "rate": 0.25,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "x": 10
+     }
+    },
+    {
+     "key": 2,
+     "score": 1.0,
+     "fields": {
+      "x": 16
+     }
+    },
+    {
+     "key": 3,
+     "score": 1.0,
+     "fields": {
+      "x": 21
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1
+    },
+    {
+     "id": 2,
+     "score": 0.25
+    },
+    {
+     "id": 3,
+     "score": 0.0625
+    }
+   ]
+  },
+  {
+   "name": "boost gauss decay with weight",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "decay",
+       "field": [
+        "x"
+       ],
+       "weight": 3,
+       "shape": "gauss",
+       "origin": 0,
+       "scale": 2,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "x": 0
+     }
+    },
+    {
+     "key": 2,
+     "score": 1.0,
+     "fields": {
+      "x": 2
+     }
+    },
+    {
+     "key": 3,
+     "score": 1.0,
+     "fields": {
+      "x": 4
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 3
+    },
+    {
+     "id": 2,
+     "score": 1.5
+    },
+    {
+     "id": 3,
+     "score": 0.1875
+    }
+   ]
+  },
+  {
+   "name": "boost decay over timestamps",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "decay",
+       "field": [
+        "at"
+       ],
+       "weight": null,
+       "shape": "exp",
+       "origin": "2026-11-16T00:00:00Z",
+       "scale": "1d",
+       "offset": "12h",
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {
+      "at": "2026-11-16"
+     }
+    },
+    {
+     "key": 2,
+     "score": 1.0,
+     "fields": {
+      "at": "2026-11-14T12:00:00+00:00"
+     }
+    },
+    {
+     "key": 3,
+     "score": 1.0,
+     "fields": {
+      "at": "2026-11-18T12:00:00+02:00"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.1,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1
+    },
+    {
+     "id": 2,
+     "score": 0.5
+    },
+    {
+     "id": 3,
+     "score": 0.264866
+    },
+    {
+     "id": 4,
+     "score": 0.1
+    }
+   ]
+  },
+  {
+   "name": "boost condition in three-valued logic",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 3,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "not": {
+         "field": [
+          "tag"
+         ],
+         "op": "eq",
+         "value": "x"
+        }
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "tag": "x"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.4,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.3,
+     "fields": {
+      "tag": "y"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 1.2
+    },
+    {
+     "id": 3,
+     "score": 0.9
+    },
+    {
+     "id": 1,
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "condition like",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "like",
+        "value": "ab%c_"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": "abxxcd"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": "abc"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": "abcz"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.96,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 3,
+     "score": 1.94
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    },
+    {
+     "id": 4,
+     "score": 0.96
+    }
+   ]
+  },
+  {
+   "name": "condition like with an escaped percent",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "like",
+        "value": "a\\%b"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": "a%b"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": "axb"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    }
+   ]
+  },
+  {
+   "name": "condition between",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "between",
+        "value": 2,
+        "upper": 4
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": 2
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": 5
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": "3"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.96,
+     "fields": {
+      "s": 4
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 4,
+     "score": 1.92
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    }
+   ]
+  },
+  {
+   "name": "condition in",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "in",
+        "value": [
+         1,
+         2
+        ]
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": 2
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": 3
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    }
+   ]
+  },
+  {
+   "name": "condition not_in",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "not_in",
+        "value": [
+         1,
+         2
+        ]
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": 3
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": 1
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 1.96
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    }
+   ]
+  },
+  {
+   "name": "condition length",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "length_gt",
+        "value": 2
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": [
+       "a",
+       "b",
+       "c"
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": [
+       "a"
+      ]
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": "héé"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.96,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 3,
+     "score": 1.94
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    },
+    {
+     "id": 4,
+     "score": 0.96
+    }
+   ]
+  },
+  {
+   "name": "condition is_empty",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "is_empty"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": []
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": ""
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": "x"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.96,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 1.96
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    },
+    {
+     "id": 4,
+     "score": 0.96
+    }
+   ]
+  },
+  {
+   "name": "condition contains",
+   "spec": {
+    "offset": 0,
+    "limit": 4,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "contains",
+        "value": "b"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": [
+       "a",
+       "b"
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": "abc"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": [
+       "a"
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.96,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 1.96
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    },
+    {
+     "id": 4,
+     "score": 0.96
+    }
+   ]
+  },
+  {
+   "name": "condition contains_any",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "contains_any",
+        "value": [
+         "x",
+         "b"
+        ]
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": [
+       "a",
+       "b"
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": [
+       "a"
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    }
+   ]
+  },
+  {
+   "name": "condition contains_all",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "contains_all",
+        "value": [
+         "a",
+         "x"
+        ]
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": [
+       "a",
+       "b"
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": [
+       "x",
+       "a",
+       "z"
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 1.96
+    },
+    {
+     "id": 1,
+     "score": 0.99
+    }
+   ]
+  },
+  {
+   "name": "condition prefix",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "prefix",
+        "value": "ab"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": "abc"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": "xab"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    }
+   ]
+  },
+  {
+   "name": "condition neq",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "neq",
+        "value": "x"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": "x"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": "y"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 3,
+     "score": 1.94
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    }
+   ]
+  },
+  {
+   "name": "condition eq on lists",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "eq",
+        "value": [
+         1,
+         2
+        ]
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": [
+       1,
+       2.0
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": [
+       2,
+       1
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    }
+   ]
+  },
+  {
+   "name": "condition gt",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "gt",
+        "value": "a"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": "b"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": "a"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": 5
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    }
+   ]
+  },
+  {
+   "name": "condition is_null",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "field": [
+         "s"
+        ],
+        "op": "is_null"
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": 0
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    }
+   ]
+  },
+  {
+   "name": "condition or with unknown",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "or": [
+         {
+          "field": [
+           "s"
+          ],
+          "op": "eq",
+          "value": "x"
+         },
+         {
+          "field": [
+           "t"
+          ],
+          "op": "eq",
+          "value": true
+         }
+        ]
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "t": true
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "s": "x"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 1.96
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    }
+   ]
+  },
+  {
+   "name": "condition and with unknown",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": {
+        "and": [
+         {
+          "field": [
+           "s"
+          ],
+          "op": "eq",
+          "value": "x"
+         },
+         {
+          "field": [
+           "t"
+          ],
+          "op": "eq",
+          "value": true
+         }
+        ]
+       }
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.99,
+     "fields": {
+      "s": "x",
+      "t": true
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.98,
+     "fields": {
+      "t": true
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.97,
+     "fields": {
+      "s": "y",
+      "t": true
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 1.98
+    },
+    {
+     "id": 2,
+     "score": 0.98
+    },
+    {
+     "id": 3,
+     "score": 0.97
+    }
+   ]
+  },
+  {
+   "name": "mmr dot",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.85,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.8,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.5,
+     "fields": {},
+     "vectors": {
+      "v": [
+       0,
+       1
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 3,
+     "score": 0.5
+    }
+   ]
+  },
+  {
+   "name": "mmr euclidean with offset",
+   "spec": {
+    "offset": 1,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.7,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "euclidean"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 1.0,
+     "fields": {},
+     "vectors": {
+      "v": [
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.95,
+     "fields": {},
+     "vectors": {
+      "v": [
+       0,
+       0.1
+      ]
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.6,
+     "fields": {},
+     "vectors": {
+      "v": [
+       3,
+       4
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 3,
+     "score": 0.6
+    }
+   ]
+  },
+  {
+   "name": "mmr pool of written candidates",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": 2,
+     "vectorField": "v",
+     "metric": "cosine"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {},
+     "vectors": {
+      "v": [
+       0,
+       1
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 2,
+     "score": 0.8
+    }
+   ]
+  },
+  {
+   "name": "mmr hamming bit strings",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "hamming"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {},
+     "vectors": {
+      "v": "1100"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {},
+     "vectors": {
+      "v": "1101"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {},
+     "vectors": {
+      "v": "0011"
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 3,
+     "score": 0.7
+    }
+   ]
+  },
+  {
+   "name": "mmr jaccard",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "jaccard"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       1,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       1,
+       0,
+       1
+      ]
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {},
+     "vectors": {
+      "v": [
+       0,
+       0,
+       1,
+       1
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 3,
+     "score": 0.7
+    }
+   ]
+  },
+  {
+   "name": "mmr lambda 1 and a zero vector",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 1,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "cosine"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {},
+     "vectors": {
+      "v": [
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.7,
+     "fields": {},
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.9
+    },
+    {
+     "id": 2,
+     "score": 0.8
+    },
+    {
+     "id": 3,
+     "score": 0.7
+    }
+   ]
+  },
+  {
+   "name": "mmr needs a metric",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": null
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {}
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "mmr needs the diversity vector field and its metric"
+   }
+  },
+  {
+   "name": "aggregations of every kind",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [
+     {
+      "name": "count_tags",
+      "kind": "count",
+      "field": [
+       "tags"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "count_price",
+      "kind": "count",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "distinct_count_tags",
+      "kind": "distinct_count",
+      "field": [
+       "tags"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "cardinality_genre",
+      "kind": "cardinality",
+      "field": [
+       "genre"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "terms_tags",
+      "kind": "terms",
+      "field": [
+       "tags"
+      ],
+      "interval": null,
+      "size": 1
+     },
+     {
+      "name": "facet_genre",
+      "kind": "facet",
+      "field": [
+       "genre"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "histogram_price",
+      "kind": "histogram",
+      "field": [
+       "price"
+      ],
+      "interval": 10,
+      "size": null
+     },
+     {
+      "name": "byTwenty",
+      "kind": "histogram",
+      "field": [
+       "price"
+      ],
+      "interval": "20",
+      "size": null
+     },
+     {
+      "name": "byDay",
+      "kind": "date_histogram",
+      "field": [
+       "at"
+      ],
+      "interval": "1d",
+      "size": null
+     },
+     {
+      "name": "date_histogram_at",
+      "kind": "date_histogram",
+      "field": [
+       "at"
+      ],
+      "interval": "12h",
+      "size": null
+     },
+     {
+      "name": "min_name",
+      "kind": "min",
+      "field": [
+       "name"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "max_name",
+      "kind": "max",
+      "field": [
+       "name"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "avg_price",
+      "kind": "avg",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "sum_price",
+      "kind": "sum",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "percentiles_price",
+      "kind": "percentiles",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     },
+     {
+      "name": "stats_price",
+      "kind": "stats",
+      "field": [
+       "price"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.4,
+     "fields": {
+      "price": 10,
+      "tags": [
+       "a",
+       "b"
+      ],
+      "genre": "x",
+      "at": "2026-11-16T05:00:00Z",
+      "name": "m"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.3,
+     "fields": {
+      "price": 25,
+      "tags": [
+       "a"
+      ],
+      "genre": "y",
+      "at": "2026-11-16T23:59:59Z",
+      "name": "z"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.2,
+     "fields": {
+      "price": null,
+      "tags": null,
+      "genre": "x",
+      "at": "2026-11-17T00:00:00Z",
+      "name": "a"
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.1,
+     "fields": {
+      "price": 30,
+      "tags": [],
+      "genre": null,
+      "at": null
+     }
+    }
+   ],
+   "expected": {
+    "hits": [
+     {
+      "id": 1,
+      "score": 0.4
+     }
+    ],
+    "total": 4,
+    "aggregations": {
+     "count_tags": 3,
+     "count_price": 3,
+     "distinct_count_tags": 2,
+     "cardinality_genre": 2,
+     "terms_tags": [
+      {
+       "key": "a",
+       "count": 2
+      }
+     ],
+     "facet_genre": [
+      {
+       "key": "x",
+       "count": 2
+      },
+      {
+       "key": "y",
+       "count": 1
+      }
+     ],
+     "histogram_price": [
+      {
+       "key": 10,
+       "count": 1
+      },
+      {
+       "key": 20,
+       "count": 1
+      },
+      {
+       "key": 30,
+       "count": 1
+      }
+     ],
+     "byTwenty": [
+      {
+       "key": 0,
+       "count": 1
+      },
+      {
+       "key": 20,
+       "count": 2
+      }
+     ],
+     "byDay": [
+      {
+       "key": "2026-11-16T00:00:00",
+       "count": 2
+      },
+      {
+       "key": "2026-11-17T00:00:00",
+       "count": 1
+      }
+     ],
+     "date_histogram_at": [
+      {
+       "key": "2026-11-16T00:00:00",
+       "count": 1
+      },
+      {
+       "key": "2026-11-16T12:00:00",
+       "count": 1
+      },
+      {
+       "key": "2026-11-17T00:00:00",
+       "count": 1
+      }
+     ],
+     "min_name": "a",
+     "max_name": "z",
+     "avg_price": 21.666667,
+     "sum_price": 65,
+     "percentiles_price": {
+      "1": 10.3,
+      "5": 11.5,
+      "25": 17.5,
+      "50": 25,
+      "75": 27.5,
+      "95": 29.5,
+      "99": 29.9
+     },
+     "stats_price": {
+      "count": 3,
+      "min": 10,
+      "max": 30,
+      "avg": 21.666667,
+      "sum": 65
+     }
+    }
+   }
+  },
+  {
+   "name": "aggregations cover the window within the bounds, not the page",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": {
+     "min": 0.5,
+     "max": null
+    },
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [
+     {
+      "name": "sum_p",
+      "kind": "sum",
+      "field": [
+       "p"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "p": 1
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "p": 2
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.2,
+     "fields": {
+      "p": 4
+     }
+    }
+   ],
+   "expected": {
+    "hits": [
+     {
+      "id": 1,
+      "score": 0.9
+     }
+    ],
+    "total": 2,
+    "aggregations": {
+     "sum_p": 3
+    }
+   }
+  },
+  {
+   "name": "terms ties by key",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [
+     {
+      "name": "terms_g",
+      "kind": "terms",
+      "field": [
+       "g"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": [],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "g": "b"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.4,
+     "fields": {
+      "g": "a"
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.3,
+     "fields": {
+      "g": 2
+     }
+    },
+    {
+     "key": 4,
+     "score": 0.2,
+     "fields": {
+      "g": "a"
+     }
+    },
+    {
+     "key": 5,
+     "score": 0.1,
+     "fields": {
+      "g": "b"
+     }
+    }
+   ],
+   "expected": {
+    "hits": [
+     {
+      "id": 1,
+      "score": 0.5
+     }
+    ],
+    "aggregations": {
+     "terms_g": [
+      {
+       "key": "a",
+       "count": 2
+      },
+      {
+       "key": "b",
+       "count": 2
+      },
+      {
+       "key": 2,
+       "count": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "refuse cursor with group-by",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": "1",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "g"
+     ],
+     "size": null
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "the 'cursor' clause with group-by or mmr; keyset pagination continues after one record in an order that each record's own values decide"
+   }
+  },
+  {
+   "name": "refuse cursor with mmr",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": "1",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "the 'cursor' clause with group-by or mmr; keyset pagination continues after one record in an order that each record's own values decide"
+   }
+  },
+  {
+   "name": "refuse sort with group-by",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "g"
+     ],
+     "size": null
+    },
+    "sort": [
+     {
+      "field": [
+       "g"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "sort with group-by; groups follow the relevance of their best hit"
+   }
+  },
+  {
+   "name": "refuse mmr with group-by",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": {
+     "field": [
+      "g"
+     ],
+     "size": null
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "mmr with group-by; MMR selects single hits, groups select records per group value"
+   }
+  },
+  {
+   "name": "refuse boost with score native",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "native",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "boosts with score native; boosts apply to the canonical similarity, where higher is better"
+   }
+  },
+  {
+   "name": "refuse mmr with score native",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "native",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "mmr with score native; MMR weighs the canonical similarity, which a native score does not give"
+   }
+  },
+  {
+   "name": "refuse group-by on a scroll",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": null,
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "g"
+     ],
+     "size": null
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "boost, mmr and group-by on a scroll, whose records have no score"
+   }
+  },
+  {
+   "name": "refuse mmr lambda outside 0 to 1",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 1.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "an mmr lambda outside 0 to 1"
+   }
+  },
+  {
+   "name": "refuse decay rate outside 0 to 1",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "decay",
+       "field": [
+        "x"
+       ],
+       "weight": null,
+       "shape": "exp",
+       "origin": 0,
+       "scale": 1,
+       "offset": null,
+       "rate": 1,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "a decay rate outside the open interval from 0 to 1"
+   }
+  },
+  {
+   "name": "refuse range aggregation",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [
+     {
+      "name": "range_p",
+      "kind": "range",
+      "field": [
+       "p"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "g": "a",
+      "x": 1
+     },
+     "vectors": {
+      "v": [
+       1,
+       0
+      ]
+     }
+    }
+   ],
+   "error": {
+    "kind": "unsupported",
+    "message": "range aggregations; vecDSL gives no range bounds to count records in"
+   }
+  },
+  {
+   "name": "key with quotes and backslashes",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "t"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": "a\"b\\c",
+     "score": 0.5,
+     "fields": {
+      "t": "say \"hi\"\n"
+     }
+    },
+    {
+     "key": "x",
+     "score": 0.4,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": "a\"b\\c",
+     "score": 0.5,
+     "t": "say \"hi\"\n"
+    },
+    {
+     "id": "x",
+     "score": 0.4
+    }
+   ]
+  },
+  {
+   "name": "nan score",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": {
+      "$number": "NaN"
+     },
+     "fields": {}
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "the score of candidate 1 is not a finite number"
+   }
+  },
+  {
+   "name": "infinite score",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": "x",
+     "score": {
+      "$number": "Infinity"
+     },
+     "fields": {}
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "the score of candidate \"x\" is not a finite number"
+   }
+  },
+  {
+   "name": "missing score",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": null,
+     "fields": {}
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "candidate 1 has no score"
+   }
+  },
+  {
+   "name": "boolean key",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": true,
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "a candidate key must be a string or a finite number: true"
+   }
+  },
+  {
+   "name": "missing key",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "score": 0.5,
+     "fields": {}
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "a candidate key must be a string or a finite number: null"
+   }
+  },
+  {
+   "name": "duplicate keys 1 and 1.0",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": 1.0,
+     "score": 0.4,
+     "fields": {}
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "duplicate candidate key 1"
+   }
+  },
+  {
+   "name": "fields that are not an object",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": [
+      1
+     ]
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "the fields or vectors of candidate 1 are not an object"
+   }
+  },
+  {
+   "name": "sum over text",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [
+     {
+      "name": "sum_p",
+      "kind": "sum",
+      "field": [
+       "p"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "p": "x"
+     }
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "the sum aggregation over a value that is not a number: \"x\""
+   }
+  },
+  {
+   "name": "interval in months",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [
+     {
+      "name": "date_histogram_at",
+      "kind": "date_histogram",
+      "field": [
+       "at"
+      ],
+      "interval": "1 month",
+      "size": null
+     }
+    ],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "at": "2026-11-16"
+     }
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "an interval of numbers with the units ms, s, m, h, d or w: 1 month"
+   }
+  },
+  {
+   "name": "timestamp not in ISO 8601",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [
+     {
+      "name": "date_histogram_at",
+      "kind": "date_histogram",
+      "field": [
+       "at"
+      ],
+      "interval": "1d",
+      "size": null
+     }
+    ],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "at": "16/11/2026"
+     }
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "a timestamp in ISO 8601 form: \"16/11/2026\""
+   }
+  },
+  {
+   "name": "histogram without an interval",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [
+     {
+      "name": "histogram_p",
+      "kind": "histogram",
+      "field": [
+       "p"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.5,
+     "fields": {
+      "p": 1
+     }
+    }
+   ],
+   "error": {
+    "kind": "invalid",
+    "message": "a histogram without a numeric interval"
+   }
+  },
+  {
+   "name": "missing fields read as null",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "a",
+       "b"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "a"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.9,
+     "fields": {
+      "a": "text"
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.8,
+     "fields": {
+      "a": {
+       "b": 1
+      }
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 2,
+     "score": 0.8,
+     "a": {
+      "b": 1
+     }
+    },
+    {
+     "id": 1,
+     "score": 0.9,
+     "a": "text"
+    }
+   ]
+  },
+  {
+   "name": "projection: output order, exclude, vectors, highlight, explanation, key field",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "title",
+     "price",
+     "missing"
+    ],
+    "exclude": [
+     "price"
+    ],
+    "withVectors": true,
+    "keyField": "isbn"
+   },
+   "candidates": [
+    {
+     "key": "k1",
+     "score": 0.5,
+     "fields": {
+      "price": 1,
+      "isbn": "dup",
+      "other": 2,
+      "title": "t"
+     },
+     "vectors": {
+      "emb": [
+       0.1,
+       0.2
+      ]
+     },
+     "highlight": {
+      "title": [
+       "<b>t</b>"
+      ]
+     },
+     "explanation": {
+      "value": 1
+     }
+    }
+   ],
+   "expected": [
+    {
+     "isbn": "k1",
+     "score": 0.5,
+     "title": "t",
+     "emb": [
+      0.1,
+      0.2
+     ],
+     "highlight": {
+      "title": [
+       "<b>t</b>"
+      ]
+     },
+     "explanation": {
+      "value": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "projection of every field without vectors",
+   "spec": {
+    "offset": 0,
+    "limit": 1,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": "x",
+     "score": 0.5,
+     "fields": {
+      "b": 1,
+      "a": 2,
+      "id": "other"
+     },
+     "vectors": {
+      "v": [
+       1
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": "x",
+     "score": 0.5,
+     "b": 1,
+     "a": 2
+    }
+   ]
+  },
+  {
+   "name": "native scores keep the target's order",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": null,
+    "bounds": {
+     "min": null,
+     "max": 0.4
+    },
+    "score": "native",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.1,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.3,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.1
+    }
+   ]
+  },
+  {
+   "name": "native scores sorted by relevance ascending",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "native",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "relevance": true,
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.1,
+     "fields": {}
+    },
+    {
+     "key": 2,
+     "score": 0.5,
+     "fields": {}
+    },
+    {
+     "key": 3,
+     "score": 0.3,
+     "fields": {}
+    }
+   ],
+   "expected": [
+    {
+     "id": 3,
+     "score": 0.3
+    },
+    {
+     "id": 2,
+     "score": 0.5
+    },
+    {
+     "id": 1,
+     "score": 0.1
+    }
+   ]
+  },
+  {
+   "name": "scroll sorts every record and resumes after the cursor",
+   "spec": {
+    "offset": 0,
+    "limit": 2,
+    "cursor": "2",
+    "bounds": null,
+    "score": null,
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "price"
+      ],
+      "direction": "desc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": null,
+     "fields": {
+      "price": 10
+     }
+    },
+    {
+     "key": 2,
+     "score": null,
+     "fields": {
+      "price": 30
+     }
+    },
+    {
+     "key": 3,
+     "score": null,
+     "fields": {}
+    },
+    {
+     "key": 4,
+     "score": null,
+     "fields": {
+      "price": 20
+     }
+    },
+    {
+     "key": 5,
+     "score": null,
+     "fields": {
+      "price": 30
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 5,
+     "price": 30
+    },
+    {
+     "id": 4,
+     "price": 20
+    }
+   ]
+  },
+  {
+   "name": "scroll without a limit",
+   "spec": {
+    "offset": 3,
+    "limit": null,
+    "cursor": null,
+    "bounds": null,
+    "score": null,
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": null,
+     "fields": {
+      "price": 10
+     }
+    },
+    {
+     "key": 2,
+     "score": null,
+     "fields": {
+      "price": 30
+     }
+    },
+    {
+     "key": 3,
+     "score": null,
+     "fields": {}
+    },
+    {
+     "key": 4,
+     "score": null,
+     "fields": {
+      "price": 20
+     }
+    },
+    {
+     "key": 5,
+     "score": null,
+     "fields": {
+      "price": 30
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 4,
+     "price": 20
+    },
+    {
+     "id": 5,
+     "price": 30
+    }
+   ]
+  },
+  {
+   "name": "rounding half to even on exact ties",
+   "spec": {
+    "offset": 0,
+    "limit": 3,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": [
+     "v"
+    ],
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "candidates": [
+    {
+     "key": 1,
+     "score": 0.0390625,
+     "fields": {
+      "v": 2.0000004
+     }
+    },
+    {
+     "key": 2,
+     "score": 0.0234375,
+     "fields": {
+      "v": -4e-07
+     }
+    },
+    {
+     "key": 3,
+     "score": 0.0078125,
+     "fields": {
+      "v": [
+       0.1234564999
+      ]
+     }
+    }
+   ],
+   "expected": [
+    {
+     "id": 1,
+     "score": 0.039062,
+     "v": 2
+    },
+    {
+     "id": 2,
+     "score": 0.023438,
+     "v": 0
+    },
+    {
+     "id": 3,
+     "score": 0.007812,
+     "v": [
+      0.123456
+     ]
+    }
+   ]
+  }
+ ],
+ "windows": [
+  {
+   "name": "plain",
+   "spec": {
+    "offset": 2,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 7
+  },
+  {
+   "name": "sort",
+   "spec": {
+    "offset": 2,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "p"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 70
+  },
+  {
+   "name": "cursor",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": "3",
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 50
+  },
+  {
+   "name": "with-total",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": true,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 50
+  },
+  {
+   "name": "aggregate",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [
+     {
+      "name": "count_p",
+      "kind": "count",
+      "field": [
+       "p"
+      ],
+      "interval": null,
+      "size": null
+     }
+    ],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 50
+  },
+  {
+   "name": "boost",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": {
+     "functions": [
+      {
+       "name": null,
+       "kind": "condition",
+       "field": null,
+       "weight": 2,
+       "shape": null,
+       "origin": null,
+       "scale": null,
+       "offset": null,
+       "rate": null,
+       "when": null
+      }
+     ],
+     "combine": null,
+     "apply": null
+    },
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 50
+  },
+  {
+   "name": "group",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": null,
+    "group": {
+     "field": [
+      "g"
+     ],
+     "size": 2
+    },
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 50
+  },
+  {
+   "name": "mmr without candidates",
+   "spec": {
+    "offset": 2,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": null,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 70
+  },
+  {
+   "name": "mmr candidates below the page",
+   "spec": {
+    "offset": 2,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": 3,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 7
+  },
+  {
+   "name": "mmr candidates",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": "similarity",
+    "boost": null,
+    "mmr": {
+     "lambda": 0.5,
+     "candidates": 40,
+     "vectorField": "v",
+     "metric": "dot"
+    },
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "p"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 40
+  },
+  {
+   "name": "scroll page",
+   "spec": {
+    "offset": 1,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": null,
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": 6
+  },
+  {
+   "name": "scroll sorted",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": null,
+    "bounds": null,
+    "score": null,
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [
+     {
+      "field": [
+       "p"
+      ],
+      "direction": "asc"
+     }
+    ],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": null
+  },
+  {
+   "name": "scroll after a cursor",
+   "spec": {
+    "offset": 0,
+    "limit": 5,
+    "cursor": "2",
+    "bounds": null,
+    "score": null,
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": null
+  },
+  {
+   "name": "scroll without a limit",
+   "spec": {
+    "offset": 0,
+    "limit": null,
+    "cursor": null,
+    "bounds": null,
+    "score": null,
+    "boost": null,
+    "mmr": null,
+    "group": null,
+    "sort": [],
+    "withTotal": false,
+    "aggregations": [],
+    "output": null,
+    "exclude": [],
+    "withVectors": false,
+    "keyField": "id"
+   },
+   "expected": null
+  }
+ ]
+}

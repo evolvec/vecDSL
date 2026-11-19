@@ -1,0 +1,19 @@
+// Judgment: T-Collection. Intended: reject. The primary key names a vector field.
+script n10
+version "7.1"
+
+createBooks: create collection books {
+    primary embedding
+    field id type varchar
+    field genre type varchar
+    vector-field embedding type float_vector dim 4 metric cosine
+}
+
+seed: upsert into books values [
+    { id: "00000000-0000-4000-8000-000000000001", genre: "fiction", embedding: [0.9, 0.1, 0.0, 0.1] },
+    { id: "00000000-0000-4000-8000-000000000002", genre: "science", embedding: [0.1, 0.8, 0.2, 0.0] }
+]
+
+nearest: vector-search in books top 10 query vector [0.8, 0.2, 0.1, 0.0] using embedding
+    output [id, genre]
+    where genre eq "fiction"

@@ -1,0 +1,196 @@
+script qdrantCoverage
+targets [ qdrant ]
+version "1.0"
+description "Every native and concealed Qdrant construct of vecDSL 7.1, in an order that runs on a fresh server"
+param queryVector : vector = [0.9, 0.1, 0.0, 0.1]
+
+connectLocal: create connection local uri "http://localhost:6333" grpc-port 6334
+
+createBooks: create collection books tags ["catalog"] {
+    primary id
+    analyzer english tokenizer standard language "en" { filter lower type lowercase }
+    field id type int
+    field title type varchar max-length 256 full-text analyzer english
+    field genre type varchar max-length 64
+    field price type float
+    field tags type array element-type varchar field-limit tagLimit array_len = 8
+    field meta type varchar
+    field note type varchar
+    vector-field embedding type float_vector dim 4 metric cosine {
+        vector-index embeddingIndex family hnsw max-degree 16 build-candidates 200
+    }
+    vector-field sketch type float_vector dim 2 metric euclidean
+    payload-index genreIndex on genre kind keyword
+    payload-index priceIndex on price kind float
+    alias shelf for books
+} description "Books about databases"
+
+createNotes: create collection notes {
+    primary id
+    field id type int
+    field body type varchar
+    vector-field noteVector type float_vector dim 2 metric cosine
+    namespace teamA key "team-a"
+    tenant north
+    tenant beta
+}
+
+createOrders: create collection orders {
+    primary id
+    default-partition gamma
+    field id type int
+    field item type varchar
+    vector-field orderVector type float_vector dim 2 metric dot
+    partition gamma
+    partition delta
+}
+
+seed: insert into books values [
+    { id: 1, title: "Vector database design", genre: "databases", price: 35.0, tags: ["vector", "database"], meta: "first", note: "draft", embedding: [0.9, 0.1, 0.0, 0.1], sketch: [1.0, 0.0] },
+    { id: 2, title: "Approximate nearest neighbour search", genre: "databases", price: 52.0, tags: ["ann"], meta: "second", embedding: [0.8, 0.2, 0.1, 0.0] },
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 249.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] },
+    { id: 4, title: "Graph databases explained", genre: "databases", price: 30.0, tags: ["graph", "database"], embedding: [0.5, 0.5, 0.2, 0.1] }
+] wait
+
+localImport: bulk-import into books from "file://../books.jsonl" format json
+
+evolveBooks: alter books {
+    add-field field pages type int default 100
+    add-field vector-field summaryVector type float_vector dim 2 metric euclidean
+    set description = "Books about vector databases"
+    set tags = ["catalog", "vectors"]
+    set dynamic = true
+    add-alias alias stacks for books
+}
+
+renameMeta: alter books { rename-field meta to remark }
+
+pruneBooks: alter books { drop-field sketch drop-field note }
+
+addTagIndex: create books if-not-exists with {
+    create payload-index tagIndex on tags kind keyword
+}
+
+restock: upsert into books values [
+    { id: 3, title: "Espresso at home", genre: "kitchen", price: 239.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] }
+] wait
+
+reprice: update books set { price: 32.0 } ids [4] wait
+
+tagMore: update books set { tags: ["classic"] } ids [4] array-append [tags] wait
+
+untag: update books set { tags: ["graph"] } ids [4] array-remove [tags] wait
+
+trimKitchen: delete from books limit 1 wait where genre eq "kitchen"
+
+writeNorth: insert into notes values [ { id: 1, body: "north note", noteVector: [1.0, 0.0] } ] tenant north wait
+
+writeBeta: insert into notes values [
+    { id: 2, body: "beta note", noteVector: [0.0, 1.0] },
+    { id: 3, body: "beta memo", noteVector: [0.6, 0.8] }
+] tenant beta wait
+
+writeTeam: upsert into notes values [ { id: 4, body: "team note", noteVector: [0.8, 0.6] } ] namespace "team-a" wait
+
+writeGamma: insert into orders values [ { id: 1, item: "pen", orderVector: [1.0, 0.0] } ] wait
+
+writeDelta: insert into orders values [ { id: 2, item: "ink", orderVector: [0.0, 1.0] } ] partition delta wait
+
+loadBooks: load books
+
+persist: flush books
+
+compactBooks: compact books target-segments 2
+
+priceReady: await-index priceIndex until ready timeout 30
+
+vectorsReady: await-index embeddingIndex timeout 60
+
+reindexPrice: rebuild-index priceIndex
+
+info: describe books stats index-progress
+
+similar: vector-search in books top 3 query vector $queryVector using embedding
+    output [title, price]
+    where genre eq "databases"
+
+grouped: vector-search in books top 2 query vector $queryVector using embedding group-by genre size 1 output [title]
+
+keywords: search in books top 3 query text "databases" fields [title] output [title]
+
+hybrid: hybrid-search in books top 3 fusion rrf {
+    vector { query vector $queryVector using embedding }
+    keyword { query text "vector" fields [title] }
+} output [title]
+
+byId: get from books ids [1, 4] output [title, price, tags, meta]
+
+browse: scroll in books limit 10 output [title, price]
+
+firstTwo: sample in books size 2 method first output [title]
+
+anyTwo: sample in books size 2 output [title]
+
+pairs: distance-matrix in books using embedding sample 3 limit 1
+
+cheap: count in books where price lt 40
+
+countNorth: count in notes tenant north
+
+countTeam: count in notes namespace "team-a"
+
+northNotes: vector-search in notes top 5 query vector [1.0, 0.0] tenant north output [body]
+
+betaNotes: get from notes ids [1, 2, 3] tenant beta output [body]
+
+gammaOrders: count in orders partitions [gamma]
+
+deltaOrders: scroll in orders partitions [delta] output [item]
+
+collectionNames: list collections
+
+aliasNames: list aliases in books
+
+indexNames: list indexes in books
+
+partitionNames: list partitions in orders
+
+tenantNames: list tenants in notes
+
+namespaceNames: list namespaces in notes
+
+nightly: snapshot books as "nightly" description "before cleanup"
+
+snapshotNames: list snapshots in books
+
+copyBooks: clone books to "booksCopy"
+
+createArchive: create collection archive {
+    primary id
+    field id type int
+    vector-field embedding type float_vector dim 4 metric cosine
+}
+
+restoreArchive: restore archive from "nightly"
+
+archived: count in archive
+
+moveShelf: swap-alias shelf from books to notes
+
+dropStacks: drop stacks
+
+dropNightly: drop-snapshot "nightly"
+
+emptyBooks: truncate books
+
+remaining: count in books
+
+clearTeam: truncate notes namespace "team-a"
+
+dropNorth: drop north
+
+northLeft: count in notes tenant north
+
+dropDelta: drop delta
+
+renameNotes: alter notes rename to memos

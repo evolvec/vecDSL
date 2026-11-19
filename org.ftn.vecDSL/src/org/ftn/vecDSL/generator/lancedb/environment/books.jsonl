@@ -1,0 +1,2 @@
+{"id": 5, "title": "Vector search in practice", "genre": "databases", "price": 45.0, "tags": ["vector"], "details": {"pageCount": 320, "lang": "en"}, "embedding": [0.7, 0.3, 0.1, 0.1]}
+{"id": 6, "title": "Coffee grinders", "genre": "kitchen", "price": 19.0, "tags": ["coffee"], "details": {"pageCount": 96, "lang": "de"}, "embedding": [0.1, 0.0, 0.8, 0.4]}

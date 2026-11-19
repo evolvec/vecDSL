@@ -1,0 +1,14 @@
+form,rule,target-recall,candidates,probes,scan-budget,timeout,oversampling,rescore,filter-strategy,exhaustive,extension
+vector-search,VectorSearch,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted
+search,KeywordSearch,excluded,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted
+hybrid-search,HybridSearch,excluded,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted
+recommend,RecommendSearch,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted
+get,GetById,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a
+generate,GenerativeSearch,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a
+distance-matrix,DistanceMatrix,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a
+count,Count,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a
+scroll,Scroll,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a
+sample,Sample,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a
+batch-query,BatchQuery,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a
+vector leg,VectorLeg,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted
+prefetch stage,Prefetch,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted,admitted

@@ -1,0 +1,5 @@
+# Keep every file byte for byte as it is in the workspace: no line-ending conversion.
+* -text
+# Shell scripts and the files they source keep LF on every platform: bash rejects a carriage return.
+*.sh text eol=lf
+*.env text eol=lf

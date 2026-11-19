@@ -1,0 +1,12 @@
+{
+  "vecdsl-ir": "1.0",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "wf.recall.one",
+      "message": "target-recall must be less than 1; recall 1 is written 'exact'",
+      "line": 14,
+      "column": 104
+    }
+  ]
+}

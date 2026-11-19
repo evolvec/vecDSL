@@ -1,0 +1,58 @@
+script productCatalog
+targets [ oracledb ]
+version "1.0"
+description "Product catalogue on Oracle AI Database 26ai: schema, writes, vector, keyword and hybrid search"
+param queryVector : vector = [0.9, 0.1, 0.0, 0.1]
+param maxPrice : float = 60
+param queryText : text = "vector database"
+
+connectLocal: create connection local uri "127.0.0.1:1521/FREEPDB1" username "VECDSL"
+
+dropOld: drop products if-exists
+
+createProducts: create collection products consistency strong {
+    primary id
+    analyzer english tokenizer standard language "en"
+    field id type int
+    field title type varchar max-length 256 full-text analyzer english
+    field category type varchar max-length 64
+    field price type float
+    field tags type array element-type varchar field-limit tagLimit array_len = 8
+    vector-field embedding type float_vector dim 4 metric cosine {
+        vector-index embeddingIndex family hnsw max-degree 16 build-candidates 200
+    }
+    payload-index categoryIndex on category kind keyword
+} if-not-exists
+
+seed: insert into products values [
+    { id: 1, title: "Milvus in action: vector database design", category: "books", price: 39.5, tags: ["vector", "database"], embedding: [0.9, 0.1, 0.0, 0.1] },
+    { id: 2, title: "Approximate nearest neighbour search", category: "books", price: 52.0, tags: ["ann"], embedding: [0.8, 0.2, 0.1, 0.0] },
+    { id: 3, title: "Espresso machine", category: "kitchen", price: 249.0, tags: ["coffee"], embedding: [0.0, 0.1, 0.9, 0.3] },
+    { id: 4, title: "Graph databases explained", category: "books", price: 28.0, tags: ["graph", "database"], embedding: [0.5, 0.5, 0.2, 0.1] }
+] wait
+
+similar: vector-search in products top 3 query vector $queryVector using embedding
+    score similarity bounds min 0.2
+    output [title, category, price]
+    where category eq "books" and price lte $maxPrice
+
+keywords: search in products top 3 query text $queryText fields [title] output [title, price]
+
+hybrid: hybrid-search in products top 3 fusion rrf fusion-k 60 {
+    vector { query vector $queryVector using embedding }
+    keyword { query text $queryText fields [title] }
+} output [title, price]
+
+byId: get from products ids [1, 2] output [title, price]
+
+cheapBooks: count in products where category eq "books" and price lt 40
+
+reprice: update products set { price: 35.0 } ids [1] wait
+
+similarToFirst: recommend in products top 2 positive [1] negative [3] using embedding output [title]
+
+browse: scroll in products limit 10 output [title, tags] where tags contains "database"
+
+removeOne: delete from products ids [4] wait
+
+remaining: count in products
